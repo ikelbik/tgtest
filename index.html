@@ -69,6 +69,16 @@
             font-size: 20px;
             margin: 10px 0;
         }
+
+        body {
+            overflow: hidden;
+            padding: 10px;
+        }
+        .container {
+            height: 80vh;
+        }
+    </style>		
+		
     </style>
 </head>
 <body>
@@ -84,6 +94,24 @@
     </div>
 
     <script>
+		const tg = window.Telegram.WebApp;
+        tg.ready();
+        tg.expand();
+        tg.enableClosingConfirmation();
+
+        // Модифицированные функции
+        function resetGame(diskCount = 3) {
+            // Предыдущий код resetGame
+            tg.MainButton.hide();
+        }
+
+        function handleTouchEnd(e) {
+            // Предыдущий код handleTouchEnd
+            if (checkWin()) {
+                tg.HapticFeedback.notificationOccurred("success");
+            }
+        }	
+	
         let towers = [[], [], []];
         let selectedTower = null;
         let moveCount = 0;
