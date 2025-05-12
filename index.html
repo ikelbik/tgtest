@@ -1,216 +1,139 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>Ханойские башни</title>
+    <title>Ханойская башня</title>
     <style>
         body {
             margin: 0;
-            padding: 20px;
             display: flex;
-            flex-direction: column;
+            justify-content: center;
             align-items: center;
-            font-family: Arial, sans-serif;
-            background-color: #f0f0f0;
-            touch-action: manipulation;
+            min-height: 100vh;
+            background: #f0f0f0;
         }
-
-        .container {
-            display: flex;
-            justify-content: space-around;
-            width: 100%;
-            margin: 20px 0;
-        }
-
-        .tower {
-            width: 30%;
-            height: 300px;
-            display: flex;
-            flex-direction: column-reverse;
-            align-items: center;
-            border-bottom: 8px solid #666;
-            background: linear-gradient(to right, #ddd, #eee);
-            border-radius: 10px 10px 0 0;
-            padding: 10px 5px;
-            touch-action: none;
-            user-select: none;
-            transition: transform 0.1s;
-        }
-
-        .disk {
-            height: 22px;
-            margin: 2px 0;
-            border-radius: 10px;
-            transition: all 0.3s;
-        }
-
-        .controls {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 20px;
-        }
-
-        button {
-            padding: 10px 20px;
-            font-size: 16px;
-            border: none;
-            border-radius: 5px;
-            background-color: #4CAF50;
-            color: white;
-            cursor: pointer;
-        }
-
-        .selected {
-            background-color: #ffeb3b;
-        }
-
-        #moveCounter {
-            font-size: 20px;
-            margin: 10px 0;
-        }
-
-        body {
-            overflow: hidden;
-            padding: 10px;
-        }
-        .container {
-            height: 80vh;
-        }
-    </style>		
-		
     </style>
 </head>
 <body>
-    <div class="controls">
-        <button ontouchstart="resetGame(3)">Новая игра</button>
-        <button ontouchstart="showWinMessage()">Правила</button>
-    </div>
-    <div id="moveCounter">Ходов: 0</div>
-    <div class="container">
-        <div class="tower" data-tower-id="0"></div>
-        <div class="tower" data-tower-id="1"></div>
-        <div class="tower" data-tower-id="2"></div>
-    </div>
-
+    <div id="game"></div>
+    
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <script>
-		const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
-        tg.enableClosingConfirmation();
+const config = {
+    type: Phaser.AUTO,
+    parent: 'game',
+    width: 800,
+    height: 600,
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
 
-        // Модифицированные функции
-        function resetGame(diskCount = 3) {
-            // Предыдущий код resetGame
-            tg.MainButton.hide();
+const game = new Phaser.Game(config);
+
+let towers = [];
+let selectedDisk = null;
+let selectedTowerIndex = null;
+const diskHeight = 30;
+const baseY = 500;
+const towerPositions = [200, 400, 600];
+const totalDisks = 5;
+
+function preload() {
+    for (let i = 1; i <= totalDisks; i++) {
+        this.load.image(`disk_${i}`, `assets/disk_${i}.png`);
+    }
+}
+
+function create() {
+    towers = [
+        Array.from({length: totalDisks}, (_, i) => totalDisks - i),
+        [],
+        []
+    ];
+
+    // Рисуем башни
+    this.add.graphics()
+        .lineStyle(5, 0x999999)
+        .lineBetween(200, 100, 200, 500)
+        .lineBetween(400, 100, 400, 500)
+        .lineBetween(600, 100, 600, 500);
+
+    // Создаем диски
+    towers[0].forEach((diskSize, index) => {
+        const disk = this.add.image(
+            towerPositions[0],
+            baseY - index * diskHeight,
+            `disk_${diskSize}`
+        )
+        .setInteractive()
+        .on('pointerdown', () => handleDiskClick(0));
+        
+        disk.diskSize = diskSize;
+    });
+}
+
+function handleDiskClick(towerIndex) {
+    if (!selectedDisk) {
+        if (towers[towerIndex].length > 0) {
+            selectedTowerIndex = towerIndex;
+            selectedDisk = towers[towerIndex][towers[towerIndex].length - 1];
+            highlightTower(towerIndex, true);
         }
-
-        function handleTouchEnd(e) {
-            // Предыдущий код handleTouchEnd
-            if (checkWin()) {
-                tg.HapticFeedback.notificationOccurred("success");
-            }
-        }	
-	
-        let towers = [[], [], []];
-        let selectedTower = null;
-        let moveCount = 0;
-        const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#ffeead', '#ff9999'];
-        const MIN_DISK_WIDTH = 40;
-        const MAX_DISK_WIDTH = 80;
-
-        function createDisk(size) {
-            const disk = document.createElement('div');
-            disk.className = 'disk';
-            disk.style.width = `${MIN_DISK_WIDTH + (MAX_DISK_WIDTH - MIN_DISK_WIDTH) * size}%`;
-            disk.style.backgroundColor = colors[size % colors.length];
-            return disk;
+    } else {
+        if (isValidMove(towerIndex)) {
+            moveDisk(selectedTowerIndex, towerIndex);
+            checkWin();
         }
+        highlightTower(selectedTowerIndex, false);
+        selectedDisk = null;
+        selectedTowerIndex = null;
+    }
+}
 
-        function resetGame(diskCount = 3) {
-            towers = [Array.from({length: diskCount}, (_, i) => i), [], []];
-            moveCount = 0;
-            selectedTower = null;
-            document.getElementById('moveCounter').textContent = `Ходов: ${moveCount}`;
-            updateTowersDisplay();
-        }
+function isValidMove(targetTowerIndex) {
+    const targetTower = towers[targetTowerIndex];
+    return targetTower.length === 0 || 
+           selectedDisk < targetTower[targetTower.length - 1];
+}
 
-        function updateTowersDisplay() {
-            const towerElements = document.querySelectorAll('.tower');
-            
-            towerElements.forEach((tower, index) => {
-                tower.innerHTML = '';
-                tower.classList.remove('selected');
-                
-                towers[index].forEach(size => {
-                    const disk = createDisk(size);
-                    tower.appendChild(disk);
-                });
-            });
+function moveDisk(from, to) {
+    const disk = towers[from].pop();
+    towers[to].push(disk);
+    
+    const disks = this.children.getChildren();
+    const targetDisk = disks.find(d => d.diskSize === disk);
+    this.tweens.add({
+        targets: targetDisk,
+        x: towerPositions[to],
+        y: baseY - (towers[to].length - 1) * diskHeight,
+        duration: 500
+    });
+}
 
-            if (selectedTower !== null) {
-                towerElements[selectedTower].classList.add('selected');
-            }
-        }
+function highlightTower(towerIndex, enable) {
+    const color = enable ? 0x00ff00 : 0x000000;
+    this.add.graphics()
+        .lineStyle(5, color)
+        .lineBetween(
+            towerPositions[towerIndex], 100, 
+            towerPositions[towerIndex], 500
+        )
+        .setDepth(-1);
+}
 
-        function handleTouchStart(e) {
-            e.preventDefault();
-            const towerId = parseInt(e.currentTarget.dataset.towerId);
-            if (selectedTower === null && towers[towerId].length > 0) {
-                selectedTower = towerId;
-                updateTowersDisplay();
-            }
-        }
-
-        function handleTouchEnd(e) {
-            e.preventDefault();
-            const towerId = parseInt(e.currentTarget.dataset.towerId);
-            
-            if (selectedTower !== null && selectedTower !== towerId) {
-                const source = towers[selectedTower];
-                const target = towers[towerId];
-                
-                if (source.length > 0 && 
-                    (target.length === 0 || source[source.length-1] < target[target.length-1])) {
-                    
-                    const disk = source.pop();
-                    target.push(disk);
-                    moveCount++;
-                    document.getElementById('moveCounter').textContent = `Ходов: ${moveCount}`;
-                    
-                    if (checkWin()) {
-                        setTimeout(() => {
-                            alert(`Победа! Ходов: ${moveCount}`);
-                            resetGame(towers[2].length);
-                        }, 100);
-                    }
-                }
-                selectedTower = null;
-                updateTowersDisplay();
-            }
-        }
-
-        function checkWin() {
-            return towers[0].length === 0 && 
-                   towers[1].length === 0 && 
-                   towers[2].length > 0;
-        }
-
-        function showWinMessage() {
-            alert('Правила:\n1. Перемещайте диски между башнями\n2. Меньший диск всегда должен быть сверху\n3. Перенесите все диски на правую башню');
-        }
-
-        function initTouchHandlers() {
-            document.querySelectorAll('.tower').forEach(tower => {
-                tower.addEventListener('touchstart', handleTouchStart, {passive: false});
-                tower.addEventListener('touchend', handleTouchEnd, {passive: false});
-            });
-        }
-
-        window.addEventListener('DOMContentLoaded', () => {
-            initTouchHandlers();
-            resetGame(3);
+function checkWin() {
+    if (towers[2].length === totalDisks) {
+        this.add.text(300, 250, 'ПОБЕДА!', { 
+            fontSize: '64px', 
+            fill: '#ff0000' 
         });
+    }
+}
+
+function update() {}
     </script>
 </body>
 </html>
