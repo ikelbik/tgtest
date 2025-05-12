@@ -1,23 +1,12 @@
 <!DOCTYPE html>
-<html lang="ru">
+<html>
 <head>
-    <meta charset="UTF-8">
     <title>Ханойская башня</title>
-    <style>
-        body {
-            margin: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #f0f0f0;
-        }
-    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
 </head>
 <body>
     <div id="game"></div>
     
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <script>
 const config = {
     type: Phaser.AUTO,
@@ -26,20 +15,19 @@ const config = {
     height: 600,
     scene: {
         preload: preload,
-        create: create,
-        update: update
+        create: create
     }
 };
 
 const game = new Phaser.Game(config);
 
 let towers = [];
-let selectedDisk = null;
 let selectedTowerIndex = null;
 const diskHeight = 30;
 const baseY = 500;
 const towerPositions = [200, 400, 600];
 const totalDisks = 5;
+let highlightGraphics = null;
 
 function preload() {
     for (let i = 1; i <= totalDisks; i++) {
@@ -54,74 +42,97 @@ function create() {
         []
     ];
 
-    // Рисуем башни
+    // Создаем зоны для клика по башням
+    towerPositions.forEach((x, index) => {
+        const zone = this.add.zone(x, 300, 100, 400)
+            .setInteractive()
+            .on('pointerdown', () => handleTowerClick(index));
+    });
+
+    // Отрисовка башен
     this.add.graphics()
-        .lineStyle(5, 0x999999)
+        .lineStyle(5, 0x000000)
         .lineBetween(200, 100, 200, 500)
         .lineBetween(400, 100, 400, 500)
         .lineBetween(600, 100, 600, 500);
 
-    // Создаем диски
-    towers[0].forEach((diskSize, index) => {
-        const disk = this.add.image(
-            towerPositions[0],
-            baseY - index * diskHeight,
-            `disk_${diskSize}`
-        )
-        .setInteractive()
-        .on('pointerdown', () => handleDiskClick(0));
-        
-        disk.diskSize = diskSize;
-    });
+    // Инициализация дисков
+    redrawDisks.call(this);
 }
 
-function handleDiskClick(towerIndex) {
-    if (!selectedDisk) {
+function handleTowerClick(towerIndex) {
+    // Если ничего не выбрано
+    if (selectedTowerIndex === null) {
+        // Проверяем есть ли диски в башне
         if (towers[towerIndex].length > 0) {
             selectedTowerIndex = towerIndex;
-            selectedDisk = towers[towerIndex][towers[towerIndex].length - 1];
-            highlightTower(towerIndex, true);
+            updateHighlight(towerIndex);
         }
-    } else {
-        if (isValidMove(towerIndex)) {
+    } 
+    // Если уже есть выбранная башня
+    else {
+        // Перемещение диска
+        if (isValidMove(selectedTowerIndex, towerIndex)) {
             moveDisk(selectedTowerIndex, towerIndex);
             checkWin();
         }
-        highlightTower(selectedTowerIndex, false);
-        selectedDisk = null;
+        // Сброс выделения
         selectedTowerIndex = null;
+        updateHighlight(-1);
     }
 }
 
-function isValidMove(targetTowerIndex) {
-    const targetTower = towers[targetTowerIndex];
-    return targetTower.length === 0 || 
-           selectedDisk < targetTower[targetTower.length - 1];
+function isValidMove(from, to) {
+    if (towers[from].length === 0) return false;
+    if (towers[to].length === 0) return true;
+    
+    const topFrom = towers[from][towers[from].length - 1];
+    const topTo = towers[to][towers[to].length - 1];
+    return topFrom < topTo;
 }
 
 function moveDisk(from, to) {
     const disk = towers[from].pop();
     towers[to].push(disk);
-    
-    const disks = this.children.getChildren();
-    const targetDisk = disks.find(d => d.diskSize === disk);
-    this.tweens.add({
-        targets: targetDisk,
-        x: towerPositions[to],
-        y: baseY - (towers[to].length - 1) * diskHeight,
-        duration: 500
+    redrawDisks.call(this);
+}
+
+function redrawDisks() {
+    // Удаляем старые диски
+    this.children.each(child => {
+        if (child.texture && child.texture.key.startsWith('disk_')) {
+            child.destroy();
+        }
+    });
+
+    // Рисуем новые диски
+    towers.forEach((tower, towerIndex) => {
+        tower.forEach((diskSize, diskIndex) => {
+            this.add.image(
+                towerPositions[towerIndex],
+                baseY - diskIndex * diskHeight,
+                `disk_${diskSize}`
+            ).setOrigin(0.5, 0.5);
+        });
     });
 }
 
-function highlightTower(towerIndex, enable) {
-    const color = enable ? 0x00ff00 : 0x000000;
-    this.add.graphics()
-        .lineStyle(5, color)
-        .lineBetween(
-            towerPositions[towerIndex], 100, 
-            towerPositions[towerIndex], 500
-        )
-        .setDepth(-1);
+function updateHighlight(towerIndex) {
+    if (highlightGraphics) {
+        highlightGraphics.clear();
+    } else {
+        highlightGraphics = this.add.graphics();
+    }
+
+    if (towerIndex >= 0) {
+        highlightGraphics.lineStyle(5, 0x00FF00)
+            .lineBetween(
+                towerPositions[towerIndex], 
+                100, 
+                towerPositions[towerIndex], 
+                500
+            );
+    }
 }
 
 function checkWin() {
@@ -132,8 +143,6 @@ function checkWin() {
         });
     }
 }
-
-function update() {}
     </script>
 </body>
 </html>
