@@ -1,0 +1,73 @@
+const C3 = self.C3;
+self.C3_GetObjectRefTable = function () {
+	return [
+		C3.Plugins.Sprite,
+		C3.Behaviors.MoveTo,
+		C3.Plugins.Mouse,
+		C3.Plugins.System.Cnds.Every,
+		C3.Plugins.System.Acts.SetVar,
+		C3.Plugins.System.Exps.random,
+		C3.Plugins.System.Cnds.CompareVar,
+		C3.Plugins.System.Acts.CreateObject,
+		C3.Plugins.Mouse.Cnds.OnObjectClicked,
+		C3.Behaviors.MoveTo.Acts.MoveToPosition,
+		C3.Behaviors.MoveTo.Cnds.OnArrived
+	];
+};
+self.C3_JsPropNameTable = [
+	{Lunka1: 0},
+	{Lunka2: 0},
+	{Lunka3: 0},
+	{var1: 0},
+	{ДвижениеК: 0},
+	{Спрайт: 0},
+	{Спрайт2: 0},
+	{Спрайт3: 0},
+	{Спрайт4: 0},
+	{Спрайт5: 0},
+	{Спрайт6: 0},
+	{Спрайт7: 0},
+	{Спрайт8: 0},
+	{Спрайт9: 0},
+	{Спрайт10: 0},
+	{Спрайт11: 0},
+	{Спрайт12: 0},
+	{Спрайт13: 0},
+	{Спрайт14: 0},
+	{Спрайт15: 0},
+	{Спрайт16: 0},
+	{Start1: 0},
+	{Start2: 0},
+	{Start3: 0},
+	{Мышь: 0},
+	{start1: 0},
+	{on_y: 0},
+	{on_x: 0},
+	{s_cihoice: 0}
+];
+
+self.InstanceType = {
+	Lunka1: class extends self.ISpriteInstance {},
+	Lunka2: class extends self.ISpriteInstance {},
+	Lunka3: class extends self.ISpriteInstance {},
+	Спрайт: class extends self.ISpriteInstance {},
+	Спрайт2: class extends self.ISpriteInstance {},
+	Спрайт3: class extends self.ISpriteInstance {},
+	Спрайт4: class extends self.ISpriteInstance {},
+	Спрайт5: class extends self.ISpriteInstance {},
+	Спрайт6: class extends self.ISpriteInstance {},
+	Спрайт7: class extends self.ISpriteInstance {},
+	Спрайт8: class extends self.ISpriteInstance {},
+	Спрайт9: class extends self.ISpriteInstance {},
+	Спрайт10: class extends self.ISpriteInstance {},
+	Спрайт11: class extends self.ISpriteInstance {},
+	Спрайт12: class extends self.ISpriteInstance {},
+	Спрайт13: class extends self.ISpriteInstance {},
+	Спрайт14: class extends self.ISpriteInstance {},
+	Спрайт15: class extends self.ISpriteInstance {},
+	Спрайт16: class extends self.ISpriteInstance {},
+	Start1: class extends self.ISpriteInstance {},
+	Start2: class extends self.ISpriteInstance {},
+	Start3: class extends self.ISpriteInstance {},
+	Мышь: class extends self.IInstance {}
+}
