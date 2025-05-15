@@ -16,64 +16,77 @@
 <script>
 class Example extends Phaser.Scene
 {
-    constructor ()
-    {
+    constructor() {
         super();
         this.isDragging = false;
+        this.isScaling = false;
         this.prevX = 0;
         this.prevY = 0;
+        this.initialDistance = 0;
+        this.initialScale = 1;
     }
 
-    preload ()
-    {
+    preload() {
         this.load.setBaseURL('https://cdn.phaserfiles.com/v385');
         this.load.image('bg', 'https://ikelbik.github.io/tgtest/phaser/assets/wtf.png');
         this.load.obj('skull', 'https://ikelbik.github.io/tgtest/phaser/assets/skull.obj');
         this.load.image('powerups', 'https://ikelbik.github.io/tgtest/phaser/assets/powerups.png');
     }
 
-    create ()
-    {
+    create() {
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-
-        const mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'powerups');
-        mesh.addVerticesFromObj('skull', 0.1);
-        mesh.panZ(7);
-        mesh.modelRotation.y += 0.5;
-
-        // Настройка интерактивности
-        mesh.setInteractive();
+        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'powerups');
         
+        this.mesh.addVerticesFromObj('skull', 0.1);
+        this.mesh.panZ(7);
+        this.mesh.modelRotation.y += 0.5;
+
         // Обработчики событий ввода
-        mesh.on('pointerdown', (pointer) => {
-            this.isDragging = true;
-            this.prevX = pointer.x;
-            this.prevY = pointer.y;
-        });
-
-        this.input.on('pointerup', () => {
-            this.isDragging = false;
-        });
-
-        this.input.on('pointermove', (pointer) => {
-            if (this.isDragging) {
-                const deltaX = pointer.x - this.prevX;
-                const deltaY = pointer.y - this.prevY;
-                
-                // Вращение с учетом направления движения
-                mesh.modelRotation.y += deltaX * 0.01;
-                mesh.modelRotation.x += deltaY * 0.01;
-                
-                // Обновление предыдущих координат
+        this.input.on('pointerdown', pointer => {
+            if (this.input.activePointers.total === 2) {
+                const [p1, p2] = this.input.pointers.list.slice(0, 2);
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                this.initialDistance = Math.sqrt(dx*dx + dy*dy);
+                this.initialScale = this.mesh.scaleX;
+                this.isScaling = true;
+                this.isDragging = false;
+            } else if (this.input.activePointers.total === 1) {
+                this.isDragging = true;
                 this.prevX = pointer.x;
                 this.prevY = pointer.y;
             }
         });
 
-        // Обработчик изменения размера экрана
-        this.scale.on('resize', (gameSize) => {
+        this.input.on('pointermove', pointer => {
+            if (this.isScaling && this.input.activePointers.total === 2) {
+                const [p1, p2] = this.input.pointers.list.slice(0, 2);
+                const dx = p1.x - p2.x;
+                const dy = p1.y - p2.y;
+                const currentDistance = Math.sqrt(dx*dx + dy*dy);
+                const scaleFactor = currentDistance / this.initialDistance;
+                let newScale = Phaser.Math.Clamp(this.initialScale * scaleFactor, 0.3, 3);
+                this.mesh.setScale(newScale);
+            }
+            else if (this.isDragging) {
+                const deltaX = pointer.x - this.prevX;
+                const deltaY = pointer.y - this.prevY;
+                this.mesh.modelRotation.y += deltaX * 0.01;
+                this.mesh.modelRotation.x += deltaY * 0.01;
+                this.prevX = pointer.x;
+                this.prevY = pointer.y;
+            }
+        });
+
+        this.input.on('pointerup', () => {
+            if (this.input.activePointers.total < 2) this.isScaling = false;
+            if (this.input.activePointers.total === 0) this.isDragging = false;
+        });
+
+        // Обработчик изменения размера
+        this.scale.on('resize', gameSize => {
             this.cameras.main.setSize(gameSize.width, gameSize.height);
-            mesh.setPosition(gameSize.width / 2, gameSize.height / 2);
+            this.mesh.setPosition(gameSize.width/2, gameSize.height/2);
         });
     }
 }
