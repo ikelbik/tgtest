@@ -19,6 +19,9 @@ class Example extends Phaser.Scene
     constructor ()
     {
         super();
+        this.isDragging = false;
+        this.prevX = 0;
+        this.prevY = 0;
     }
 
     preload ()
@@ -31,35 +34,64 @@ class Example extends Phaser.Scene
 
     create ()
     {
-        this.add.image(400, 300, 'bg');
+        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
 
-        const mesh = this.add.mesh(400, 300, 'powerups');
-
+        const mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'powerups');
         mesh.addVerticesFromObj('skull', 0.1);
-
         mesh.panZ(7);
         mesh.modelRotation.y += 0.5;
 
+        // Настройка интерактивности
         mesh.setInteractive();
+        
+        // Обработчики событий ввода
+        mesh.on('pointerdown', (pointer) => {
+            this.isDragging = true;
+            this.prevX = pointer.x;
+            this.prevY = pointer.y;
+        });
 
-        mesh.on('pointerdown', () => {
+        this.input.on('pointerup', () => {
+            this.isDragging = false;
+        });
 
-            mesh.modelRotation.z += Math.random();
-            mesh.modelRotation.y += Math.random();
+        this.input.on('pointermove', (pointer) => {
+            if (this.isDragging) {
+                const deltaX = pointer.x - this.prevX;
+                const deltaY = pointer.y - this.prevY;
+                
+                // Вращение с учетом направления движения
+                mesh.modelRotation.y += deltaX * 0.01;
+                mesh.modelRotation.x += deltaY * 0.01;
+                
+                // Обновление предыдущих координат
+                this.prevX = pointer.x;
+                this.prevY = pointer.y;
+            }
+        });
 
+        // Обработчик изменения размера экрана
+        this.scale.on('resize', (gameSize) => {
+            this.cameras.main.setSize(gameSize.width, gameSize.height);
+            mesh.setPosition(gameSize.width / 2, gameSize.height / 2);
         });
     }
 }
 
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: window.innerWidth,
+    height: window.innerHeight,
     backgroundColor: '#000022',
-    parent: 'phaser-example',
-    scene: Example
+    parent: 'game',
+    scene: Example,
+    scale: {
+        mode: Phaser.Scale.RESIZE,
+        autoCenter: Phaser.Scale.CENTER_BOTH
+    }
 };
 
-let game = new Phaser.Game(config);</script>
+let game = new Phaser.Game(config);
+</script>
 </body>
 </html>
