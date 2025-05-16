@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+	<meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
 	<link rel="manifest" href="/app-manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
@@ -13,10 +14,13 @@
 </head>
 <body>
     <div id="game"></div>
-
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
 <script>
-const isTelegram = /Telegram/.test(navigator.userAgent);
-
+  const isTelegram = /Telegram/.test(navigator.userAgent);
+  const tg = window.Telegram.WebApp;
+  tg.expand(); // Раскрыть на весь экран
+  tg.MainButton.show(); // Показать основную кнопку
+  
 class MainScene extends Phaser.Scene {
     constructor(){
         super();
