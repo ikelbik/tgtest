@@ -1,141 +1,123 @@
 <!DOCTYPE html>
-<html>
-<head>
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            overflow: hidden;
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web Player | My project</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+  </head>
+  <body>
+<div id="unity-container" style="position: absolute; width: 100%; height: 100%; left: 0%; top: 0%;">
+<canvas id="unity-canvas" style="position: absolute; width: 100%; height: 100%"></canvas>
+      <div id="unity-loading-bar">
+        <div id="unity-logo"></div>
+        <div id="unity-progress-bar-empty">
+          <div id="unity-progress-bar-full"></div>
+        </div>
+      </div>
+      <div id="unity-warning"> </div>
+
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      // Shows a temporary message banner/ribbon for a few seconds, or
+      // a permanent error message on top of the canvas if type=='error'.
+      // If type=='warning', a yellow highlight color is used.
+      // Modify or remove this function to customize the visually presented
+      // way that non-critical warnings and error messages are presented to the
+      // user.
+      function unityShowBanner(msg, type) {
+        var warningBanner = document.querySelector("#unity-warning");
+        function updateBannerVisibility() {
+          warningBanner.style.display = warningBanner.children.length ? 'block' : 'none';
         }
-    </style>
-</head>
-<body>
-    <div id="game"></div>
+        var div = document.createElement('div');
+        div.innerHTML = msg;
+        warningBanner.appendChild(div);
+        if (type == 'error') div.style = 'background: red; padding: 10px;';
+        else {
+          if (type == 'warning') div.style = 'background: yellow; padding: 10px;';
+          setTimeout(function() {
+            warningBanner.removeChild(div);
+            updateBannerVisibility();
+          }, 5000);
+        }
+        updateBannerVisibility();
+      }
 
-<script>
-class Example extends Phaser.Scene
-{
-    constructor() {
-        super();
-        this.isDragging = false;
-        this.isScaling = false;
-        this.prevX = 0;
-        this.prevY = 0;
-        this.initialDistance = 0;
-        this.initialScale = 1;
-    }
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/unity.loader.js";
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/unity.data",
+        frameworkUrl: buildUrl + "/unity.framework.js",
+        codeUrl: buildUrl + "/unity.wasm",
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "My project",
+        productVersion: "0.1.0",
+        showBanner: unityShowBanner,
+      };
 
-    preload() {
-        this.load.setBaseURL('https://cdn.phaserfiles.com/v385');
-        this.load.image('bg', 'https://ikelbik.github.io/tgtest/phaser/assets/wtf.png');
-        this.load.obj('skull', 'https://ikelbik.github.io/tgtest/phaser/assets/skull.obj');
-        this.load.image('powerups', 'https://ikelbik.github.io/tgtest/phaser/assets/powerups.png');
-    }
+      // By default, Unity keeps WebGL canvas render target size matched with
+      // the DOM size of the canvas element (scaled by window.devicePixelRatio)
+      // Set this to false if you want to decouple this synchronization from
+      // happening inside the engine, and you would instead like to size up
+      // the canvas DOM size and WebGL render target sizes yourself.
+      // config.matchWebGLToCanvasSize = false;
 
-    create() {
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'powerups');
-        
-        this.mesh.addVerticesFromObj('skull', 0.1);
-        this.mesh.panZ(7);
-        this.mesh.modelRotation.y += 0.5;
+      // If you would like all file writes inside Unity Application.persistentDataPath
+      // directory to automatically persist so that the contents are remembered when
+      // the user revisits the site the next time, uncomment the following line:
+      // config.autoSyncPersistentDataPath = true;
+      // This autosyncing is currently not the default behavior to avoid regressing
+      // existing user projects that might rely on the earlier manual
+      // JS_FileSystem_Sync() behavior, but in future Unity version, this will be
+      // expected to change.
 
-        // Включаем интерактивность для меша
-        this.mesh.setInteractive();
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        // Mobile device style: fill the whole browser client area with the game canvas:
 
-        // Обработчики событий
-        this.mesh.on('pointerdown', (pointer) => {
-            if (pointer.event.touches && pointer.event.touches.length >= 2) {
-                this.handleTwoFingerStart(pointer);
-            } else {
-                this.isDragging = true;
-                this.prevX = pointer.x;
-                this.prevY = pointer.y;
-            }
-        });
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
 
-        this.input.on('pointermove', (pointer) => {
-            if (!pointer.isDown) return;
+        // To lower canvas resolution on mobile devices to gain some
+        // performance, uncomment the following line:
+        // config.devicePixelRatio = 1;
 
-            if (pointer.event.touches && pointer.event.touches.length >= 2) {
-                this.handleTwoFingerMove(pointer);
-            } else if (this.isDragging) {
-                this.handleDragMove(pointer);
-            }
-        });
 
-        this.input.on('pointerup', () => {
-            this.isDragging = false;
-            this.isScaling = false;
-        });
+      } else {
+        // Desktop style: Render the game canvas in a window that can be maximized to fullscreen:
+        canvas.style.width = "100%";
+        canvas.style.height = "100%";
+      }
 
-        // Масштабирование колесом мыши
-        this.input.on('wheel', (pointer, gameObjects, deltaX, deltaY, deltaZ) => {
-            const newScale = Phaser.Math.Clamp(this.mesh.scaleX + deltaY * -0.001, 0.3, 3);
-            this.mesh.setScale(newScale);
-        });
+      document.querySelector("#unity-loading-bar").style.display = "block";
 
-        // Ресайз
-        this.scale.on('resize', (gameSize) => {
-            this.cameras.main.setSize(gameSize.width, gameSize.height);
-            this.mesh.setPosition(gameSize.width/2, gameSize.height/2);
-        });
-    }
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          document.querySelector("#unity-progress-bar-full").style.width = 100 * progress + "%";
+              }).then((unityInstance) => {
+                document.querySelector("#unity-loading-bar").style.display = "none";
+                document.querySelector("#unity-fullscreen-button").onclick = () => {
+                  unityInstance.SetFullscreen(1);
+                };
 
-    handleTwoFingerStart(pointer) {
-        const touches = pointer.event.touches;
-        const p1 = { x: touches[0].clientX, y: touches[0].clientY };
-        const p2 = { x: touches[1].clientX, y: touches[1].clientY };
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        this.initialDistance = Math.sqrt(dx*dx + dy*dy);
-        this.initialScale = this.mesh.scaleX;
-        this.isScaling = true;
-        this.isDragging = false;
-    }
+              }).catch((message) => {
+                alert(message);
+              });
+            };
 
-    handleTwoFingerMove(pointer) {
-        if (!this.isScaling) return;
-        
-        const touches = pointer.event.touches;
-        const p1 = { x: touches[0].clientX, y: touches[0].clientY };
-        const p2 = { x: touches[1].clientX, y: touches[1].clientY };
-        const dx = p1.x - p2.x;
-        const dy = p1.y - p2.y;
-        const currentDistance = Math.sqrt(dx*dx + dy*dy);
-        const scaleFactor = currentDistance / this.initialDistance;
-        const newScale = Phaser.Math.Clamp(this.initialScale * scaleFactor, 0.3, 3);
-        this.mesh.setScale(newScale);
-    }
+      document.body.appendChild(script);
 
-    handleDragMove(pointer) {
-        const deltaX = pointer.x - this.prevX;
-        const deltaY = pointer.y - this.prevY;
-        this.mesh.modelRotation.y += deltaX * 0.01;
-        this.mesh.modelRotation.x += deltaY * 0.01;
-        this.prevX = pointer.x;
-        this.prevY = pointer.y;
-    }
-}
-
-const config = {
-    type: Phaser.AUTO,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    backgroundColor: '#000022',
-    parent: 'game',
-    scene: Example,
-    scale: {
-        mode: Phaser.Scale.RESIZE,
-        autoCenter: Phaser.Scale.CENTER_BOTH
-    },
-    input: {
-        activePointers: 3
-    }
-};
-
-let game = new Phaser.Game(config);
-</script>
-</body>
+    </script>
+  </body>
 </html>
