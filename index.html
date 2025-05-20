@@ -82,7 +82,7 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
         
         this.input.on('wheel',(_,__,___,dy)=>{
-            this.mesh.setScale(Phaser.Math.Clamp(this.mesh.scaleX+dy*-this.scaleFactor,0.3,3));
+            this.mesh.setScale(Phaser.Math.Clamp(this.mesh.scaleX+dy*-this.scaleFactor,0.3,10));
         });
 
         this.scale.on('resize',s=>{
