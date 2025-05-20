@@ -24,8 +24,8 @@
 class MainScene extends Phaser.Scene {
     constructor(){
         super();
-        this.rotSpeed = isTelegram ? 0.005 : 0.02;
-        this.scaleFactor = isTelegram ? 0.0005 : 0.05;
+        this.rotSpeed = isTelegram ? 0.005 : 0.01;
+        this.scaleFactor = isTelegram ? 0.0005 : 0.001;
         this.isDragging = false;
         this.isScaling = false;
         this.prevX = 0;
@@ -70,7 +70,7 @@ class MainScene extends Phaser.Scene {
             if(p.event.touches?.length>=2){
                 const[t1,t2]=p.event.touches;
                 const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.mesh.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,3));
+                this.mesh.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),1,3));
             }else if(this.isDragging){
                 const dx=p.x-this.prevX, dy=p.y-this.prevY;
                 this.mesh.modelRotation.y += dx*this.rotSpeed;
