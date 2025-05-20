@@ -24,8 +24,8 @@
 class MainScene extends Phaser.Scene {
     constructor(){
         super();
-        this.rotSpeed = isTelegram ? 0.005 : 0.01;
-        this.scaleFactor = isTelegram ? 0.0005 : 0.001;
+        this.rotSpeed = isTelegram ? 0.005 : 0.02;
+        this.scaleFactor = isTelegram ? 0.0005 : 0.005;
         this.isDragging = false;
         this.isScaling = false;
         this.prevX = 0;
