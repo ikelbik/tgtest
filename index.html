@@ -47,30 +47,26 @@ class MainScene extends Phaser.Scene {
             Telegram.WebApp.expand();
         }
 
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+        const {width, height} = this.cameras.main;
+        this.add.image(width/2, height/2, 'bg');
         
-        // Создаем родительский контейнер для стопки монет
-        // Создаем родительский контейнер с правильным позиционированием
-        this.coinStack = this.add.mesh(
-            this.cameras.main.centerX, 
-            this.cameras.main.centerY, 
-            'texture'
-        ).setDepth(1);
+        // Создаем контейнер для стопки монет
+        this.coinStack = this.add.mesh(width/2, height/2);
         
-            // Создаем 10 монет с учетом правильного позиционирования
+        // Создаем 10 монет с смещением
         for(let i = 0; i < 10; i++) {
             const coin = this.add.mesh(0, 0, 'texture')
                 .addVerticesFromObj('skull', 0.1)
                 .panZ(7 + i * 0.5)
                 .panY(i * 0.3)
-                .setDepth(i); // Устанавливаем глубину для правильного отображения
+                .setDepth(i);
             
             coin.modelRotation.y += 0.5;
             this.coinStack.add(coin);
         }
 
-        // Настраиваем интерактивную область с учетом стопки
-        const interactiveSize = 400 * Math.max(this.coinStack.scaleX, 1);
+        // Настройка интерактивной области
+        const interactiveSize = 400;
         this.coinStack.setInteractive(
             new Phaser.Geom.Rectangle(
                 -interactiveSize/2, 
@@ -81,32 +77,59 @@ class MainScene extends Phaser.Scene {
             Phaser.Geom.Rectangle.Contains
         );
 
-        this.input.on('pointermove',p=>{
-            if(!p.isDown) return;
-            if(p.event.touches?.length>=2){
-                const[t1,t2]=p.event.touches;
-                const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.coinStack.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,10));
-            }else if(this.isDragging){
-                const dx=p.x-this.prevX, dy=p.y-this.prevY;
-                this.coinStack.modelRotation.y += dx*this.rotSpeed;
-                this.coinStack.modelRotation.x += dy*this.rotSpeed;
-                [this.prevX,this.prevY]=[p.x,p.y];
+        // Обработчики событий
+        this.coinStack.on('pointerdown', (p) => {
+            if(p.event.touches?.length >= 2){
+                const [t1, t2] = p.event.touches;
+                this.initDist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+                this.initScale = this.coinStack.scaleX;
+                this.isScaling = true;
+            } else {
+                this.isDragging = true;
+                [this.prevX, this.prevY] = [p.x, p.y];
             }
         });
 
-        this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
-        
-        this.input.on('wheel',(_,__,___,dy)=>{
-            this.coinStack.setScale(Phaser.Math.Clamp(this.coinStack.scaleX+dy*-this.scaleFactor,0.3,10));
+        this.input.on('pointermove', (p) => {
+            if(!p.isDown) return;
+            
+            if(p.event.touches?.length >= 2){
+                const [t1, t2] = p.event.touches;
+                const dist = Math.hypot(t1.clientX - t2.clientX, t1.clientY - t2.clientY);
+                const newScale = Phaser.Math.Clamp(this.initScale * (dist / this.initDist), 0.3, 10);
+                this.coinStack.setScale(newScale);
+            } else if(this.isDragging) {
+                const dx = p.x - this.prevX;
+                const dy = p.y - this.prevY;
+                this.coinStack.modelRotation.y += dx * this.rotSpeed;
+                this.coinStack.modelRotation.x += dy * this.rotSpeed;
+                [this.prevX, this.prevY] = [p.x, p.y];
+            }
         });
 
-        this.scale.on('resize',s=>{
-            this.cameras.main.setSize(s.width,s.height);
-            this.coinStack.setPosition(s.width/2,s.height/2);
+        this.input.on('pointerup', () => {
+            this.isDragging = false;
+            this.isScaling = false;
         });
 
-        if(this.sys.game.device.input.touch) this.input.addTouchLock();
+        this.input.on('wheel', (_, __, ___, dy) => {
+            const newScale = Phaser.Math.Clamp(
+                this.coinStack.scaleX + dy * -this.scaleFactor, 
+                0.3, 
+                10
+            );
+            this.coinStack.setScale(newScale);
+        });
+
+        // Обработчик изменения размера экрана
+        this.scale.on('resize', (gameSize) => {
+            this.cameras.main.setSize(gameSize.width, gameSize.height);
+            this.coinStack.setPosition(gameSize.width/2, gameSize.height/2);
+        });
+
+        if(this.sys.game.device.input.touch) {
+            this.input.addTouchLock();
+        }
     }
 }
 
@@ -116,15 +139,32 @@ const config = {
     height: window.innerHeight,
     parent: 'game',
     scene: MainScene,
-    scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-    input: { activePointers:3, touch:{capture:true} },
-    fps: { target:60, smoothStep:true },
-    render: { antialiasGL:false }
+    scale: { 
+        mode: Phaser.Scale.RESIZE, 
+        autoCenter: Phaser.Scale.CENTER_BOTH 
+    },
+    input: { 
+        activePointers: 3,
+        touch: { capture: true } 
+    },
+    fps: { 
+        target: 60,
+        smoothStep: true 
+    },
+    render: { 
+        antialiasGL: false 
+    }
 };
 
-new Phaser.Game(config);
-window.addEventListener('resize',()=>game.scale.resize(window.innerWidth,window.innerHeight));
-document.addEventListener('contextmenu',e=>e.preventDefault());
+const game = new Phaser.Game(config);
+
+window.addEventListener('resize', () => {
+    game.scale.resize(window.innerWidth, window.innerHeight);
+});
+
+document.addEventListener('contextmenu', (e) => {
+    e.preventDefault();
+});
 </script>
 </body>
 </html>
