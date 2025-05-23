@@ -29,6 +29,8 @@
                 this.scaleFactor = 0.001;
                 this.isDragging = false;
             }
+			
+
 
             preload() {
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
@@ -81,17 +83,37 @@
 
         }
 
-        const config = {
-            type: Phaser.WEBGL,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            parent: 'game',
-            scene: MainScene,
-            scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-            input: { activePointers: 2 },
-            fps: { target: 60, smoothStep: true },
-            render: { antialiasGL: false }
-        };
+const config = {
+    type: Phaser.WEBGL,
+    width: window.innerWidth,
+    height: window.innerHeight,
+    parent: 'game',
+    scene: MainScene,
+    // Добавляем здесь настройки камеры ▼
+    cameras: {
+        default: {
+            type: 'OrthographicCamera',
+            zoom: 1.5, // Оптимальный зум для демонстрации
+            near: 0.1,
+            far: 1000
+        }
+    },
+
+    scale: { 
+        mode: Phaser.Scale.RESIZE, 
+        autoCenter: Phaser.Scale.CENTER_BOTH 
+    },
+    input: { 
+        activePointers: 2 
+    },
+    fps: { 
+        target: 60, 
+        smoothStep: true 
+    },
+    render: { 
+        antialiasGL: true 
+    }
+};
 
         const game = new Phaser.Game(config);
         window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
