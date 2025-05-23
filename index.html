@@ -52,7 +52,7 @@ class MainScene extends Phaser.Scene {
         this.mesh.addVerticesFromObj('skull',0.1);
 		coin.panX(this.cameras.main.centerX);
 		coin.panY(this.cameras.main.centerX);
-		coin.panZ(7);
+		coin.panZ(-7);
 		this.mesh.modelRotation.x += 0.5;
 
         
@@ -106,8 +106,6 @@ const config = {
     parent: 'game',
     scene: MainScene,
 	    type: Phaser.WEBGL,
-    width: 800,
-    height: 600,
     parent: 'game',
     scene: MainScene,
     render: {
