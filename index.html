@@ -48,7 +48,7 @@
                 // Создаем стопку из 7 монет
                 const stackHeight = 7;
                 const zSpacing = 0.25;
-                const yOffset = 0.07;
+                const yOffset = 0.1;
                 
                 for (let i = 0; i < stackHeight; i++) {
                     const coin = this.add.mesh(
@@ -58,8 +58,8 @@
                     );
                     
                     coin.addVerticesFromObj('coin', 0.1)
-                        .panZ(5 + i * zSpacing)
-                        .modelRotation.y += Phaser.Math.FloatBetween(0, 1.28);
+                        .panZ(7)
+                        .modelRotation.y += Phaser.Math.FloatBetween(0, 5.28);
                     
                     this.coins.push(coin);
                 }
