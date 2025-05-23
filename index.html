@@ -66,8 +66,8 @@ class MainScene extends Phaser.Scene {
         if (!pointer.isDown) return;
         
         //this.mesh.resetTransform();
-        this.mesh.panX(pointer.deltaX * 0.1);
-        this.mesh.panY(pointer.deltaY * 0.1);
+        this.mesh.panX(pointer.x);
+        this.mesh.panY(pointer.y);
         this.mesh.modelRotation.y += pointer.deltaX * 0.01;
     });
 		
