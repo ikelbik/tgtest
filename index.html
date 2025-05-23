@@ -33,8 +33,9 @@
                 this.scaleFactor = 0.001;
                 
                 // Физические параметры
-                this.gravity = 0.8;
+                this.gravity = 0.7;
                 this.bounceDamping = 0.6;
+				this.minHoldTime = 300;
                 this.maxHoldTime = 800; // Максимальное время удержания в мс
                 this.maxJumpForce = 25;  // Максимальная сила прыжка
                 
@@ -81,7 +82,7 @@
                 this.input.on('pointerup', () => {
                     if(this.isHolding && !this.isJumping) {
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-                        if (holdDuration >= 200){
+                        if (holdDuration >= this.minHoldTime){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
                         this.isJumping = true;
                         this.isHolding = false;
