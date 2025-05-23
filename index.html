@@ -53,14 +53,14 @@
                 for (let i = 0; i < stackHeight; i++) {
                     const coin = this.add.mesh(
                         centerX,
-                        centerY - i * yOffset * 100,
+                        centerY - i * yOffset * 10,
                         'texture'
                     );
                     
                     coin.addVerticesFromObj('coin', 0.1)
                         .panZ(5 + i * zSpacing)
-                        .setScale(0.8)
-                        .modelRotation.y += Phaser.Math.FloatBetween(0, 6.28);
+                        .setScale(1)
+                        .modelRotation.y += Phaser.Math.FloatBetween(0, 1.28);
                     
                     this.coins.push(coin);
                 }
