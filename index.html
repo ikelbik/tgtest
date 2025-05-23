@@ -1,8 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
-    <link rel="manifest" href="/app-manifest.json">
+	<meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+	<link rel="manifest" href="/app-manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
@@ -18,8 +18,8 @@
 <script>
   const isTelegram = /Telegram/.test(navigator.userAgent);
   const tg = window.Telegram.WebApp;
-  tg.expand();
-  tg.MainButton.show();
+  tg.expand(); // Раскрыть на весь экран
+  tg.MainButton.show(); // Показать основную кнопку
   
 class MainScene extends Phaser.Scene {
     constructor(){
@@ -49,27 +49,20 @@ class MainScene extends Phaser.Scene {
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         
-        // Создаем родительский контейнер для стопки монет
-        this.coinStack = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY);
+		 for(let i = 0; i < 10; i++) {
+		this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         
-        // Создаем 10 монет в стопке
-        for(let i = 0; i < 10; i++) {
-            const coin = this.add.mesh(0, 0, 'texture');
-            this.coin.addVerticesFromObj('skull', 0.1)
+		this.mesh.addVerticesFromObj('skull', 0.1)
                 .panZ(7 + i * 0.5)  // Смещаем каждую монету по оси Z
-                .panY(i * 0.3);     // Добавляем вертикальное смещение
-            coin.modelRotation.y += 0.5;
-            this.coinStack.add(coin);
+                .panY(i * 0.3);    
         }
-
-        // Настраиваем интерактивность для всей стопки
-        this.coinStack.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
+        this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
         
-        this.coinStack.on('pointerdown',p=>{
+        this.mesh.on('pointerdown',p=>{
             if(p.event.touches?.length>=2){
                 const[t1,t2]=p.event.touches;
                 this.initDist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.initScale=this.coinStack.scaleX;
+                this.initScale=this.mesh.scaleX;
                 this.isScaling=true;
             }else{
                 this.isDragging=true;
@@ -82,11 +75,11 @@ class MainScene extends Phaser.Scene {
             if(p.event.touches?.length>=2){
                 const[t1,t2]=p.event.touches;
                 const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.coinStack.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,10));
+                this.mesh.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,10));
             }else if(this.isDragging){
                 const dx=p.x-this.prevX, dy=p.y-this.prevY;
-                this.coinStack.modelRotation.y += dx*this.rotSpeed;
-                this.coinStack.modelRotation.x += dy*this.rotSpeed;
+                this.mesh.modelRotation.y += dx*this.rotSpeed;
+                this.mesh.modelRotation.x += dy*this.rotSpeed;
                 [this.prevX,this.prevY]=[p.x,p.y];
             }
         });
@@ -94,12 +87,12 @@ class MainScene extends Phaser.Scene {
         this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
         
         this.input.on('wheel',(_,__,___,dy)=>{
-            this.coinStack.setScale(Phaser.Math.Clamp(this.coinStack.scaleX+dy*-this.scaleFactor,0.3,10));
+            this.mesh.setScale(Phaser.Math.Clamp(this.mesh.scaleX+dy*-this.scaleFactor,0.3,10));
         });
 
         this.scale.on('resize',s=>{
             this.cameras.main.setSize(s.width,s.height);
-            this.coinStack.setPosition(s.width/2,s.height/2);
+            this.mesh.setPosition(s.width/2,s.height/2);
         });
 
         if(this.sys.game.device.input.touch) this.input.addTouchLock();
