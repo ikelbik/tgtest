@@ -64,7 +64,7 @@
         this.bounceSound.volume = this.soundVolume;
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
+        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY+100, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.x +=0.6;
 		this.mesh.setScale(2);
         
