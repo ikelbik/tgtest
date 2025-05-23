@@ -28,10 +28,23 @@
                 this.rotSpeed = isTelegram ? 0.005 : 0.01;
                 this.scaleFactor = 0.001;
                 this.isDragging = false;
+                // Настройки вращения и масштаба
+                this.rotSpeed = 0.005;
+                this.scaleFactor = 0.001;
+                
+                // Физические параметры
+                this.gravity = 0.8;
+                this.bounceDamping = 0.6;
+                this.maxHoldTime = 800; // Максимальное время удержания в мс
+                this.maxJumpForce = 25;  // Максимальная сила прыжка
+                
+                // Состояние объекта
+                this.isHolding = false;
+                this.isJumping = false;
+                this.velocityY = 0;
+                this.currentSpin = 0;				
             }
-			
-
-
+		
             preload() {
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 this.load.image('bg', 'assets/wtf.png');
@@ -47,7 +60,7 @@
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
-        this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
+        this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.x +=0.6;
         
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400), Phaser.Geom.Rectangle.Contains);
                 
