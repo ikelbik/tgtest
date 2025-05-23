@@ -44,8 +44,8 @@
     
     // Параметры стопки
     const stackHeight = 7;
-    const yOffset = 0.5; // Смещение в пикселях между монетами
-    const baseScale = 0.9; // Базовый масштаб для всех монет
+    const yOffset = 0.05; // Смещение в пикселях между монетами
+    const baseScale = 0.5; // Базовый масштаб для всех монет
 
     for (let i = 0; i < stackHeight; i++) {
         const coin = this.add.mesh(
@@ -58,7 +58,7 @@
         coin.addVerticesFromObj('coin', 0.1)
             .resetTransform() // Сброс текущих трансформаций
             .setScale(baseScale) // Фиксированный масштаб
-            .panZ(10) // Фиксированная позиция по Z
+            .panZ(7) // Фиксированная позиция по Z
             .modelRotation.y = Phaser.Math.FloatBetween(0, Math.PI*2);
         
         this.coins.push(coin);
