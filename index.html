@@ -100,14 +100,22 @@ const config = {
     height: window.innerHeight,
     parent: 'game',
     scene: MainScene,
-	cameras: {
+	    type: Phaser.WEBGL,
+    width: 800,
+    height: 600,
+    parent: 'game',
+    scene: MainScene,
+    render: {
+        antialias: true,
+        antialiasGL: true,
+        powerPreference: "high-performance"
+    },
+    cameras: {
         default: {
-        type: 'OrthographicCamera',
-        zoom: 1,
-        near: -100, // Отрицательное near
-        far: 100,
-        multisampleLevel: 4, // MSAA уровень (2, 4, 8, 16)
-        antialias: true
+            type: 'OrthographicCamera',
+            zoom: 1,
+            multisampleLevel: 4,
+            antialias: true
         }
     },
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
