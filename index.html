@@ -81,10 +81,12 @@
                 this.input.on('pointerup', () => {
                     if(this.isHolding && !this.isJumping) {
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-                        this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
+                        if (holdDuration >= 2){
+						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
                         this.isJumping = true;
                         this.isHolding = false;
                         this.currentSpin = 0.4; // Начальная скорость вращения
+						}
                     }
                 });
             }
