@@ -1,45 +1,47 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
-    <link rel="manifest" href="/app-manifest.json">
+	<meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+	<link rel="manifest" href="/app-manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
-        body { background: #000022 }
+        *{margin:0;padding:0;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:none}
+        body{background:#000022}
     </style>
 </head>
 <body>
     <div id="game"></div>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        const isTelegram = /Telegram/.test(navigator.userAgent);
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.MainButton.show();
+<script src="https://telegram.org/js/telegram-web-app.js"></script>
+<script>
+  const isTelegram = /Telegram/.test(navigator.userAgent);
+  const tg = window.Telegram.WebApp;
+  tg.expand(); // Раскрыть на весь экран
+  tg.MainButton.show(); // Показать основную кнопку
+  
+class MainScene extends Phaser.Scene {
+    constructor(){
+        super();
+        this.rotSpeed = isTelegram ? 0.005 : 0.01;
+        this.scaleFactor = isTelegram ? 0.0005 : 0.001;
+        this.isDragging = false;
+        this.isScaling = false;
+        this.prevX = 0;
+        this.prevY = 0;
+        this.initDist = 0;
+        this.initScale = 1;
+    }
 
-        class MainScene extends Phaser.Scene {
-            constructor() {
-                super();
-                this.coins = [];
-                this.rotSpeed = isTelegram ? 0.005 : 0.01;
-                this.scaleFactor = 0.001;
-                this.isDragging = false;
-            }
-			
+    preload(){
+        this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+        this.load.image('bg','assets/wtf.png');
+        this.load.obj('skull','assets/fantom.obj');
+        this.load.image('texture','assets/coin_txt.png');
+    }
 
-
-            preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                this.load.image('bg', 'assets/wtf.png');
-                this.load.obj('coin', 'assets/fantom.obj');
-                this.load.image('texture', 'assets/coin_txt.png');
-            }
-
- create(){
+    create(){
         if(isTelegram && window.TelegramWebViewProxy){
             TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
             Telegram.WebApp.expand();
@@ -90,8 +92,7 @@
 
         if(this.sys.game.device.input.touch) this.input.addTouchLock();
     }
-
-        }
+}
 
 const config = {
     type: Phaser.WEBGL,
@@ -99,36 +100,15 @@ const config = {
     height: window.innerHeight,
     parent: 'game',
     scene: MainScene,
-    // Добавляем здесь настройки камеры ▼
-    cameras: {
-        default: {
-        type: 'OrthographicCamera',
-        zoom: 1,
-        near: -1, // Отрицательное near
-        far: 10,
-        position: { x:0, y:0, z:100 }
-        }
-    },
-
-    scale: { 
-        mode: Phaser.Scale.RESIZE, 
-        autoCenter: Phaser.Scale.CENTER_BOTH 
-    },
-    input: { 
-        activePointers: 2 
-    },
-    fps: { 
-        target: 60, 
-        smoothStep: true 
-    },
-    render: { 
-        antialiasGL: true 
-    }
+    scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
+    input: { activePointers:3, touch:{capture:true} },
+    fps: { target:60, smoothStep:true },
+    render: { antialiasGL:false }
 };
 
-        const game = new Phaser.Game(config);
-        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
-        document.addEventListener('contextmenu', e => e.preventDefault());
-    </script>
+new Phaser.Game(config);
+window.addEventListener('resize',()=>game.scale.resize(window.innerWidth,window.innerHeight));
+document.addEventListener('contextmenu',e=>e.preventDefault());
+</script>
 </body>
 </html>
