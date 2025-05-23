@@ -78,7 +78,7 @@
                         this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
                         this.isJumping = true;
                         this.isHolding = false;
-                        this.currentSpin = 0.2; // Начальная скорость вращения
+                        this.currentSpin = 0.4; // Начальная скорость вращения
                     }
                 });
             }
@@ -96,8 +96,8 @@
                 
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-                this.mesh.modelRotation.y += this.currentSpin;
-				this.mesh.modelRotation.z += this.currentSpin;
+                this.mesh.modelRotation.x += this.currentSpin;
+				//this.mesh.modelRotation.z += this.currentSpin;
 
                 // Обработка столкновения с "землей"
                 if(this.mesh.y >= this.cameras.main.centerY) {
