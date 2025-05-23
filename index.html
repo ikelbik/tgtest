@@ -40,45 +40,46 @@
             }
 
             create() {
-                if (isTelegram && window.TelegramWebViewProxy) {
-                    TelegramWebViewProxy.onEvent('back_button', () => this.scene.stop());
-                }
+    const { centerX, centerY } = this.cameras.main;
+    
+    // Параметры стопки
+    const stackHeight = 7;
+    const yOffset = 15; // Смещение в пикселях между монетами
+    const baseScale = 0.5; // Базовый масштаб для всех монет
 
-                const { centerX, centerY } = this.cameras.main;
-                this.add.image(centerX, centerY, 'bg');
-                
-                // Создаем стопку из 7 монет
-                const stackHeight = 7;
-                const zSpacing = 0.25;
-                const yOffset = 0.07;
-                
-                for (let i = 0; i < stackHeight; i++) {
-                    const coin = this.add.mesh(
-                        centerX - i * yOffset * 100,
-                        centerY, //- i * yOffset * 100,
-                        'texture'
-                    );
-                    
-                    coin.addVerticesFromObj('coin', 0.1)
-                        .panZ(5 + i * zSpacing)
-						.setScale(0.8)
-                        .modelRotation.y += Phaser.Math.FloatBetween(0, 6.28);
-                    
-                    this.coins.push(coin);
-                }
+    for (let i = 0; i < stackHeight; i++) {
+        const coin = this.add.mesh(
+            centerX, // X позиция (центр экрана)
+            centerY - i * yOffset, // Y позиция со смещением
+            'texture'
+        );
+        
+        // Инициализация меша
+        coin.addVerticesFromObj('coin', 0.1)
+            .resetTransform() // Сброс текущих трансформаций
+            .setScale(baseScale) // Фиксированный масштаб
+            .panZ(10) // Фиксированная позиция по Z
+            .modelRotation.y = Phaser.Math.FloatBetween(0, Math.PI*2);
+        
+        this.coins.push(coin);
+    }
 
-                // Настройка управления
-                this.input.on('pointerdown', () => this.isDragging = true);
-                this.input.on('pointerup', () => this.isDragging = false);
-                this.input.on('pointermove', (ptr) => {
-                    if (this.isDragging && ptr.isDown) {
-                        this.coins.forEach(coin => {
-                            coin.modelRotation.y += ptr.velocity.x * this.rotSpeed;
-                            coin.modelRotation.x += ptr.velocity.y * this.rotSpeed;
-                        });
-                    }
-                });
-            }
+    // Обработчик перемещения
+    this.input.on('pointermove', (pointer) => {
+        if (!pointer.isDown) return;
+        
+        const deltaX = pointer.deltaX * 0.1;
+        const deltaY = pointer.deltaY * 0.1;
+        
+        this.coins.forEach(coin => {
+            coin.resetTransform()
+                .panX(deltaX)
+                .panY(deltaY)
+                .modelRotation.y += deltaX * 0.01
+                .setScale(baseScale); // Принудительная установка масштаба
+        });
+    });
+}
 
 
         }
@@ -92,10 +93,11 @@ const config = {
     // Добавляем здесь настройки камеры ▼
     cameras: {
         default: {
-            type: 'OrthographicCamera',
-            zoom: 1.5, // Оптимальный зум для демонстрации
-            near: 0.1,
-            far: 1000
+        type: 'OrthographicCamera',
+        zoom: 1,
+        near: -1000, // Отрицательное near
+        far: 1000,
+        position: { x:0, y:0, z:100 }
         }
     },
 
