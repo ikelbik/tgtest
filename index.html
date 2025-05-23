@@ -106,8 +106,8 @@
 				//this.mesh.modelRotation.z += this.currentSpin;
 
                 // Обработка столкновения с "землей"
-                if(this.mesh.y >= this.cameras.main.centerY) {
-                    this.mesh.y = this.cameras.main.centerY;
+                if(this.mesh.y >= this.cameras.main.centerY+100) {
+                    this.mesh.y = this.cameras.main.centerY+100;
                     this.velocityY *= -this.bounceDamping;
 					
                     
@@ -122,7 +122,7 @@
 		     				this.mesh.modelRotation.x = 3.74;
 						}
                     }
-				if(this.mesh.y >= this.cameras.main.centerY) {
+				if(this.mesh.y >= this.cameras.main.centerY+100) {
                     // Воспроизводим звук только при достаточной силе удара
                     if(Math.abs(this.velocityY) > this.minImpactForSound) {
                         this.bounceSound.play({
