@@ -53,7 +53,7 @@ class MainScene extends Phaser.Scene {
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
 		//this.mesh.addVerticesFromObj('skull',0.1);
-		this.mesh.panX(this.cameras.main.centerX-0);
+		//this.mesh.panX(this.cameras.main.centerX-0);
 		//this.mesh.panY(this.cameras.main.centerY);
 		//this.mesh.panZ(7);
 		this.mesh.modelRotation.x += 0.5;
@@ -61,6 +61,16 @@ class MainScene extends Phaser.Scene {
         
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
         
+		    // Плавное перемещение
+    this.input.on('pointermove', (pointer) => {
+        if (!pointer.isDown) return;
+        
+        coin.resetTransform();
+        coin.panX(pointer.deltaX * 0.1);
+        coin.panY(pointer.deltaY * 0.1);
+        coin.modelRotation.y += pointer.deltaX * 0.01;
+    });
+		
         this.mesh.on('pointerdown',p=>{
             if(p.event.touches?.length>=2){
                 const[t1,t2]=p.event.touches;
@@ -72,7 +82,7 @@ class MainScene extends Phaser.Scene {
                 [this.prevX,this.prevY]=[p.x,p.y];
             }
         });
-
+/*
         this.input.on('pointermove',p=>{
             if(!p.isDown) return;
             if(p.event.touches?.length>=2){
@@ -86,7 +96,7 @@ class MainScene extends Phaser.Scene {
                 [this.prevX,this.prevY]=[p.x,p.y];
             }
         });
-
+*/
         this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
         
         this.input.on('wheel',(_,__,___,dy)=>{
