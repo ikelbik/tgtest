@@ -1,47 +1,45 @@
 <!DOCTYPE html>
 <html>
 <head>
-	<meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
-	<link rel="manifest" href="/app-manifest.json">
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+    <link rel="manifest" href="/app-manifest.json">
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        *{margin:0;padding:0;overflow:hidden;-webkit-tap-highlight-color:transparent;touch-action:none}
-        body{background:#000022}
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
     </style>
 </head>
 <body>
     <div id="game"></div>
-<script src="https://telegram.org/js/telegram-web-app.js"></script>
-<script>
-  const isTelegram = /Telegram/.test(navigator.userAgent);
-  const tg = window.Telegram.WebApp;
-  tg.expand(); // Раскрыть на весь экран
-  tg.MainButton.show(); // Показать основную кнопку
-  
-class MainScene extends Phaser.Scene {
-    constructor(){
-        super();
-        this.rotSpeed = isTelegram ? 0.005 : 0.01;
-        this.scaleFactor = isTelegram ? 0.0005 : 0.001;
-        this.isDragging = false;
-        this.isScaling = false;
-        this.prevX = 0;
-        this.prevY = 0;
-        this.initDist = 0;
-        this.initScale = 1;
-    }
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const isTelegram = /Telegram/.test(navigator.userAgent);
+        const tg = window.Telegram.WebApp;
+        tg.expand();
+        tg.MainButton.show();
 
-    preload(){
-        this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-        this.load.image('bg','assets/wtf.png');
-        this.load.obj('skull','assets/fantom.obj');
-        this.load.image('texture','assets/coin_txt.png');
-    }
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super();
+                this.coins = [];
+                this.rotSpeed = isTelegram ? 0.005 : 0.01;
+                this.scaleFactor = 0.001;
+                this.isDragging = false;
+            }
+			
 
-    create(){
+
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                this.load.image('bg', 'assets/wtf.png');
+                this.load.obj('skull', 'assets/fantom.obj');
+                this.load.image('texture', 'assets/coin_txt.png');
+            }
+
+ create(){
         if(isTelegram && window.TelegramWebViewProxy){
             TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
             Telegram.WebApp.expand();
@@ -49,69 +47,58 @@ class MainScene extends Phaser.Scene {
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
-		//this.mesh.addVerticesFromObj('skull',0.1);
-		//this.mesh.panX(this.cameras.main.centerX-0);
-		//this.mesh.panY(this.cameras.main.centerY);
-		//this.mesh.panZ(7);
-		this.mesh.modelRotation.x += 0.5;
+        
+        this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400), Phaser.Geom.Rectangle.Contains);
+                
+                // Обработчики событий
+                this.mesh.on('pointerdown', () => {
+                    if(!this.isJumping) {
+                        this.isHolding = true;
+                        this.holdStartTime = this.time.now;
+                    }
+                });
 
-        
-        this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
-        
-		    // Плавное перемещение
-    this.input.on('pointermove', (pointer) => {
-        if (!pointer.isDown) return;
-        
-        //this.mesh.resetTransform();
-        //this.mesh.panX(pointer.x);
-        //this.mesh.panY(pointer.y);
-		 this.mesh.setPosition(pointer.x,pointer.y);
-        this.mesh.modelRotation.y += pointer.deltaX * 0.01;
-    });
-		
-        this.mesh.on('pointerdown',p=>{
-            if(p.event.touches?.length>=2){
-                const[t1,t2]=p.event.touches;
-                this.initDist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.initScale=this.mesh.scaleX;
-                this.isScaling=true;
-            }else{
-                this.isDragging=true;
-                [this.prevX,this.prevY]=[p.x,p.y];
+                this.input.on('pointerup', () => {
+                    if(this.isHolding && !this.isJumping) {
+                        const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
+                        this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
+                        this.isJumping = true;
+                        this.isHolding = false;
+                        this.currentSpin = 0.2; // Начальная скорость вращения
+                    }
+                });
             }
-        });
-/*
-        this.input.on('pointermove',p=>{
-            if(!p.isDown) return;
-            if(p.event.touches?.length>=2){
-                const[t1,t2]=p.event.touches;
-                const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.mesh.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,10));
-            }else if(this.isDragging){
-                const dx=p.x-this.prevX, dy=p.y-this.prevY;
-                this.mesh.modelRotation.y += dx*this.rotSpeed;
-                this.mesh.modelRotation.x += dy*this.rotSpeed;
-                [this.prevX,this.prevY]=[p.x,p.y];
+
+            update(time, delta) {
+                // Нормальное вращение когда объект в покое
+                if(!this.isJumping) {
+                    this.mesh.modelRotation.y += this.rotSpeed;
+                    return;
+                }
+
+                // Физика прыжка
+                this.velocityY += this.gravity;
+                this.mesh.y += this.velocityY;
+                
+                // Вращение в полете
+                this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
+                this.mesh.modelRotation.y += this.currentSpin;
+
+                // Обработка столкновения с "землей"
+                if(this.mesh.y >= this.cameras.main.centerY) {
+                    this.mesh.y = this.cameras.main.centerY;
+                    this.velocityY *= -this.bounceDamping;
+                    
+                    // Затухание при маленькой скорости
+                    if(Math.abs(this.velocityY) < 2) {
+                        this.isJumping = false;
+                        this.velocityY = 0;
+                        this.currentSpin = 0;
+                    }
+                }
             }
-        });
-*/
-        this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
-        
-        this.input.on('wheel',(_,__,___,dy)=>{
-            this.mesh.setScale(Phaser.Math.Clamp(this.mesh.scaleX+dy*-this.scaleFactor,0.3,10));
-        });
-
-        this.scale.on('resize',s=>{
-            this.cameras.main.setSize(s.width,s.height);
-            this.mesh.setPosition(s.width/2,s.height/2);
-        });
-
-        if(this.sys.game.device.input.touch) this.input.addTouchLock();
-    }
-}
+        }
 
 const config = {
     type: Phaser.WEBGL,
@@ -119,31 +106,36 @@ const config = {
     height: window.innerHeight,
     parent: 'game',
     scene: MainScene,
-	    type: Phaser.WEBGL,
-    parent: 'game',
-    scene: MainScene,
-    render: {
-        antialias: true,
-        antialiasGL: true,
-        powerPreference: "high-performance"
-    },
+    // Добавляем здесь настройки камеры ▼
     cameras: {
         default: {
-          //  type: 'OrthographicCamera',
-            zoom: 1,
-            multisampleLevel: 4,
-            antialias: true
+        type: 'OrthographicCamera',
+        zoom: 1,
+        near: -1000, // Отрицательное near
+        far: 1000,
+        position: { x:0, y:0, z:100 }
         }
     },
-    scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
-    input: { activePointers:3, touch:{capture:true} },
-    fps: { target:60, smoothStep:true },
 
+    scale: { 
+        mode: Phaser.Scale.RESIZE, 
+        autoCenter: Phaser.Scale.CENTER_BOTH 
+    },
+    input: { 
+        activePointers: 2 
+    },
+    fps: { 
+        target: 60, 
+        smoothStep: true 
+    },
+    render: { 
+        antialiasGL: true 
+    }
 };
 
-new Phaser.Game(config);
-window.addEventListener('resize',()=>game.scale.resize(window.innerWidth,window.innerHeight));
-document.addEventListener('contextmenu',e=>e.preventDefault());
-</script>
+        const game = new Phaser.Game(config);
+        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
 </body>
 </html>
