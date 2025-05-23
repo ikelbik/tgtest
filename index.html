@@ -54,7 +54,7 @@
                 
                 for (let i = 0; i < stackHeight; i++) {
                     const coin = this.add.mesh(
-                        centerX,
+                        centerX - i * yOffset * 100,
                         centerY, //- i * yOffset * 100,
                         'texture'
                     );
