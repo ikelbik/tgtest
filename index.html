@@ -39,33 +39,57 @@
                 this.load.image('texture', 'assets/coin_txt.png');
             }
 
-            create() {
-    const { centerX, centerY } = this.cameras.main;
-    
-    // Параметры стопки
-    const stackHeight = 7;
-    const yOffset = 0.05; // Смещение в пикселях между монетами
-    const baseScale = 0.5; // Базовый масштаб для всех монет
+ create(){
+        if(isTelegram && window.TelegramWebViewProxy){
+            TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
+            Telegram.WebApp.expand();
+        }
 
-    for (let i = 0; i < stackHeight; i++) {
-        const coin = this.add.mesh(
-            centerX, // X позиция (центр экрана)
-            centerY - i * yOffset, // Y позиция со смещением
-            'texture'
-        );
+        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
+        this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
         
-        // Инициализация меша
-        coin.addVerticesFromObj('coin', 0.1)
-            .resetTransform() // Сброс текущих трансформаций
-            .setScale(baseScale) // Фиксированный масштаб
-            .panZ(7) // Фиксированная позиция по Z
-            .modelRotation.y = Phaser.Math.FloatBetween(0, Math.PI*2);
+        this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
         
-        this.coins.push(coin);
+        this.mesh.on('pointerdown',p=>{
+            if(p.event.touches?.length>=2){
+                const[t1,t2]=p.event.touches;
+                this.initDist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
+                this.initScale=this.mesh.scaleX;
+                this.isScaling=true;
+            }else{
+                this.isDragging=true;
+                [this.prevX,this.prevY]=[p.x,p.y];
+            }
+        });
+
+        this.input.on('pointermove',p=>{
+            if(!p.isDown) return;
+            if(p.event.touches?.length>=2){
+                const[t1,t2]=p.event.touches;
+                const dist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
+                this.mesh.setScale(Phaser.Math.Clamp(this.initScale*(dist/this.initDist),0.3,10));
+            }else if(this.isDragging){
+                const dx=p.x-this.prevX, dy=p.y-this.prevY;
+                this.mesh.modelRotation.y += dx*this.rotSpeed;
+                this.mesh.modelRotation.x += dy*this.rotSpeed;
+                [this.prevX,this.prevY]=[p.x,p.y];
+            }
+        });
+
+        this.input.on('pointerup',()=>this.isDragging=this.isScaling=false);
+        
+        this.input.on('wheel',(_,__,___,dy)=>{
+            this.mesh.setScale(Phaser.Math.Clamp(this.mesh.scaleX+dy*-this.scaleFactor,0.3,10));
+        });
+
+        this.scale.on('resize',s=>{
+            this.cameras.main.setSize(s.width,s.height);
+            this.mesh.setPosition(s.width/2,s.height/2);
+        });
+
+        if(this.sys.game.device.input.touch) this.input.addTouchLock();
     }
-
-}
-
 
         }
 
