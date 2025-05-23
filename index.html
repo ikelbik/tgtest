@@ -66,6 +66,7 @@
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.x +=0.6;
+		this.mesh.setScale(2);
         
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400), Phaser.Geom.Rectangle.Contains);
                 
@@ -115,7 +116,7 @@
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
-						this.mesh.modelRotation.y = 0.6
+						this.mesh.modelRotation.x = 0.6;
                     }
 				if(this.mesh.y >= this.cameras.main.centerY) {
                     // Воспроизводим звук только при достаточной силе удара
