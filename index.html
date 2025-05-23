@@ -50,31 +50,36 @@ class MainScene extends Phaser.Scene {
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         
         // Создаем родительский контейнер для стопки монет
-        this.coinStack = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY);
+        // Создаем родительский контейнер с правильным позиционированием
+        this.coinStack = this.add.mesh(
+            this.cameras.main.centerX, 
+            this.cameras.main.centerY, 
+            'texture'
+        ).setDepth(1);
         
-        // Создаем 10 монет в стопке
+            // Создаем 10 монет с учетом правильного позиционирования
         for(let i = 0; i < 10; i++) {
-            const coin = this.add.mesh(0, 0, 'texture');
-            coin.addVerticesFromObj('skull', 0.1)
-                .panZ(7 + i * 0.1)  // Смещаем каждую монету по оси Z
-                .modelRotation.y +=0.5;     // Добавляем вертикальное смещение
+            const coin = this.add.mesh(0, 0, 'texture')
+                .addVerticesFromObj('skull', 0.1)
+                .panZ(7 + i * 0.5)
+                .panY(i * 0.3)
+                .setDepth(i); // Устанавливаем глубину для правильного отображения
+            
+            coin.modelRotation.y += 0.5;
             this.coinStack.add(coin);
         }
 
-        // Настраиваем интерактивность для всей стопки
-        this.coinStack.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
-        
-        this.coinStack.on('pointerdown',p=>{
-            if(p.event.touches?.length>=2){
-                const[t1,t2]=p.event.touches;
-                this.initDist=Math.hypot(t1.clientX-t2.clientX,t1.clientY-t2.clientY);
-                this.initScale=this.coinStack.scaleX;
-                this.isScaling=true;
-            }else{
-                this.isDragging=true;
-                [this.prevX,this.prevY]=[p.x,p.y];
-            }
-        });
+        // Настраиваем интерактивную область с учетом стопки
+        const interactiveSize = 400 * Math.max(this.coinStack.scaleX, 1);
+        this.coinStack.setInteractive(
+            new Phaser.Geom.Rectangle(
+                -interactiveSize/2, 
+                -interactiveSize/2, 
+                interactiveSize, 
+                interactiveSize
+            ), 
+            Phaser.Geom.Rectangle.Contains
+        );
 
         this.input.on('pointermove',p=>{
             if(!p.isDown) return;
