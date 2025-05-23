@@ -65,10 +65,10 @@ class MainScene extends Phaser.Scene {
     this.input.on('pointermove', (pointer) => {
         if (!pointer.isDown) return;
         
-        coin.resetTransform();
-        coin.panX(pointer.deltaX * 0.1);
-        coin.panY(pointer.deltaY * 0.1);
-        coin.modelRotation.y += pointer.deltaX * 0.01;
+        this.mesh.resetTransform();
+        this.mesh.panX(pointer.deltaX * 0.1);
+        this.mesh.panY(pointer.deltaY * 0.1);
+        this.mesh.modelRotation.y += pointer.deltaX * 0.01;
     });
 		
         this.mesh.on('pointerdown',p=>{
