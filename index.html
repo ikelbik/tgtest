@@ -49,13 +49,10 @@ class MainScene extends Phaser.Scene {
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         
-		 for(let i = 0; i < 10; i++) {
 		this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         
-		this.mesh.addVerticesFromObj('skull', 0.1)
-                .panZ(7 + i * 0.5)  // Смещаем каждую монету по оси Z
-                .panY(i * 0.3);    
-        }
+		this.mesh.addVerticesFromObj('skull',0.1).panZ(8).modelRotation.y +=0.5;
+        
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
         
         this.mesh.on('pointerdown',p=>{
