@@ -49,11 +49,14 @@ class MainScene extends Phaser.Scene {
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
-        this.mesh.addVerticesFromObj('skull',0.1);
-		this.mesh.panX(this.cameras.main.centerX);
-		this.mesh.panY(this.cameras.main.centerY);
-		this.mesh.panZ(7);
-		this.mesh.modelRotation.x += 0.5;
+        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+        this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
+        this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
+		//this.mesh.addVerticesFromObj('skull',0.1);
+		//this.mesh.panX(this.cameras.main.centerX);
+		//this.mesh.panY(this.cameras.main.centerY);
+		//this.mesh.panZ(7);
+		//this.mesh.modelRotation.x += 0.5;
 
         
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400),Phaser.Geom.Rectangle.Contains);
@@ -105,12 +108,27 @@ const config = {
     height: window.innerHeight,
     parent: 'game',
     scene: MainScene,
+	    type: Phaser.WEBGL,
+    parent: 'game',
+    scene: MainScene,
+    render: {
+        antialias: true,
+        antialiasGL: true,
+        powerPreference: "high-performance"
+    },
+    cameras: {
+        default: {
+          //  type: 'OrthographicCamera',
+            zoom: 1,
+            multisampleLevel: 4,
+            antialias: true
+        }
+    },
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
     input: { activePointers:3, touch:{capture:true} },
     fps: { target:60, smoothStep:true },
     render: { antialiasGL:false }
 };
-
 
 new Phaser.Game(config);
 window.addEventListener('resize',()=>game.scale.resize(window.innerWidth,window.innerHeight));
