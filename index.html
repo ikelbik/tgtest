@@ -48,7 +48,7 @@
                 // Создаем стопку из 7 монет
                 const stackHeight = 7;
                 const zSpacing = 0.25;
-                const yOffset = 0.1;
+                const yOffset = 0.2;
                 
                 for (let i = 0; i < stackHeight; i++) {
                     const coin = this.add.mesh(
@@ -63,7 +63,27 @@
                     
                     this.coins.push(coin);
                 }
+			// Настройка управления
+                this.input.on('pointerdown', () => this.isDragging = true);
+                this.input.on('pointerup', () => this.isDragging = false);
+                this.input.on('pointermove', (ptr) => {
+                    if (this.isDragging && ptr.isDown) {
+                        this.coins.forEach(coin => {
+                            coin.modelRotation.y += ptr.velocity.x * this.rotSpeed;
+                            coin.modelRotation.x += ptr.velocity.y * this.rotSpeed;
+                        });
+                    }
+                });
+            }
 
+				update(time) {
+                // Плавная анимация стопки
+                this.coins.forEach((coin, i) => {
+                    coin.modelRotation.y += this.rotSpeed * (1 + i * 0.05);
+                    coin.modelRotation.x = Math.sin(time * 0.001 + i) * 0.05;
+                    coin.modelPosition.z = 5 + Math.cos(time * 0.001 + i) * 0.1;
+                });
+            }
                
             }
         }
