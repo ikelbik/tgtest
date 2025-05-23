@@ -42,7 +42,9 @@
                 this.isHolding = false;
                 this.isJumping = false;
                 this.velocityY = 0;
-                this.currentSpin = 0;				
+                this.currentSpin = 0;		
+				this.soundVolume = 0.6;
+                this.minImpactForSound = 3;
             }
 		
             preload() {
@@ -50,6 +52,7 @@
                 this.load.image('bg', 'assets/wtf.png');
                 this.load.obj('skull', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');				
             }
 
  create(){
@@ -57,6 +60,8 @@
             TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
             Telegram.WebApp.expand();
         }
+		this.bounceSound = this.sound.add('coinDrop');
+        this.bounceSound.volume = this.soundVolume;
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
@@ -103,6 +108,7 @@
                 if(this.mesh.y >= this.cameras.main.centerY) {
                     this.mesh.y = this.cameras.main.centerY;
                     this.velocityY *= -this.bounceDamping;
+					
                     
                     // Затухание при маленькой скорости
                     if(Math.abs(this.velocityY) < 2) {
@@ -110,6 +116,15 @@
                         this.velocityY = 0;
                         this.currentSpin = 0;
                     }
+				if(this.mesh.y >= this.cameras.main.centerY) {
+                    // Воспроизводим звук только при достаточной силе удара
+                    if(Math.abs(this.velocityY) > this.minImpactForSound) {
+                        this.bounceSound.play({
+                            volume: Phaser.Math.Clamp(Math.abs(this.velocityY)/this.maxJumpForce, 0.3, 1)
+                        });
+                    }	
+				}
+					
                 }
             }
         }
