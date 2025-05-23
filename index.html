@@ -55,7 +55,7 @@ class MainScene extends Phaser.Scene {
         // Создаем 10 монет в стопке
         for(let i = 0; i < 10; i++) {
             const coin = this.add.mesh(0, 0, 'texture');
-            coin.addVerticesFromObj('skull', 0.1)
+            this.coin.addVerticesFromObj('skull', 0.1)
                 .panZ(7 + i * 0.5)  // Смещаем каждую монету по оси Z
                 .panY(i * 0.3);     // Добавляем вертикальное смещение
             coin.modelRotation.y += 0.5;
