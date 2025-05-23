@@ -44,8 +44,8 @@
     
     // Параметры стопки
     const stackHeight = 7;
-    const yOffset = 15; // Смещение в пикселях между монетами
-    const baseScale = 0.5; // Базовый масштаб для всех монет
+    const yOffset = 1.5; // Смещение в пикселях между монетами
+    const baseScale = 0.9; // Базовый масштаб для всех монет
 
     for (let i = 0; i < stackHeight; i++) {
         const coin = this.add.mesh(
@@ -64,21 +64,6 @@
         this.coins.push(coin);
     }
 
-    // Обработчик перемещения
-    this.input.on('pointermove', (pointer) => {
-        if (!pointer.isDown) return;
-        
-        const deltaX = pointer.deltaX * 0.1;
-        const deltaY = pointer.deltaY * 0.1;
-        
-        this.coins.forEach(coin => {
-            coin.resetTransform()
-                .panX(deltaX)
-                .panY(deltaY)
-                .modelRotation.y += deltaX * 0.01
-                .setScale(baseScale); // Принудительная установка масштаба
-        });
-    });
 }
 
 
