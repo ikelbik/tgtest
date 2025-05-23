@@ -86,7 +86,7 @@
             update(time, delta) {
                 // Нормальное вращение когда объект в покое
                 if(!this.isJumping) {
-                    this.mesh.modelRotation.y += this.rotSpeed;
+                    //this.mesh.modelRotation.y += this.rotSpeed;
                     return;
                 }
 
@@ -97,6 +97,7 @@
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
                 this.mesh.modelRotation.y += this.currentSpin;
+				this.mesh.modelRotation.z += this.currentSpin;
 
                 // Обработка столкновения с "землей"
                 if(this.mesh.y >= this.cameras.main.centerY) {
