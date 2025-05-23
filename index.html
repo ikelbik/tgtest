@@ -116,7 +116,11 @@
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
-						this.mesh.modelRotation.x = 0.6;
+						if (this.mesh.modelRotation.x < 1.5){
+						   this.mesh.modelRotation.x = 0.6;
+						} else{
+		     				this.mesh.modelRotation.x = 2.5;
+						}
                     }
 				if(this.mesh.y >= this.cameras.main.centerY) {
                     // Воспроизводим звук только при достаточной силе удара
