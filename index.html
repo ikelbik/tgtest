@@ -81,7 +81,7 @@
                 this.input.on('pointerup', () => {
                     if(this.isHolding && !this.isJumping) {
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-                        if (holdDuration >= 2){
+                        if (holdDuration >= 200){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
                         this.isJumping = true;
                         this.isHolding = false;
