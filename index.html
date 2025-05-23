@@ -106,7 +106,8 @@ const config = {
         zoom: 1,
         near: -100, // Отрицательное near
         far: 100,
-        position: { x:0, y:0, z:100 }
+        multisampleLevel: 4, // MSAA уровень (2, 4, 8, 16)
+        antialias: true
         }
     },
     scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.CENTER_BOTH },
