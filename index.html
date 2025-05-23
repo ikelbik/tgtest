@@ -53,7 +53,7 @@ class MainScene extends Phaser.Scene {
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.y +=0.5;
 		//this.mesh.addVerticesFromObj('skull',0.1);
-		this.mesh.panX(this.cameras.main.centerX-0.05);
+		this.mesh.panX(this.cameras.main.centerX-0);
 		//this.mesh.panY(this.cameras.main.centerY);
 		//this.mesh.panZ(7);
 		this.mesh.modelRotation.x += 0.5;
