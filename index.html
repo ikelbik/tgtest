@@ -111,10 +111,11 @@
 					
                     
                     // Затухание при маленькой скорости
-                    if(Math.abs(this.velocityY) < 2) {
+                    if(Math.abs(this.velocityY) < 1) {
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
+						this.mesh.modelRotation.y = 0.6
                     }
 				if(this.mesh.y >= this.cameras.main.centerY) {
                     // Воспроизводим звук только при достаточной силе удара
