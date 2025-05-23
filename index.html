@@ -52,7 +52,7 @@ class MainScene extends Phaser.Scene {
         this.mesh.addVerticesFromObj('skull',0.1);
 		coin.panX(this.cameras.main.centerX);
 		coin.panY(this.cameras.main.centerX);
-		coin.panZ(-7);
+		coin.panZ(7);
 		this.mesh.modelRotation.x += 0.5;
 
         
@@ -115,7 +115,7 @@ const config = {
     },
     cameras: {
         default: {
-            type: 'OrthographicCamera',
+          //  type: 'OrthographicCamera',
             zoom: 1,
             multisampleLevel: 4,
             antialias: true
