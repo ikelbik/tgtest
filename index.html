@@ -135,10 +135,11 @@
                     this.mesh.y = this.cameras.main.centerY+100;
                     this.velocityY *= -this.bounceDamping;
 					this.velocityZ = 1+ (this.velocityZ-1)/3;
-					
+					this.velocityX =  this.velocityX / 3;
                     
                     // Затухание при маленькой скорости
-                    if(Math.abs(this.velocityY) < 2)  {
+                //    if(Math.abs(this.velocityY) < 2)  {
+					if (this.velocityY > 0) {
 					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < 0.2)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < 0.2)){
                         this.isJumping = false;
                         this.velocityY = 0;
