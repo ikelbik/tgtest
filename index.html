@@ -94,8 +94,8 @@
 						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
 						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
-						this.velocityY = -this.maxJumpForce * (4*holdY/(2*this.maxDy));//(holdDuration/this.maxHoldTime);
-						this.velocityZ = 1 + this.maxJumpForce * (holdY/(327*this.maxDy));
+						this.velocityY = -this.maxJumpForce * (5.5*holdY/(2*this.maxDy));//(holdDuration/this.maxHoldTime);
+						this.velocityZ = 1 + this.maxJumpForce * (holdY/(257*this.maxDy));
                         this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
 						this.isJumping = true;
                         this.isHolding = false;
