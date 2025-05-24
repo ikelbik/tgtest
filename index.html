@@ -34,7 +34,7 @@
                 
                 // Физические параметры
                 this.gravity = 0.7;
-                this.bounceDamping = 0.6;
+                this.bounceDamping = 0.8;
 				this.minHoldTime = 300;
                 this.maxHoldTime = 800; // Максимальное время удержания в мс
                 this.maxJumpForce = 25;  // Максимальная сила прыжка
@@ -106,6 +106,10 @@
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
                 this.mesh.modelRotation.x += this.currentSpin;
+				
+				if (this.mesh.modelRotation.x > 2*Math.PI){
+				    this.mesh.modelRotation.x -= 2*Math.PI
+				}
 				//this.mesh.modelRotation.z += this.currentSpin;
 
                 // Обработка столкновения с "землей"
@@ -119,10 +123,11 @@
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
-						if (Phaser.Math.Between(0, 10) < 5){
+						//if (Phaser.Math.Between(0, 10) < 5){
+						if (this.mesh.modelRotation.x < Math.PI){
 						   this.mesh.modelRotation.x = 0.6;
 						} else{
-		     				this.mesh.modelRotation.x = 3.74;
+		     				this.mesh.modelRotation.x = Math.PI+0.6;
 						}
                     }
 				if(this.mesh.y >= this.cameras.main.centerY+100) {
