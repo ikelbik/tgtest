@@ -3,7 +3,7 @@
 <head>
     <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
     <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
-    <link rel="icon" href="https://ikelbik.github.io/tgtest/favicon.ico">	
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">	
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
@@ -95,11 +95,12 @@
 						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
-						this.velocityZ = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
-                        this.velocityX = -this.maxJumpForce * (holdX/(2*this.maxDx));
+						this.velocityZ = this.maxJumpForce * (holdDuration/this.maxHoldTime);
+                        this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
 						this.isJumping = true;
                         this.isHolding = false;
                         this.currentSpin = 0.4; // Начальная скорость вращения
+						this.curentScale = 1;
 						console.log(this.velocityZ, ' ',this.velocityX );
 						}
                     }
@@ -116,7 +117,8 @@
                 // Физика прыжка
                 this.velocityY += this.gravity;
                 this.mesh.y += this.velocityY;
-				this.mesh.z += this.velocityZ;
+				this.curentScale = this.curentScale / this.velocityZ;
+				this.mesh.setScale(this.curentScale);
 				this.mesh.x += this.velocityX;
                 
                 // Вращение в полете
