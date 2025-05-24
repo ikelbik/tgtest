@@ -124,6 +124,7 @@
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
+						this.mesh.modelRotation.x = 0.6;
 						} else {
 						this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
 						this.mesh.modelRotation.x -= this.currentSpin;
