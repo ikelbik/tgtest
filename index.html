@@ -53,7 +53,8 @@
                 this.load.image('bg', 'assets/wtf.png');
                 this.load.obj('skull', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
-                this.load.audio('coinDrop', 'assets/drop.mp3');				
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');					
             }
 
  create(){
@@ -63,6 +64,8 @@
         }
 		this.bounceSound = this.sound.add('coinDrop');
         this.bounceSound.volume = this.soundVolume;
+		this.upSound = this.sound.add('coinUp');
+        this.upSound.volume = this.soundVolume;		
 
         this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY+100, 'texture');
@@ -81,6 +84,7 @@
 
                 this.input.on('pointerup', () => {
                     if(this.isHolding && !this.isJumping) {
+						this.upSound.play();
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
                         if (holdDuration >= this.minHoldTime){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
@@ -120,21 +124,21 @@
                     
                     // Затухание при маленькой скорости
                     if(Math.abs(this.velocityY) < 1)  {
-					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < 0.1)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < 0.1)){
+					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < 0.2)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < 0.2)){
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
-						this.mesh.modelRotation.x = 0.6;
-						} else {
+						if (this.mesh.modelRotation.x < Math.PI){
+						   this.mesh.modelRotation.x = 0.6;
+						} else{
+		     				this.mesh.modelRotation.x = Math.PI+0.6;
+					} else {
 						this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-						this.mesh.modelRotation.x -= 0.05;
-						}
+						this.mesh.modelRotation.x -= 0.1;
+					}
 						
 						//if (Phaser.Math.Between(0, 10) < 5){
-						//if (this.mesh.modelRotation.x < Math.PI){
-						//   this.mesh.modelRotation.x = 0.6;
-						//} else{
-		     			//	this.mesh.modelRotation.x = Math.PI+0.6;
+
 						//}
                     }
 				if(this.mesh.y >= this.cameras.main.centerY+100) {
