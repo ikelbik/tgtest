@@ -132,7 +132,8 @@
 						   this.mesh.modelRotation.x = 0.6;
 						} else{
 		     				this.mesh.modelRotation.x = Math.PI+0.6;
-					} else {
+							}
+					 } else {
 						this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
 						this.mesh.modelRotation.x -= 0.1;
 					}
