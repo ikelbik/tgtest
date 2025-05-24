@@ -119,16 +119,21 @@
 					
                     
                     // Затухание при маленькой скорости
-                    if(Math.abs(this.velocityY) < 1) {
+                    if(Math.abs(this.velocityY) < 1)  {
+					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < this.currentSpin)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < this.currentSpin)){
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
-						//if (Phaser.Math.Between(0, 10) < 5){
-						if (this.mesh.modelRotation.x < Math.PI){
-						   this.mesh.modelRotation.x = 0.6;
-						} else{
-		     				this.mesh.modelRotation.x = Math.PI+0.6;
+						} else {
+						this.mesh.modelRotation.x -= this.currentSpin;
 						}
+						
+						//if (Phaser.Math.Between(0, 10) < 5){
+						//if (this.mesh.modelRotation.x < Math.PI){
+						//   this.mesh.modelRotation.x = 0.6;
+						//} else{
+		     			//	this.mesh.modelRotation.x = Math.PI+0.6;
+						//}
                     }
 				if(this.mesh.y >= this.cameras.main.centerY+100) {
                     // Воспроизводим звук только при достаточной силе удара
