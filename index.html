@@ -120,14 +120,14 @@
                     
                     // Затухание при маленькой скорости
                     if(Math.abs(this.velocityY) < 1)  {
-					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < this.currentSpin)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < this.currentSpin)){
+					 if ((Math.abs(this.mesh.modelRotation.x - 0.6) < 0.1)||(Math.abs(this.mesh.modelRotation.x - (Math.PI + 0.6)) < 0.1)){
                         this.isJumping = false;
                         this.velocityY = 0;
                         this.currentSpin = 0;
 						this.mesh.modelRotation.x = 0.6;
 						} else {
 						this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-						this.mesh.modelRotation.x -= this.currentSpin;
+						this.mesh.modelRotation.x -= 0.05;
 						}
 						
 						//if (Phaser.Math.Between(0, 10) < 5){
