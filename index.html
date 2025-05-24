@@ -2,7 +2,8 @@
 <html>
 <head>
     <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
-    <link rel="manifest" href="app-manifest.json">
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" href="https://ikelbik.github.io/tgtest/favicon.ico">	
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
@@ -81,8 +82,8 @@
                     if(!this.isJumping) {
                         this.isHolding = true;
                         this.holdStartTime = this.time.now;
-						px_0 = p.x;
-						py_0 = p.y; 
+						this.px_0 = p.x;
+						this.py_0 = p.y; 
                     }
                 });
 
@@ -90,8 +91,8 @@
                     if(this.isHolding && !this.isJumping) {
 						this.upSound.play();
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-						const holdX = Phaser.Math.Clamp(px_0 - p.x, -this.maxDx, this.maxDx);
-						const holdY = Phaser.Math.Clamp(py_0 - p.y, 0, this.maxDy);
+						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
+						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
 						this.velocityZ = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
