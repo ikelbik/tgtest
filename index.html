@@ -38,6 +38,8 @@
 				this.minHoldTime = 300;
                 this.maxHoldTime = 800; // Максимальное время удержания в мс
                 this.maxJumpForce = 25;  // Максимальная сила прыжка
+				this.maxDx =  100;
+				this.maxDy = 100;
                 
                 // Состояние объекта
                 this.isHolding = false;
@@ -75,20 +77,26 @@
         this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400), Phaser.Geom.Rectangle.Contains);
                 
                 // Обработчики событий
-                this.mesh.on('pointerdown', () => {
+                this.mesh.on('pointerdown', p => {
                     if(!this.isJumping) {
                         this.isHolding = true;
                         this.holdStartTime = this.time.now;
+						px_0 = p.x;
+						py_0 = p.y; 
                     }
                 });
 
-                this.input.on('pointerup', () => {
+                this.input.on('pointerup', p=> {
                     if(this.isHolding && !this.isJumping) {
 						this.upSound.play();
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
+						const holdX = Phaser.Math.Clamp(px_0 - p.x, -this.maxDx, this.maxDx);
+						const holdY = Phaser.Math.Clamp(py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
 						this.velocityY = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
-                        this.isJumping = true;
+						this.velocityZ = -this.maxJumpForce * (holdDuration/this.maxHoldTime);
+                        this.velocityX = -this.maxJumpForce * (holdX/(2*this.maxDx));
+						this.isJumping = true;
                         this.isHolding = false;
                         this.currentSpin = 0.4; // Начальная скорость вращения
 						}
@@ -106,6 +114,8 @@
                 // Физика прыжка
                 this.velocityY += this.gravity;
                 this.mesh.y += this.velocityY;
+				this.mesh.z += this.velocityZ;
+				this.mesh.x += this.velocityX;
                 
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
