@@ -94,14 +94,14 @@
 						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
 						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
-						this.velocityY = -this.maxJumpForce * (holdY/(7*this.maxDy));//(holdDuration/this.maxHoldTime);
+						this.velocityY = -this.maxJumpForce * (holdY/(1*this.maxDy));//(holdDuration/this.maxHoldTime);
 						this.velocityZ = 1 + this.maxJumpForce * (holdY/(570*this.maxDy));
                         this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
 						this.isJumping = true;
                         this.isHolding = false;
                         this.currentSpin = 0.4; // Начальная скорость вращения
 						this.curentScale = 2;
-						console.log(this.velocityZ, ' ',this.velocityX );
+						console.log(this.velocityZ, ' ',this.velocityY, ' ', -this.maxJumpForce * (holdDuration/this.maxHoldTime) );
 						}
                     }
                 });
