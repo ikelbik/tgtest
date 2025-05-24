@@ -40,7 +40,7 @@
                 this.maxHoldTime = 800; // Максимальное время удержания в мс
                 this.maxJumpForce = 25;  // Максимальная сила прыжка
 				this.maxDx =  100;
-				this.maxDy = 100;
+				this.maxDy = 700;
                 
                 // Состояние объекта
                 this.isHolding = false;
@@ -94,7 +94,7 @@
 						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
 						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
-						this.velocityY = -this.maxJumpForce * (holdY/(1.5*this.maxDy));//(holdDuration/this.maxHoldTime);
+						this.velocityY = -this.maxJumpForce * (holdY/(2*this.maxDy));//(holdDuration/this.maxHoldTime);
 						this.velocityZ = 1 + this.maxJumpForce * (holdY/(1270*this.maxDy));
                         this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
 						this.isJumping = true;
@@ -134,7 +134,7 @@
                 if(this.mesh.y >= this.cameras.main.centerY+100) {
                     this.mesh.y = this.cameras.main.centerY+100;
                     this.velocityY *= -this.bounceDamping;
-					this.velocityZ = this.velocityZ-1/this.velocityZ;
+					this.velocityZ = 1+ (this.velocityZ-1)/3;
 					
                     
                     // Затухание при маленькой скорости
