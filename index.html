@@ -79,7 +79,7 @@
 		this.upSound = this.sound.add('coinUp');
         this.upSound.volume = this.soundVolume;		
 
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+        this.add.image(this.cameras.main.centerX+Phaser.Math.Between(-300, 300), this.cameras.main.centerY, 'bg');
         this.mesh = this.add.mesh(this.cameras.main.centerX, this.cameras.main.centerY+this.dY, 'texture');
         this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.x +=0.6;
 		this.mesh.setScale(3);
@@ -147,7 +147,6 @@
 					this.velocityX =  this.velocityX / 3;
                     
                     // Затухание при маленькой скорости
-                //    if(Math.abs(this.velocityY) < 2)  {
 				//console.log(this.mesh.modelRotation.x, ' ', this.velocityY);
 					if (Math.abs(this.velocityY) < 1) {
 					 if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2)||(Math.abs(this.mesh.modelRotation.x )- (Math.PI + 0.6) < 0.2)){
@@ -162,9 +161,7 @@
 					 } else {
 						//this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
 						this.mesh.modelRotation.x -= 0.1;
-						
 					}
-						
 						//if (Phaser.Math.Between(0, 10) < 5){
 
 						//}
