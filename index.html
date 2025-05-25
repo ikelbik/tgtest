@@ -97,13 +97,14 @@
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
                 
                 // Счетчик
+				/*
 				this.scoreText = this.add.text(20, 20, 'Счет: 0', {
                     font: '28px Arial',
                     fill: '#ffffff',
                     stroke: '#000000',
                     strokeThickness: 4
                 }).setScrollFactor(0);
-
+*/
                 // Создаем первую монету
                 this.createNewCoin();
                
@@ -133,19 +134,20 @@
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
                 
                 // Анимация появления
+				/*
                 this.tweens.add({
                     targets: this.mesh,
                     y: this.cameras.main.centerY + this.currentYOffset,
                     duration: 1500,
                     ease: 'Bounce.out'
                 });
-
+*/
                 // Сброс состояния
                 this.isJumping = false;
                 this.isHolding = false;
                 this.velocityY = 0;
                 this.velocityX = 0;
-                this.velocityZ = 1;
+                this.velocityZ = 0;
                 this.currentSpin = 0;
                 
                 // Обработчики событий
