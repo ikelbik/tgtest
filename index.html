@@ -3,7 +3,7 @@
 <head>
     <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
     <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
-    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">	
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <meta name="theme-color" content="#000022">
@@ -11,212 +11,304 @@
     <style>
         * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
         body { background: #000022 }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            z-index: 1000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
     </style>
 </head>
 <body>
     <div id="game"></div>
+    <div id="score">Счет: 0</div>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-	//document.addEventListener('DOMContentLoaded', () => {
-   // if (window.Telegram?.WebApp) {
-    //    Telegram.WebApp.ready(); // Инициализация API
-    //    Telegram.WebApp.enableClosingConfirmation(); // Блокирует автоматическое закрытие
-    //}
-	//});
         const isTelegram = /Telegram/.test(navigator.userAgent);
-        const tg = window.Telegram.WebApp;
-        tg.expand();
-        tg.MainButton.show();
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.MainButton.show();
+        }
 
         class MainScene extends Phaser.Scene {
             constructor() {
-                super();
-                this.coins = [];
+                super({ key: 'MainScene' });
+                this.score = 0;
+                this.coinsCollected = 0;
                 this.rotSpeed = isTelegram ? 0.005 : 0.01;
-                this.scaleFactor = 0.001;
-                this.isDragging = false;
-                // Настройки вращения и масштаба
-                this.rotSpeed = 0.005;
                 this.scaleFactor = 0.001;
                 
                 // Физические параметры
                 this.gravity = 0.7;
                 this.bounceDamping = 0.8;
-				this.minHoldTime = 100;
-                this.maxHoldTime = 800; // Максимальное время удержания в мс
-                this.maxJumpForce = 25;  // Максимальная сила прыжка
-				this.maxDx =  100;
-				this.maxDy = 700;
-				this.dY = 100;
+                this.minHoldTime = 100;
+                this.maxHoldTime = 800;
+                this.maxJumpForce = 25;
+                this.maxDx = 100;
+                this.maxDy = 700;
+                this.baseYOffset = 100;
                 
                 // Состояние объекта
                 this.isHolding = false;
                 this.isJumping = false;
                 this.velocityY = 0;
-                this.currentSpin = 0;		
-				this.soundVolume = 0.6;
+                this.velocityX = 0;
+                this.velocityZ = 1;
+                this.currentSpin = 0;
+                this.curentScale = 3;
+                this.soundVolume = 0.6;
                 this.minImpactForSound = 1;
+                this.comboMultiplier = 1;
+                this.lastLandTime = 0;
+                this.comboTimeout = 2000; // 2 секунды для комбо
             }
-		
+        
             preload() {
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 this.load.image('bg', 'assets/wtf.png');
                 this.load.obj('skull', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
-                this.load.audio('coinUp', 'assets/up.mp3');					
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('comboSound', 'assets/combo.mp3'); // Добавьте этот файл                    
             }
 
- create(){
-        //if(isTelegram && window.TelegramWebViewProxy){
-           // TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
-           // Telegram.WebApp.expand();
-        //}
-		if (window.Telegram?.WebApp?.onEvent){
-		    Telegram.WebApp.onEvent('backButtonClicked', () => {
-            Telegram.WebApp.close(); // Правильное закрытие
-		  });
-		}
-		
-		this.dY = this.cameras.main.height / 2 - 200;  
-		
-		this.bounceSound = this.sound.add('coinDrop');
-        this.bounceSound.volume = this.soundVolume;
-		this.upSound = this.sound.add('coinUp');
-        this.upSound.volume = this.soundVolume;		
+            create() {
+                if (window.Telegram?.WebApp?.onEvent) {
+                    Telegram.WebApp.onEvent('backButtonClicked', () => {
+                        Telegram.WebApp.close();
+                    });
+                }
+                
+                // Звуки
+                this.bounceSound = this.sound.add('coinDrop');
+                this.bounceSound.volume = this.soundVolume;
+                this.upSound = this.sound.add('coinUp');
+                this.upSound.volume = this.soundVolume;
+                this.comboSound = this.sound.add('comboSound');
+                this.comboSound.volume = this.soundVolume;
 
-        this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-        this.mesh = this.add.mesh(this.cameras.main.centerX+Phaser.Math.Between(-300, 300), this.cameras.main.centerY+this.dY, 'texture');
-        this.mesh.addVerticesFromObj('skull',0.1).panZ(7).modelRotation.x +=0.6;
-		this.mesh.setScale(3);
-        
-        this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200,-200,400,400), Phaser.Geom.Rectangle.Contains);
+                // Фон
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+                
+                // Счетчик
+                this.scoreText = this.add.text(20, 20, 'Счет: 0', {
+                    font: '28px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setScrollFactor(0);
+
+                // Создаем первую монету
+                this.createNewCoin();
+                
+                // Комбо-текст
+                this.comboText = this.add.text(this.cameras.main.centerX, 50, '', {
+                    font: '32px Arial',
+                    fill: '#ffcc00',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(0.5).setScrollFactor(0).setVisible(false);
+            }
+
+            createNewCoin() {
+                // Уничтожаем старую монету, если есть
+                if (this.mesh) {
+                    this.mesh.destroy();
+                }
+                
+                // Случайное смещение по X
+                const randomX = Phaser.Math.Between(-150, 150);
+                // Случайное смещение по Y (выше начальной позиции)
+                const randomYOffset = Phaser.Math.Between(0, 100);
+                this.currentYOffset = this.baseYOffset + randomYOffset;
+                
+                // Создаем новую монету
+                this.mesh = this.add.mesh(
+                    this.cameras.main.centerX + randomX,
+                    this.cameras.main.centerY - 100, // Начинаем выше конечной позиции
+                    'texture'
+                );
+                
+                this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
+                this.mesh.setScale(this.curentScale);
+                this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
+                
+                // Анимация появления
+                this.tweens.add({
+                    targets: this.mesh,
+                    y: this.cameras.main.centerY + this.currentYOffset,
+                    duration: 500,
+                    ease: 'Bounce.out'
+                });
+
+                // Сброс состояния
+                this.isJumping = false;
+                this.isHolding = false;
+                this.velocityY = 0;
+                this.velocityX = 0;
+                this.velocityZ = 1;
+                this.currentSpin = 0;
                 
                 // Обработчики событий
                 this.mesh.on('pointerdown', p => {
-                    if(!this.isJumping) {
+                    if (!this.isJumping) {
                         this.isHolding = true;
                         this.holdStartTime = this.time.now;
-						this.px_0 = p.x;
-						this.py_0 = p.y; 
+                        this.px_0 = p.x;
+                        this.py_0 = p.y;
                     }
                 });
 
-                this.input.on('pointerup', p=> {
-                    if(this.isHolding && !this.isJumping) {
-						this.upSound.play();
+                this.input.on('pointerup', p => {
+                    if (this.isHolding && !this.isJumping) {
+                        this.upSound.play();
                         const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
-						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
-                        if (holdDuration >= this.minHoldTime){
-						this.velocityY = -this.maxJumpForce * (5.5*holdY/(2*this.maxDy))*100/holdDuration;//(holdDuration/this.maxHoldTime);
-						this.velocityZ = 1 + this.maxJumpForce * (holdY/(297*this.maxDy))*100/holdDuration;
-                        this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
-						this.isJumping = true;
-                        this.isHolding = false;
-                        this.currentSpin = 0.4; // Начальная скорость вращения
-						this.curentScale = 2;
-						//console.log(this.velocityZ, ' ',this.velocityY, ' ', -this.maxJumpForce * (holdDuration/this.maxHoldTime) );
-						}
+                        const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
+                        const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
+                        
+                        if (holdDuration >= this.minHoldTime) {
+                            this.velocityY = -this.maxJumpForce * (5.5 * holdY / (2 * this.maxDy)) * 100 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (297 * this.maxDy)) * 100 / holdDuration;
+                            this.velocityX = -this.maxJumpForce * (holdX / (7 * this.maxDx));
+                            this.isJumping = true;
+                            this.isHolding = false;
+                            this.currentSpin = 0.4;
+                        }
                     }
                 });
             }
 
             update(time, delta) {
-                // Нормальное вращение когда объект в покое
-                if(!this.isJumping) {
-                    //this.mesh.modelRotation.y += this.rotSpeed;
-                    return;
-                }
+                if (!this.isJumping) return;
 
                 // Физика прыжка
                 this.velocityY += this.gravity;
                 this.mesh.y += this.velocityY;
-				this.curentScale = this.curentScale / this.velocityZ;
-				this.mesh.setScale(this.curentScale);
-				this.mesh.x += this.velocityX;
+                this.curentScale = this.curentScale / this.velocityZ;
+                this.mesh.setScale(this.curentScale);
+                this.mesh.x += this.velocityX;
                 
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
                 this.mesh.modelRotation.x += this.currentSpin;
-				
-				if (this.mesh.modelRotation.x > 2*Math.PI){
-				    this.mesh.modelRotation.x -= 2*Math.PI
-				}
-				//this.mesh.modelRotation.z += this.currentSpin;
+                
+                if (this.mesh.modelRotation.x > 2 * Math.PI) {
+                    this.mesh.modelRotation.x -= 2 * Math.PI;
+                }
 
                 // Обработка столкновения с "землей"
-                if(this.mesh.y >= this.cameras.main.centerY+this.dY) {
-                    this.mesh.y = this.cameras.main.centerY+this.dY;
+                if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                    this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
-					this.velocityZ = 1+ (this.velocityZ-1)/3;
-					this.velocityX =  this.velocityX / 3;
+                    this.velocityZ = 1 + (this.velocityZ - 1) / 3;
+                    this.velocityX = this.velocityX / 3;
                     
-                    // Затухание при маленькой скорости
-				//console.log(this.mesh.modelRotation.x, ' ', this.velocityY);
-					if (Math.abs(this.velocityY) < 1) {
-					 if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2)||(Math.abs(this.mesh.modelRotation.x )- (Math.PI + 0.6) < 0.2)){
-                        this.isJumping = false;
-                        this.velocityY = 0;
-                        this.currentSpin = 0;
-						if (this.mesh.modelRotation.x < Math.PI){
-						   this.mesh.modelRotation.x = 0.6;
-						} else{
-		     				this.mesh.modelRotation.x = Math.PI+0.6;
-							}
-					 } else {
-						//this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-						this.mesh.modelRotation.x -= 0.1;
-					}
-						//if (Phaser.Math.Between(0, 10) < 5){
-
-						//}
-                    }
-				if(this.mesh.y >= this.cameras.main.centerY+this.dY) {
-                    // Воспроизводим звук только при достаточной силе удара
-                    if(Math.abs(this.velocityY) > this.minImpactForSound) {
+                    // Воспроизводим звук удара
+                    if (Math.abs(this.velocityY) > this.minImpactForSound) {
                         this.bounceSound.play({
                             volume: Phaser.Math.Clamp(Math.abs(this.velocityY)/this.maxJumpForce, 0.3, 1)
                         });
-                    }	
-				}
-					
+                    }
+
+                    // Проверка на остановку
+                    if (Math.abs(this.velocityY) < 1) {
+                        if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
+                            (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
+                            
+                            // Проверка комбо
+                            const currentTime = this.time.now;
+                            if (currentTime - this.lastLandTime < this.comboTimeout) {
+                                this.comboMultiplier++;
+                                this.showCombo();
+                            } else {
+                                this.comboMultiplier = 1;
+                            }
+                            this.lastLandTime = currentTime;
+                            
+                            // Увеличение счета с учетом комбо
+                            this.score += 1 * this.comboMultiplier;
+                            this.coinsCollected++;
+                            this.scoreText.setText(`Счет: ${this.score}`);
+                            
+                            // Анимация исчезновения и создания новой монеты
+                            this.tweens.add({
+                                targets: this.mesh,
+                                alpha: 0,
+                                scaleX: 0.5,
+                                scaleY: 0.5,
+                                duration: 300,
+                                onComplete: () => {
+                                    this.createNewCoin();
+                                }
+                            });
+                        } else {
+                            // Монета не стабилизировалась - продолжаем вращение
+                            this.mesh.modelRotation.x -= 0.1;
+                        }
+                    }
+                }
+            }
+
+            showCombo() {
+                if (this.comboMultiplier > 1) {
+                    this.comboSound.play();
+                    this.comboText.setText(`x${this.comboMultiplier} COMBO!`)
+                        .setVisible(true)
+                        .setAlpha(1)
+                        .setY(50)
+                        .setScale(1);
+                    
+                    // Анимация комбо-текста
+                    this.tweens.add({
+                        targets: this.comboText,
+                        y: 80,
+                        scale: 1.5,
+                        alpha: 0,
+                        duration: 1000,
+                        onComplete: () => {
+                            this.comboText.setVisible(false);
+                        }
+                    });
                 }
             }
         }
 
-const config = {
-    type: Phaser.WEBGL,
-    width: window.innerWidth,
-    height: window.innerHeight,
-    parent: 'game',
-    scene: MainScene,
-    // Добавляем здесь настройки камеры ▼
-    cameras: {
-        default: {
-        type: 'OrthographicCamera',
-        zoom: 1,
-        near: -1000, // Отрицательное near
-        far: 1000,
-        position: { x:0, y:0, z:100 }
-        }
-    },
-
-    scale: { 
-        mode: Phaser.Scale.RESIZE, 
-        autoCenter: Phaser.Scale.CENTER_BOTH 
-    },
-    input: { 
-        activePointers: 2 
-    },
-    fps: { 
-        target: 60, 
-        smoothStep: true 
-    },
-    render: { 
-        antialiasGL: true 
-    }
-};
+        const config = {
+            type: Phaser.WEBGL,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game',
+            scene: MainScene,
+            cameras: {
+                default: {
+                    type: 'OrthographicCamera',
+                    zoom: 1,
+                    near: -1000,
+                    far: 1000,
+                    position: { x:0, y:0, z:100 }
+                }
+            },
+            scale: { 
+                mode: Phaser.Scale.RESIZE, 
+                autoCenter: Phaser.Scale.CENTER_BOTH 
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60, 
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true 
+            }
+        };
 
         const game = new Phaser.Game(config);
         window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
