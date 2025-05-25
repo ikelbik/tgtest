@@ -134,14 +134,14 @@
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
                 
                 // Анимация появления
-				/*
+				
                 this.tweens.add({
                     targets: this.mesh,
                     y: this.cameras.main.centerY + this.currentYOffset,
                     duration: 1500,
                     ease: 'Bounce.out'
                 });
-*/
+
                 // Сброс состояния
                 this.isJumping = false;
                 this.isHolding = false;
@@ -235,8 +235,8 @@
                             this.tweens.add({
                                 targets: this.mesh,
                                 alpha: 0,
-                                scaleX: 0.5,
-                                scaleY: 0.5,
+                                //scaleX: 0.5,
+                                //scaleY: 0.5,
                                 duration: 300,
                                 onComplete: () => {
                                     this.createNewCoin();
