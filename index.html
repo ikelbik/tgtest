@@ -97,12 +97,6 @@
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
                 
                 // Счетчик
-                this.scoreText = this.add.text(20, 20, 'Счет: 0', {
-                    font: '28px Arial',
-                    fill: '#ffffff',
-                    stroke: '#000000',
-                    strokeThickness: 4
-                }).setScrollFactor(0);
 
                 // Создаем первую монету
                 this.createNewCoin();
@@ -131,12 +125,12 @@
                 // Создаем новую монету
                 this.mesh = this.add.mesh(
                     this.cameras.main.centerX + randomX,
-                    this.cameras.main.centerY - 100, // Начинаем выше конечной позиции
+                    this.cameras.main.centerY - randomYOffset, // Начинаем выше конечной позиции
                     'texture'
                 );
                 
                 this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
-                this.mesh.setScale(this.curentScale);
+                this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
                 
                 // Анимация появления
@@ -222,19 +216,19 @@
                             (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
                             // Проверка комбо
-                            const currentTime = this.time.now;
-                            if (currentTime - this.lastLandTime < this.comboTimeout) {
-                                this.comboMultiplier++;
-                                this.showCombo();
-                            } else {
-                                this.comboMultiplier = 1;
-                            }
+                            //const currentTime = this.time.now;
+                            //if (currentTime - this.lastLandTime < this.comboTimeout) {
+                            //    this.comboMultiplier++;
+                            //    this.showCombo();
+                            //} else {
+                            //    this.comboMultiplier = 1;
+                            //}
                             this.lastLandTime = currentTime;
                             
                             // Увеличение счета с учетом комбо
-                            this.score += 1 * this.comboMultiplier;
-                            this.coinsCollected++;
-                            this.scoreText.setText(`Счет: ${this.score}`);
+                            this.score += 1;
+                            //this.coinsCollected++;
+                            this.scoreText.comboText(`Счет: ${this.score}`);
                             
                             // Анимация исчезновения и создания новой монеты
                             this.tweens.add({
