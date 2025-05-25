@@ -72,7 +72,7 @@
            // TelegramWebViewProxy.onEvent('back_button',()=>this.scene.stop());
            // Telegram.WebApp.expand();
         //}
-		if if (window.Telegram?.WebApp?.onEvent){
+		if (window.Telegram?.WebApp?.onEvent){
 		    Telegram.WebApp.onEvent('backButtonClicked', () => {
             Telegram.WebApp.close(); // Правильное закрытие
 		  });
