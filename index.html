@@ -136,7 +136,7 @@
                 this.tweens.add({
                     targets: this.mesh,
                     y: this.cameras.main.centerY + this.currentYOffset,
-                    duration: 500,
+                    duration: 1500,
                     ease: 'Bounce.out'
                 });
 
@@ -248,28 +248,6 @@
                 }
             }
 
-            showCombo() {
-                if (this.comboMultiplier > 1) {
-                    this.comboSound.play();
-                    this.comboText.setText(`x${this.comboMultiplier} COMBO!`)
-                        .setVisible(true)
-                        .setAlpha(1)
-                        .setY(50)
-                        .setScale(1);
-                    
-                    // Анимация комбо-текста
-                    this.tweens.add({
-                        targets: this.comboText,
-                        y: 80,
-                        scale: 1.5,
-                        alpha: 0,
-                        duration: 1000,
-                        onComplete: () => {
-                            this.comboText.setVisible(false);
-                        }
-                    });
-                }
-            }
         }
 
         const config = {
