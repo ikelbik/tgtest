@@ -98,7 +98,7 @@
                 
                 // Счетчик
 				
-				this.scoreText = this.add.text(20, 20, 'Счет: 0', {
+				this.scoreText = this.add.text(20, 30, 'Монет : 0', {
                     font: '28px Arial',
                     fill: '#ffffff',
                     stroke: '#000000',
@@ -174,7 +174,7 @@
                             this.velocityX = -this.maxJumpForce * (holdX / (7 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
-                            this.currentSpin = 0.4;
+                            this.currentSpin = 0.2 * holdDuration / 100;
                         }
                     }
                 });
@@ -233,7 +233,7 @@
                             this.scoreText.setText(`Счет: ${this.score}`);
                             
                             // Анимация исчезновения и создания новой монеты
-                           /*
+                           
 						   this.tweens.add({
                                 targets: this.mesh,
                                 alpha: 0,
@@ -244,8 +244,8 @@
                                     this.createNewCoin();
                                 }
                             });
-							*/
-							this.createNewCoin()
+							
+						//	this.createNewCoin()
                         } else {
                             // Монета не стабилизировалась - продолжаем вращение
                             this.mesh.modelRotation.x -= 0.1;
