@@ -25,7 +25,7 @@
 </head>
 <body>
     <div id="game"></div>
-    <div id="score">Счет: 0</div>
+
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         const isTelegram = /Telegram/.test(navigator.userAgent);
@@ -97,14 +97,14 @@
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
                 
                 // Счетчик
-				/*
+				
 				this.scoreText = this.add.text(20, 20, 'Счет: 0', {
                     font: '28px Arial',
                     fill: '#ffffff',
                     stroke: '#000000',
                     strokeThickness: 4
                 }).setScrollFactor(0);
-*/
+
                 // Создаем первую монету
                 this.createNewCoin();
                
