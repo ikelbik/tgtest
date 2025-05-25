@@ -51,7 +51,7 @@
                 this.maxHoldTime = 800;
                 this.maxJumpForce = 25;
                 this.maxDx = 100;
-                this.maxDy = 700;
+                this.maxDy = 200;
                 this.baseYOffset = 0;
                 
                 // Состояние объекта
@@ -85,6 +85,8 @@
                         Telegram.WebApp.close();
                     });
                 }
+				
+				console.log(this.cameras.main.width, ' ', this.cameras.main.hight)
                 
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
@@ -136,28 +138,62 @@ const targetY = this.cameras.main.centerY + this.currentYOffset;
                 this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
                 this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
-                
-                // 1. Устанавливаем начальную позицию ВЫШЕ экрана
-				
+               
+			
+// Создаем частицы для шлейфа
+    this.trail = this.add.particles('texture').createEmitter({
+        x: this.cameras.main.centerX + randomX,
+        y: startY,
+        speed: { min: -20, max: 20 },
+        angle: { min: -85, max: -95 },
+        scale: { start: 0.4, end: 0 },
+        alpha: { start: 0.8, end: 0 },
+        blendMode: 'ADD',
+        frequency: 30,
+        lifespan: 500,
+        follow: this.mesh // Шлейф будет следовать за монетой
+    });
 
-// 2. Анимация падения с "отскоком"
-this.appearTween = this.tweens.add({
-    targets: this.mesh,
-    y: {
-        from: startY,
-        to: targetY
-    },
-    duration: 800, // Увеличенная длительность для плавности
-    ease: 'Bounce.out',
-    onStart: () => {
-        this.isAnimating = true; // Флаг анимации
-    },
-    onComplete: () => {
-        this.isAnimating = false;
-        // Дополнительный эффект после приземления
+    // Эффект свечения
+    const glow = this.add.graphics();
+    glow.fillStyle(0xffff00, 0.3);
+    glow.fillCircle(0, 0, 60);
+    this.mesh.mask = new Phaser.Display.Masks.BitmapMask(this, glow);
 
-    }
-});
+    // Анимация падения с шлейфом
+    this.tweens.add({
+        targets: this.mesh,
+        y: targetY,
+        duration: 1000,
+        ease: 'Bounce.out',
+        onUpdate: () => {
+            // Динамическое изменение шлейфа при падении
+            this.trail.setSpeed({ min: -10, max: 10 });
+            this.trail.setAlpha({ start: 0.6, end: 0 });
+        },
+        onComplete: () => {
+            // Удаляем шлейф после приземления
+            this.tweens.add({
+                targets: this.trail,
+                alpha: 0,
+                duration: 300,
+                onComplete: () => {
+                    this.trail.destroy();
+                    this.trail = null;
+                }
+            });
+            
+            // Пульсация при приземлении
+            this.tweens.add({
+                targets: this.mesh,
+                scaleX: 1.2,
+                scaleY: 1.2,
+                duration: 200,
+                yoyo: true,
+                ease: 'Sine.easeOut'
+            });
+        }
+    });
 
                 // Сброс состояния
                 this.isJumping = false;
@@ -186,8 +222,8 @@ this.appearTween = this.tweens.add({
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (2 * this.maxDy)) * 130 / holdDuration;
-                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (267 * this.maxDy)) * 130 / holdDuration;
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (2 * this.maxDy)) * 150 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (267 * this.maxDy)) * 150 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
