@@ -174,7 +174,7 @@
                             this.velocityX = -this.maxJumpForce * (holdX / (7 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
-                            this.currentSpin = 0.2 * holdDuration / 100;
+                            this.currentSpin = 0.1 * holdDuration / 200;
                         }
                     }
                 });
@@ -233,7 +233,7 @@
                             this.scoreText.setText(`Счет: ${this.score}`);
                             
                             // Анимация исчезновения и создания новой монеты
-                           
+                           /*
 						   this.tweens.add({
                                 targets: this.mesh,
                                 alpha: 0,
@@ -247,8 +247,8 @@
                                     this.createNewCoin();
                                 }
                             });
-							
-						//	this.createNewCoin()
+							*/
+							this.createNewCoin()
                         } else {
                             // Монета не стабилизировалась - продолжаем вращение
                             this.mesh.modelRotation.x -= 0.1;
