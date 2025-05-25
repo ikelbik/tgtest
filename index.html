@@ -138,7 +138,7 @@
                 this.tweens.add({
                     targets: this.mesh,
                     y: this.cameras.main.centerY + this.currentYOffset,
-                    duration: 1500,
+                    duration: 500,
                     ease: 'Bounce.out'
                 });
 
@@ -232,7 +232,8 @@
                             this.scoreText.setText(`Счет: ${this.score}`);
                             
                             // Анимация исчезновения и создания новой монеты
-                            this.tweens.add({
+                           /*
+						   this.tweens.add({
                                 targets: this.mesh,
                                 alpha: 0,
                                 //scaleX: 0.5,
@@ -242,6 +243,8 @@
                                     this.createNewCoin();
                                 }
                             });
+							*/
+							this.createNewCoin()
                         } else {
                             // Монета не стабилизировалась - продолжаем вращение
                             this.mesh.modelRotation.x -= 0.1;
