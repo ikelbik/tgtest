@@ -97,17 +97,16 @@
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
                 
                 // Счетчик
+				this.scoreText = this.add.text(20, 20, 'Счет: 0', {
+                    font: '28px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setScrollFactor(0);
 
                 // Создаем первую монету
                 this.createNewCoin();
-                
-                // Комбо-текст
-                this.comboText = this.add.text(this.cameras.main.centerX, 50, '', {
-                    font: '32px Arial',
-                    fill: '#ffcc00',
-                    stroke: '#000000',
-                    strokeThickness: 4
-                }).setOrigin(0.5).setScrollFactor(0).setVisible(false);
+               
             }
 
             createNewCoin() {
@@ -223,12 +222,12 @@
                             //} else {
                             //    this.comboMultiplier = 1;
                             //}
-                            this.lastLandTime = currentTime;
+                           // this.lastLandTime = currentTime;
                             
                             // Увеличение счета с учетом комбо
                             this.score += 1;
                             //this.coinsCollected++;
-                            this.scoreText.comboText(`Счет: ${this.score}`);
+                            this.scoreText.setText(`Счет: ${this.score}`);
                             
                             // Анимация исчезновения и создания новой монеты
                             this.tweens.add({
