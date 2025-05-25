@@ -155,14 +155,7 @@ this.appearTween = this.tweens.add({
     onComplete: () => {
         this.isAnimating = false;
         // Дополнительный эффект после приземления
-        this.tweens.add({
-            targets: this.mesh,
-            scaleX: 1.1,
-            scaleY: 1.1,
-            duration: 200,
-            yoyo: true,
-            ease: 'Sine.easeOut'
-        });
+
     }
 });
 
