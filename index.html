@@ -41,7 +41,7 @@
                 this.maxJumpForce = 25;  // Максимальная сила прыжка
 				this.maxDx =  100;
 				this.maxDy = 700;
-				this.dY = this.cameras.main.height / 2 - 100 
+				this.dY = 100;
                 
                 // Состояние объекта
                 this.isHolding = false;
@@ -71,6 +71,9 @@
             Telegram.WebApp.close(); // Правильное закрытие
 		  });
 		}
+		
+		this.dY = this.cameras.main.height / 2 - 100;  
+		
 		this.bounceSound = this.sound.add('coinDrop');
         this.bounceSound.volume = this.soundVolume;
 		this.upSound = this.sound.add('coinUp');
