@@ -51,7 +51,7 @@
                 this.maxJumpForce = 25;
                 this.maxDx = 100;
                 this.maxDy = 700;
-                this.baseYOffset = 100;
+                this.baseYOffset = 0;
                 
                 // Состояние объекта
                 this.isHolding = false;
@@ -119,13 +119,13 @@
                 // Случайное смещение по X
                 const randomX = Phaser.Math.Between(-150, 150);
                 // Случайное смещение по Y (выше начальной позиции)
-                const randomYOffset = Phaser.Math.Between(0, 100);
+                const randomYOffset = Phaser.Math.Between(200, 300);
                 this.currentYOffset = this.baseYOffset + randomYOffset;
                 
                 // Создаем новую монету
                 this.mesh = this.add.mesh(
                     this.cameras.main.centerX + randomX,
-                    this.cameras.main.centerY - randomYOffset, // Начинаем выше конечной позиции
+                    this.cameras.main.centerY + randomYOffset, 
                     'texture'
                 );
                 
