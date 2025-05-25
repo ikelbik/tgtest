@@ -169,7 +169,7 @@
                         const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
-                        if (holdDuration >= this.minHoldTime)&&(holdY > this.minholdY) {
+                        if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             this.velocityY = -this.maxJumpForce * (6.5 * holdY / (2 * this.maxDy)) * 130 / holdDuration;
                             this.velocityZ = 1 + this.maxJumpForce * (holdY / (357 * this.maxDy)) * 130 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (7 * this.maxDx));
@@ -218,42 +218,39 @@
                         if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
                             (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
-                            // Проверка комбо
-                            //const currentTime = this.time.now;
-                            //if (currentTime - this.lastLandTime < this.comboTimeout) {
-                            //    this.comboMultiplier++;
-                            //    this.showCombo();
-                            //} else {
-                            //    this.comboMultiplier = 1;
-                            //}
-                           // this.lastLandTime = currentTime;
-                            
-                            // Увеличение счета с учетом комбо
-                            this.score += 1;
-                            //this.coinsCollected++;
-                            this.scoreText.setText(`Счет: ${this.score}`);
-                            
-                            // Анимация исчезновения и создания новой монеты
-                           /*
-						   this.tweens.add({
-                                targets: this.mesh,
-                                alpha: 0,
-								x : this.mesh.x,
-								y : this.mesh.y,
-								z : this.mesh.z,
-                                //scaleX: 0.5,
-                                //scaleY: 0.5,
-                                duration: 300,
-                                onComplete: () => {
-                                    this.createNewCoin();
-                                }
-                            });
-							*/
-							this.createNewCoin()
-                        } else {
-                            // Монета не стабилизировалась - продолжаем вращение
-                            this.mesh.modelRotation.x -= 0.1;
-                        }
+                            // 1. Останавливаем физику
+        this.isJumping = false;
+        this.velocityY = 0;
+        this.velocityX = 0;
+        
+        // 2. Анимация "подпрыгивания" перед исчезновением
+        this.tweens.add({
+            targets: this.mesh,
+            y: this.mesh.y - 30, // Подбрасываем немного вверх
+            duration: 150,
+            ease: 'Power1',
+            yoyo: true,
+            onComplete: () => {
+                // 3. Анимация исчезновения с вращением
+                this.tweens.add({
+                    targets: this.mesh,
+                    alpha: 0,
+                    scaleX: 0.5,
+                    scaleY: 0.5,
+                    angle: 360, // Полное вращение
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                        this.score += 1;
+                        this.scoreText.setText(`Счет: ${this.score}`);
+                        this.createNewCoin();
+                    }
+                });
+            }
+        });
+    } else {
+        this.mesh.modelRotation.x -= 0.1;
+    }
                     }
                 }
             }
