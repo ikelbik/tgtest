@@ -72,7 +72,7 @@
 		  });
 		}
 		
-		this.dY = this.cameras.main.height / 2 - 100;  
+		this.dY = this.cameras.main.height / 2 - 200;  
 		
 		this.bounceSound = this.sound.add('coinDrop');
         this.bounceSound.volume = this.soundVolume;
@@ -103,8 +103,8 @@
 						const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
 						const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         if (holdDuration >= this.minHoldTime){
-						this.velocityY = -this.maxJumpForce * (5.5*holdY/(2*this.maxDy));//(holdDuration/this.maxHoldTime);
-						this.velocityZ = 1 + this.maxJumpForce * (holdY/(257*this.maxDy));
+						this.velocityY = -this.maxJumpForce * (5.5*holdY/(2*this.maxDy))*100/holdDuration;//(holdDuration/this.maxHoldTime);
+						this.velocityZ = 1 + this.maxJumpForce * (holdY/(297*this.maxDy))*100/holdDuration;
                         this.velocityX = -this.maxJumpForce * (holdX/(7*this.maxDx));
 						this.isJumping = true;
                         this.isHolding = false;
@@ -148,7 +148,7 @@
                     
                     // Затухание при маленькой скорости
                 //    if(Math.abs(this.velocityY) < 2)  {
-				console.log(this.mesh.modelRotation.x, ' ', this.velocityY);
+				//console.log(this.mesh.modelRotation.x, ' ', this.velocityY);
 					if (Math.abs(this.velocityY) < 1) {
 					 if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2)||(Math.abs(this.mesh.modelRotation.x )- (Math.PI + 0.6) < 0.2)){
                         this.isJumping = false;
