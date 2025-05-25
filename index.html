@@ -46,7 +46,8 @@
                 // Физические параметры
                 this.gravity = 0.7;
                 this.bounceDamping = 0.8;
-                this.minHoldTime = 100;
+                this.minHoldTime = 50;
+				this.minholdY = 30;
                 this.maxHoldTime = 800;
                 this.maxJumpForce = 25;
                 this.maxDx = 100;
@@ -168,9 +169,9 @@
                         const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
-                        if (holdDuration >= this.minHoldTime) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (2 * this.maxDy)) * 100 / holdDuration;
-                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (357 * this.maxDy)) * 100 / holdDuration;
+                        if (holdDuration >= this.minHoldTime)&&(holdY > this.minholdY) {
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (2 * this.maxDy)) * 130 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (357 * this.maxDy)) * 130 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (7 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
