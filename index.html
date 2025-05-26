@@ -210,8 +210,8 @@ this.appearTween = this.tweens.add({
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 120 / holdDuration;
-                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 130 / holdDuration;
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 60 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 650 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
