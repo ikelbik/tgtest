@@ -76,7 +76,7 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/particles/flares.json');                                   
+                this.load.atlas('flares', 'assets/flares.json');                                   
             }
 
             create() {
@@ -119,7 +119,6 @@
                 this.bounceSound.volume = this.soundVolume;
                 this.upSound = this.sound.add('coinUp');
                 this.upSound.volume = this.soundVolume;
-                this.comboSound = this.sound.add('comboSound');
                 this.comboSound.volume = this.soundVolume;
 
                 // Фон
