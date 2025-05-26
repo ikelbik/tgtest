@@ -143,7 +143,30 @@ const targetY = this.cameras.main.centerY + this.currentYOffset;
 				
 
 // 2. Анимация падения с "отскоком"
+
+   targets: this.mesh,
+    alpha: {
+        from: 0,
+        to: 1
+    },
+        
+                    scaleX: 0.5,
+                    scaleY: 0.5,
+                    angle: 360, // Полное вращение
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+
+
 this.appearTween = this.tweens.add({
+   targets: this.mesh,
+                    alpha: 0,
+                    scaleX: 0.5,
+                    scaleY: 0.5,
+                    angle: 360, // Полное вращение
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+
+/*
     targets: this.mesh,
     y: {
         from: startY,
@@ -159,6 +182,7 @@ this.appearTween = this.tweens.add({
         // Дополнительный эффект после приземления
 
     }
+*/
 });
 
                 // Сброс состояния
