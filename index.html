@@ -153,9 +153,13 @@ this.appearTween = this.tweens.add({
         from: 0,
         to: 1
     },
+    y: {
+        from: startY,
+        to: targetY
+    },
         
-                    scaleX: 0.5,
-                    scaleY: 0.5,
+                    scaleX: 1,
+                    scaleY: 1,
                     angle: 360, // Полное вращение
                     duration: 300,
                     ease: 'Cubic.easeOut'
