@@ -288,7 +288,7 @@
             // 1. Создаем форму молнии (линия с изломами)
             console.log(x,' ', y);
                // const lightningShape = new Phaser.Geom.Line(x, 0, x, y);
-                lightningShape.setTo(x, 0, x, y);
+                this.lightningShape.setTo(x, 0, x, y);
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
             // 3. Добавляем зону эмиссии вдоль формы молнии
                 this.lightning.addEmitZone({
