@@ -121,6 +121,17 @@
                     emit: false // Не стартуем автоматически
                 });
 
+                this.lightningShape.setTo(x, 0, x, y);
+
+                //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
+ 
+            this.lightning.addEmitZone({
+                    type: 'edge',
+                    source: this.lightningShape,
+                    quantity: 64, // Количество точек вдоль линии
+                    stepRate: 0.5 // Плотность распределения
+                }); 
+
                 // Создаем первую монету
                 this.createNewCoin();
                
@@ -293,16 +304,15 @@
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
                
             // 3. Добавляем зону эмиссии вдоль формы молнии
-            console.log(this.lightning.emitZones.length);
-            if (this.lightning.emitZones.length>0) {
-            this.lightning.removeEmitZone(this.lightning.emitZones.length);
-            }
+            this.lightning.emitZones[0].source = this.lightningShape;
+            /*
             this.lightning.addEmitZone({
                     type: 'edge',
                     source: this.lightningShape,
                     quantity: 64, // Количество точек вдоль линии
                     stepRate: 0.5 // Плотность распределения
-                });                
+                });
+                */                
             // Взрываем 100 частиц мгновенно
                 this.lightning.explode(100);
     
