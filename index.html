@@ -284,7 +284,7 @@
             triggerLightning(x, y) {
 
                 // 2. Создаем эмиттер
-                this.lightning = this.add.particles(0, 0, 'flares',{
+                const lightning = this.add.particles(0, 0, 'flares',{
                     frame: 'white',
                     blendMode: 'ADD',
                     lifespan: 500,
@@ -296,7 +296,7 @@
                 });
                 this.lightningShape.setTo(x, 0, x, y);
             
-                this.lightning.addEmitZone({
+                lightning.addEmitZone({
                     type: 'edge',
                     source: this.lightningShape,
                     quantity: 64, // Количество точек вдоль линии
@@ -304,7 +304,7 @@
                 });
                                 
             // Взрываем 100 частиц мгновенно
-                this.lightning.explode(100);
+                lightning.explode(100);
     
             // Эффекты камеры
                 this.cameras.main.shake(500, 0.02);
@@ -312,14 +312,14 @@
     
             // Автоматическое отключение через 0.5 секунды
                 this.time.delayedCall(500, () => {
-                this.lightning.stop(); // Останавливаем эмиттер
-                this.lightning.killAll(); // Уничтожаем все частицы
-                this.lightning.destroy();
+                lightning.stop(); // Останавливаем эмиттер
+                lightning.killAll(); // Уничтожаем все частицы
+                lightning.destroy();
             });
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
    // this.createNewCoin(); 
-}            
+            }            
         }
 
         const config = {
