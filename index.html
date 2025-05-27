@@ -110,7 +110,16 @@
                 
             
                 // 2. Создаем эмиттер
-
+                this.lightning = this.add.particles(0, 0, 'flares', {
+                    frame: 'white',
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
     
 
                 // Создаем первую монету
@@ -279,23 +288,9 @@
 
             triggerLightning(x, y) {
 
-                this.lightning = this.add.particles(0, 0, 'flares', {
-                    frame: 'white',
-                    blendMode: 'ADD',
-                    lifespan: 500,
-                    quantity: 1,
-                    scale: { start: 2, end: 0 },
-                    alpha: { start: 1, end: 0.2 },
-                    speed: { min: 50, max: 200 },
-                    emit: false // Не стартуем автоматически
-                });
-            console.log(x,' ', y);
-               // const lightningShape = new Phaser.Geom.Line(x, 0, x, y);
+
                 this.lightningShape.setTo(x, 0, x, y);
-                console.log(
-    `Начало: (${this.lightningShape.x1}, ${this.lightningShape.y1})`, // (100, 200)
-    `Конец: (${this.lightningShape.x2}, ${this.lightningShape.y2})`   // (400, 300)
-);
+
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
             // 3. Добавляем зону эмиссии вдоль формы молнии
                 this.lightning.addEmitZone({
@@ -315,7 +310,7 @@
                 this.time.delayedCall(500, () => {
                 this.lightning.stop(); // Останавливаем эмиттер
                 this.lightning.killAll(); // Уничтожаем все частицы
-                this.lightning.destroy();
+                this.lightning.emitter.removeAllEmitZones()д
             });
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
