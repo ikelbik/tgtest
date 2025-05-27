@@ -109,13 +109,6 @@
                 }).setScrollFactor(0);
                 
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
- 
-            this.lightning.addEmitZone({
-                    type: 'edge',
-                    source: this.lightningShape,
-                    quantity: 64, // Количество точек вдоль линии
-                    stepRate: 0.5 // Плотность распределения
-                }); 
 
                 // Создаем первую монету
                 this.createNewCoin();
