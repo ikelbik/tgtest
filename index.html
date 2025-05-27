@@ -145,9 +145,20 @@
 
                 this.triggerLightning(targetX, targetY)
               
-                this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
+                this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.0;
                 //Phaser.Math.FloatBetween(0, Math.PI * 2);
                 
+        const rotateX = new Phaser.Math.Matrix4().rotateX(0.6);
+        const rotateY = new Phaser.Math.Matrix4().rotateY(Phaser.Math.FloatBetween(0, Math.PI * 2));
+        
+        this.mesh.setTransformMatrix(
+            new Phaser.Math.Matrix4()
+                .multiply(rotateY)
+                .multiply(rotateX)
+        );
+        
+        this.mesh.updateTransform();
+
                 this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
 
