@@ -110,16 +110,7 @@
                 
             
                 // 2. Создаем эмиттер
-                this.lightning = this.add.particles(0, 0, 'flares', {
-                    frame: 'white',
-                    blendMode: 'ADD',
-                    lifespan: 500,
-                    quantity: 1,
-                    scale: { start: 2, end: 0 },
-                    alpha: { start: 1, end: 0.2 },
-                    speed: { min: 50, max: 200 },
-                    emit: false // Не стартуем автоматически
-                });
+
     
 
                 // Создаем первую монету
@@ -287,7 +278,17 @@
             }
 
             triggerLightning(x, y) {
-            // 1. Создаем форму молнии (линия с изломами)
+
+                this.lightning = this.add.particles(0, 0, 'flares', {
+                    frame: 'white',
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
             console.log(x,' ', y);
                // const lightningShape = new Phaser.Geom.Line(x, 0, x, y);
                 this.lightningShape.setTo(x, 0, x, y);
