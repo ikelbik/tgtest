@@ -76,9 +76,8 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');                  
+                this.load.atlas('flares', 'assets/particles/flares.png', 'assets/particles/flares.json');                  
             }
-
 
             create() {
                 if (window.Telegram?.WebApp?.onEvent) {
@@ -89,17 +88,11 @@
 				
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 
-                //emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
-
-                //emitter.stopAfter(20);
-
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
                 this.bounceSound.volume = this.soundVolume;
                 this.upSound = this.sound.add('coinUp');
                 this.upSound.volume = this.soundVolume;
-                this.comboSound = this.sound.add('comboSound');
-                this.comboSound.volume = this.soundVolume;
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
@@ -170,17 +163,18 @@
                 this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
                 this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
-                
+
                 // 2. Анимация падения с "отскоком"
+
                 this.appearTween = this.tweens.add({
                     targets: this.mesh,
                     alpha: {
-                    from: 0,
-                    to: 1
+                        from: 0,
+                        to: 1
                     },
                     y: {
-                    from: startY,
-                    to: targetY
+                        from: startY,
+                        to: targetY
                     },
                     scaleX: 2.5,
                     scaleY: 2.5,
@@ -264,36 +258,36 @@
                         if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
                             (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
-                        // 1. Останавливаем физику
-                        this.isJumping = false;
-                        this.velocityY = 0;
-                        this.velocityX = 0;
+                            // 1. Останавливаем физику
+                            this.isJumping = false;
+                            this.velocityY = 0;
+                            this.velocityX = 0;
         
-                        // 2. Анимация "подпрыгивания" перед исчезновением
-                        this.tweens.add({
-                            targets: this.mesh,
-                            y: this.mesh.y - 30, // Подбрасываем немного вверх
-                            duration: 150,
-                            ease: 'Power1',
-                            yoyo: true,
-                            onComplete: () => {
-                        // 3. Анимация исчезновения с вращением
+                            // 2. Анимация "подпрыгивания" перед исчезновением
                             this.tweens.add({
                                 targets: this.mesh,
-                                alpha: 0,
-                                scaleX: 0.5,
-                                scaleY: 0.5,
-                                angle: 360, // Полное вращение
-                                duration: 300,
-                                ease: 'Cubic.easeOut',
+                                y: this.mesh.y - 30, // Подбрасываем немного вверх
+                                duration: 150,
+                                ease: 'Power1',
+                                yoyo: true,
                                 onComplete: () => {
-                                    this.score += 1;
-                                    this.scoreText.setText(`Монет : ${this.score}`);
-                                    this.createNewCoin();
+                                // 3. Анимация исчезновения с вращением
+                                    this.tweens.add({
+                                        targets: this.mesh,
+                                        alpha: 0,
+                                        scaleX: 0.5,
+                                        scaleY: 0.5,
+                                        angle: 360, // Полное вращение
+                                        duration: 300,
+                                        ease: 'Cubic.easeOut',
+                                        onComplete: () => {
+                                            this.score += 1;
+                                            this.scoreText.setText(`Монет : ${this.score}`);
+                                            this.createNewCoin();
+                                        }
+                                    });
                                 }
                             });
-                            }
-                        });
                         } else {
                             this.mesh.modelRotation.x -= 0.1;
                         }
@@ -317,9 +311,10 @@ triggerLightning() {
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
     this.createNewCoin(); 
-}
+}            
 
-}
+        }
+
         const config = {
             type: Phaser.WEBGL,
             width: window.innerWidth,
@@ -350,7 +345,7 @@ triggerLightning() {
                 antialiasGL: true 
             }
         };
-    
+
         const game = new Phaser.Game(config);
         window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
         document.addEventListener('contextmenu', e => e.preventDefault());
