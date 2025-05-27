@@ -122,8 +122,8 @@
             createNewCoin() {
                 this.mSound.play();
                 // Уничтожаем старую монету, если есть
-              //  if (this.mesh) {
-              //      this.mesh.destroy();
+                if (this.mesh) {
+                    this.mesh.destroy();
                // }
                 
                 // Случайное смещение по X
@@ -275,12 +275,14 @@
                                         onComplete: () => {
                                             this.score += 1;
                                             this.scoreText.setText(`Монет : ${this.score}`);
+                                            /*
                                             this.time.delayedCall(250, () => {
                                                 if (this.mesh) {
                                                     this.mesh.destroy();
                                                     this.emit_flag=true;
                                                 }
                                             });
+                                            */
                                             this.createNewCoin();
                                         }
                                     });
