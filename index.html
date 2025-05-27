@@ -121,9 +121,9 @@
             createNewCoin() {
                 this.mSound.play();
                 // Уничтожаем старую монету, если есть
-                if (this.mesh) {
-                    this.mesh.destroy();
-                }
+              //  if (this.mesh) {
+              //      this.mesh.destroy();
+               // }
                 
                 // Случайное смещение по X
                 const randomX = Phaser.Math.Between(-150, 150);
@@ -224,7 +224,9 @@
 
                 // Обработка столкновения с "землей"
                 if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
-                    //this.createNewCoin();
+    this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
+        this.createNewCoin();
+    });
                     this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
                     this.velocityZ = 1 + (this.velocityZ - 1) / 3;
@@ -267,7 +269,7 @@
                                         onComplete: () => {
                                             this.score += 1;
                                             this.scoreText.setText(`Монет : ${this.score}`);
-                                            this.createNewCoin();
+                                           // this.createNewCoin();
                                         }
                                     });
                                 }
@@ -317,6 +319,11 @@
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
    // this.createNewCoin(); 
+   this.time.delayedCall(500, () => {
+    if (this.mesh) {
+        this.mesh.destroy();
+    }
+});
             }            
         }
 
