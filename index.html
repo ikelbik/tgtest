@@ -225,12 +225,14 @@
 
                 // Обработка столкновения с "землей"
                 if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                   /*
                     if (this.emit_flag) {
                         this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
                         this.createNewCoin();
                         this.emit_flag=false;
                         });
                     }
+                    */
                     this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
                     this.velocityZ = 1 + (this.velocityZ - 1) / 3;
