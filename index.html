@@ -67,6 +67,7 @@
                 this.comboMultiplier = 1;
                 this.lastLandTime = 0;
                 this.comboTimeout = 2000; // 2 секунды для комбо
+                this.emit_flag = true;
             }
         
             preload() {
@@ -224,9 +225,11 @@
 
                 // Обработка столкновения с "землей"
                 if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
-    this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
-        this.createNewCoin();
-    });
+                    if (this.emit_flag) {
+                        this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
+                        this.createNewCoin();
+                        this.emit_flag=false;
+                    });
                     this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
                     this.velocityZ = 1 + (this.velocityZ - 1) / 3;
@@ -269,7 +272,12 @@
                                         onComplete: () => {
                                             this.score += 1;
                                             this.scoreText.setText(`Монет : ${this.score}`);
-                                           // this.createNewCoin();
+                                            this.time.delayedCall(250, () => {
+                                                if (this.mesh) {
+                                                    this.mesh.destroy();
+                                                    this.emit_flag=true;
+                                                }
+                                            });
                                         }
                                     });
                                 }
