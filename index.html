@@ -76,7 +76,9 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');                  
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                
+                this.lightningShape = new Phaser.Geom.Line();
             }
 
             create() {
@@ -106,7 +108,7 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-                const lightningShape = new Phaser.Geom.Line()
+            
                 // 2. Создаем эмиттер
                 this.lightning = this.add.particles(0, 0, 'flares', {
                     frame: 'white',
