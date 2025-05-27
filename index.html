@@ -108,21 +108,6 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-            
-                // 2. Создаем эмиттер
-                this.lightning = this.add.particles(0, 0, 'flares',{
-                    frame: 'white',
-                    blendMode: 'ADD',
-                    lifespan: 500,
-                    quantity: 1,
-                    scale: { start: 2, end: 0 },
-                    alpha: { start: 1, end: 0.2 },
-                    speed: { min: 50, max: 200 },
-                    emit: false // Не стартуем автоматически
-                });
-
-                //this.lightningShape.setTo(x, 0, x, y);
-
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
  
             this.lightning.addEmitZone({
@@ -298,22 +283,26 @@
 
             triggerLightning(x, y) {
 
-
+                // 2. Создаем эмиттер
+                this.lightning = this.add.particles(0, 0, 'flares',{
+                    frame: 'white',
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
                 this.lightningShape.setTo(x, 0, x, y);
-
-                //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
-               
-            // 3. Добавляем зону эмиссии вдоль формы молнии
-            console.log(Phaser.VERSION);
-            this.lightning.emitZones[0].source = this.lightningShape;
-            /*
-            this.lightning.addEmitZone({
+            
+                this.lightning.addEmitZone({
                     type: 'edge',
                     source: this.lightningShape,
                     quantity: 64, // Количество точек вдоль линии
                     stepRate: 0.5 // Плотность распределения
                 });
-                */                
+                                
             // Взрываем 100 частиц мгновенно
                 this.lightning.explode(100);
     
@@ -325,7 +314,7 @@
                 this.time.delayedCall(500, () => {
                 this.lightning.stop(); // Останавливаем эмиттер
                 this.lightning.killAll(); // Уничтожаем все частицы
-                this.lightning.start();
+                this.lightning.destroy();
             });
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
