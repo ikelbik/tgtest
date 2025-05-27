@@ -295,7 +295,7 @@
             // 3. Добавляем зону эмиссии вдоль формы молнии
             console.log(this.lightning.emitZones.length);
             if (this.lightning.emitZones.length>0) {
-            console.log(this.lightning.removeEmitZone(this.lightning.emitZones.length-1));
+            this.lightning.removeEmitZone(this.lightning.emitZones.length);
             }
             this.lightning.addEmitZone({
                     type: 'edge',
