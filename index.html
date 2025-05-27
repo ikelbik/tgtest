@@ -110,7 +110,8 @@
                 
             
                 // 2. Создаем эмиттер
-                this.lightning = this.add.particles(0, 0, 'flares', {
+                const manager = this.add.particles(0, 0, 'flares');
+                this.lightning = manager.createEmitter({
                     frame: 'white',
                     blendMode: 'ADD',
                     lifespan: 500,
@@ -311,7 +312,7 @@
                 this.lightning.stop(); // Останавливаем эмиттер
                 this.lightning.killAll(); // Уничтожаем все частицы
             });
-            this.lightning.removeAllEmitZone(0);
+            this.lightning.removeEmitZone(0);
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
    // this.createNewCoin(); 
