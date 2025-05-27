@@ -99,6 +99,8 @@
 
                 emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
 
+                emitter.stopAfter(20);
+
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
                 this.bounceSound.volume = this.soundVolume;
