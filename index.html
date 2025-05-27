@@ -110,8 +110,7 @@
                 
             
                 // 2. Создаем эмиттер
-                const manager = this.add.particles(0, 0, 'flares');
-                this.lightning = manager.createEmitter({
+                this.lightning = this.add.particles(0, 0, 'flares',{
                     frame: 'white',
                     blendMode: 'ADD',
                     lifespan: 500,
