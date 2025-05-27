@@ -76,6 +76,7 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/magic.mp3');                
                 this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
                 
                 this.lightningShape = new Phaser.Geom.Line();
@@ -95,6 +96,8 @@
                 this.bounceSound.volume = this.soundVolume;
                 this.upSound = this.sound.add('coinUp');
                 this.upSound.volume = this.soundVolume;
+                this.mSound = this.sound.add('magic');
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;                
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
@@ -116,6 +119,7 @@
             }
 
             createNewCoin() {
+                this.mSound.play();
                 // Уничтожаем старую монету, если есть
                 if (this.mesh) {
                     this.mesh.destroy();
@@ -189,7 +193,7 @@
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 60 / holdDuration;
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
                             this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             this.isJumping = true;
