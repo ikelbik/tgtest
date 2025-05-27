@@ -309,7 +309,7 @@
             // Автоматическое отключение через 0.5 секунды
                 this.time.delayedCall(500, () => {
                 this.lightning.stop(); // Останавливаем эмиттер
-                this.lightning.removeEmitZone(0);
+                this.lightning.removeEmitZone(1);
                 this.lightning.killAll(); // Уничтожаем все частицы
             });
     
