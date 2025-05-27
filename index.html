@@ -79,6 +79,7 @@
                 this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');                  
             }
 
+
             create() {
                 if (window.Telegram?.WebApp?.onEvent) {
                     Telegram.WebApp.onEvent('backButtonClicked', () => {
@@ -89,17 +90,30 @@
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
                 const shape0 = new Phaser.Geom.Line(-150, -150, 150, 150);
 
-                const emitter = this.add.particles(400, 300, 'flares', {
-                frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
-                blendMode: 'ADD',
-                lifespan: 500,
-                quantity: 4,
-                scale: { start: 0.5, end: 0.1 }
+                const branchEmitter = this.add.particles(400, 0, 'flares', {
+                    frame: 'blue',
+                    blendMode: 'ADD',
+                    lifespan: 200,
+                    scale: { start: 0.8, end: 0 },
+                    speed: { min: 100, max: 400 },
+                    angle: { min: 60, max: 120 },
+                    emitZone: {
+                    type: 'edge',
+                    source: new Phaser.Geom.Line(0, 0, 800, 0),
+                    quantity: 30
+                    }
                 });
 
-                emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
+                    // Запускаем анимацию молнии каждые 2 секунды
+    this.time.addEvent({
+        delay: 2000,
+        callback: () => this.createLightning(),
+        loop: true
+    });
 
-                emitter.stopAfter(20);
+                //emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
+
+                //emitter.stopAfter(20);
 
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
@@ -282,6 +296,16 @@
                 }
             }
 
+createLightning() {
+    // Активируем эмиттер
+    this.lightningEmitter.explode(50);
+    
+    // Добавляем вспышку экрана
+    this.cameras.main.flash(200, 255, 255, 255);
+    
+    // Добавляем дрожание камеры
+    this.cameras.main.shake(200, 0.02);
+}
         }
 
         const config = {
