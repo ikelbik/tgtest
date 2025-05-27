@@ -278,7 +278,7 @@
 
                 // 2. Создаем эмиттер
                 const lightning = this.add.particles(0, 0, 'flares',{
-                    frame: 'white',
+                    frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
                     blendMode: 'ADD',
                     lifespan: 500,
                     quantity: 1,
