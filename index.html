@@ -292,6 +292,7 @@
                 this.lightningShape.setTo(x, 0, x, y);
 
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
+               this.lightning.removeAllEmitZones(); 
             // 3. Добавляем зону эмиссии вдоль формы молнии
                 this.lightning.addEmitZone({
                     type: 'edge',
@@ -309,8 +310,8 @@
             // Автоматическое отключение через 0.5 секунды
                 this.time.delayedCall(500, () => {
                 this.lightning.stop(); // Останавливаем эмиттер
-                this.lightning.removeEmitZone(1);
                 this.lightning.killAll(); // Уничтожаем все частицы
+                this.lightning.start();
             });
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
