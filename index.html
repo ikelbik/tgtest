@@ -76,9 +76,8 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');                  
+                this.load.atlas('flares', 'assets/particles/flares.png', 'assets/particles/flares.json');                  
             }
-
 
             create() {
                 if (window.Telegram?.WebApp?.onEvent) {
@@ -88,10 +87,17 @@
                 }
 				
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
+                const shape0 = new Phaser.Geom.Line(-150, -150, 150, 150);
 
-                //emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
-
-                //emitter.stopAfter(20);
+                const emitter = this.add.particles(400, 300, 'flares', {
+                frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
+                blendMode: 'ADD',
+                lifespan: 500,
+                quantity: 4,
+                scale: { start: 0.5, end: 0.1 }
+                });
+                
+                emitter.addEmitZone({ type: 'edge', source: shape4, quantity: 64, total: 1 });
 
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
@@ -113,35 +119,8 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
 
-                // 1. Создаем форму молнии (линия с изломами)
-    const lightningShape = new Phaser.Geom.Line(100, 50, 700, 550);
-    Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
-    
-    // 2. Создаем эмиттер
-    this.lightning = this.add.particles(0, 0, 'flares', {
-        frame: 'white',
-        blendMode: 'ADD',
-        lifespan: 500,
-        quantity: 1,
-        scale: { start: 2, end: 0 },
-        alpha: { start: 1, end: 0.2 },
-        speed: { min: 50, max: 200 },
-        emit: false // Не стартуем автоматически
-    });
-
-    // 3. Добавляем зону эмиссии вдоль формы молнии
-    this.lightning.addEmitZone({
-        type: 'edge',
-        source: lightningShape,
-        quantity: 64, // Количество точек вдоль линии
-        stepRate: 0.5 // Плотность распределения
-    });
-
-    // 4. Запускаем молнию
-    this.triggerLightning();
-
                 // Создаем первую монету
-                //this.createNewCoin();
+                this.createNewCoin();
                
             }
 
@@ -158,8 +137,8 @@
                 this.currentYOffset = this.baseYOffset + randomYOffset;
                 
                 // Создаем новую монету
-                const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
-                const targetY = this.cameras.main.centerY + this.currentYOffset;				
+const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
+const targetY = this.cameras.main.centerY + this.currentYOffset;				
 				
                 this.mesh = this.add.mesh(
                     this.cameras.main.centerX + randomX,
@@ -171,23 +150,49 @@
                 this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
                 
-                // 2. Анимация падения с "отскоком"
-                this.appearTween = this.tweens.add({
-                    targets: this.mesh,
-                    alpha: {
-                    from: 0,
-                    to: 1
-                    },
-                    y: {
-                    from: startY,
-                    to: targetY
-                    },
+                // 1. Устанавливаем начальную позицию ВЫШЕ экрана
+				
+
+// 2. Анимация падения с "отскоком"
+
+
+
+
+this.appearTween = this.tweens.add({
+   targets: this.mesh,
+    alpha: {
+        from: 0,
+        to: 1
+    },
+    y: {
+        from: startY,
+        to: targetY
+    },
+        
                     scaleX: 2.5,
                     scaleY: 2.5,
                     angle: 360, // Полное вращение
                     duration: 300,
                     ease: 'Cubic.easeOut'
-                });
+
+/*
+    targets: this.mesh,
+    y: {
+        from: startY,
+        to: targetY
+    },
+    duration: 800, // Увеличенная длительность для плавности
+    ease: 'Bounce.out',
+    onStart: () => {
+        this.isAnimating = true; // Флаг анимации
+    },
+    onComplete: () => {
+        this.isAnimating = false;
+        // Дополнительный эффект после приземления
+
+    }
+*/
+});
 
                 // Сброс состояния
                 this.isJumping = false;
@@ -264,61 +269,44 @@
                         if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
                             (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
-                        // 1. Останавливаем физику
-                        this.isJumping = false;
-                        this.velocityY = 0;
-                        this.velocityX = 0;
+                            // 1. Останавливаем физику
+        this.isJumping = false;
+        this.velocityY = 0;
+        this.velocityX = 0;
         
-                        // 2. Анимация "подпрыгивания" перед исчезновением
-                        this.tweens.add({
-                            targets: this.mesh,
-                            y: this.mesh.y - 30, // Подбрасываем немного вверх
-                            duration: 150,
-                            ease: 'Power1',
-                            yoyo: true,
-                            onComplete: () => {
-                        // 3. Анимация исчезновения с вращением
-                            this.tweens.add({
-                                targets: this.mesh,
-                                alpha: 0,
-                                scaleX: 0.5,
-                                scaleY: 0.5,
-                                angle: 360, // Полное вращение
-                                duration: 300,
-                                ease: 'Cubic.easeOut',
-                                onComplete: () => {
-                                    this.score += 1;
-                                    this.scoreText.setText(`Монет : ${this.score}`);
-                                    this.createNewCoin();
-                                }
-                            });
-                            }
-                        });
-                        } else {
-                            this.mesh.modelRotation.x -= 0.1;
-                        }
+        // 2. Анимация "подпрыгивания" перед исчезновением
+        this.tweens.add({
+            targets: this.mesh,
+            y: this.mesh.y - 30, // Подбрасываем немного вверх
+            duration: 150,
+            ease: 'Power1',
+            yoyo: true,
+            onComplete: () => {
+                // 3. Анимация исчезновения с вращением
+                this.tweens.add({
+                    targets: this.mesh,
+                    alpha: 0,
+                    scaleX: 0.5,
+                    scaleY: 0.5,
+                    angle: 360, // Полное вращение
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                        this.score += 1;
+                        this.scoreText.setText(`Монет : ${this.score}`);
+                        this.createNewCoin();
+                    }
+                });
+            }
+        });
+    } else {
+        this.mesh.modelRotation.x -= 0.1;
+    }
                     }
                 }
             }
 
-triggerLightning() {
-    // Взрываем 100 частиц мгновенно
-    this.lightning.explode(100);
-    
-    // Эффекты камеры
-    this.cameras.main.shake(500, 0.02);
-    this.cameras.main.flash(500, 255, 255, 255);
-    
-    // Автоматическое отключение через 0.5 секунды
-    this.time.delayedCall(500, () => {
-        this.lightning.stop(); // Останавливаем эмиттер
-        this.lightning.killAll(); // Уничтожаем все частицы
-    });
-    
-    // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
-    this.createNewCoin(); 
-}
-
+        }
 
         const config = {
             type: Phaser.WEBGL,
