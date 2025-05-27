@@ -120,8 +120,6 @@
                     speed: { min: 50, max: 200 },
                     emit: false // Не стартуем автоматически
                 });
-                this.lightning.removeAllEmitZones(); 
-    
 
                 // Создаем первую монету
                 this.createNewCoin();
@@ -295,6 +293,7 @@
                 //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
                
             // 3. Добавляем зону эмиссии вдоль формы молнии
+            console.log(emitter.emitZones.length)
                 this.lightning.addEmitZone({
                     type: 'edge',
                     source: this.lightningShape,
