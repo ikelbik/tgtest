@@ -131,10 +131,22 @@
     });
 
     // 4. Запускаем молнию
-    this.triggerLightning();
+    // Взрываем 100 частиц мгновенно
+    this.lightning.explode(100);
+    
+    // Эффекты камеры
+    this.cameras.main.shake(500, 0.02);
+    this.cameras.main.flash(500, 255, 255, 255);
+    
+    // Автоматическое отключение через 0.5 секунды
+    this.time.delayedCall(500, () => {
+        this.lightning.stop(); // Останавливаем эмиттер
+        this.lightning.killAll(); // Уничтожаем все частицы
+    });
+    
 
                 // Создаем первую монету
-                //this.createNewCoin();
+                this.createNewCoin();
                
             }
 
