@@ -124,6 +124,7 @@
                 // Уничтожаем старую монету, если есть
                 if (this.mesh) {
                     this.mesh.destroy();
+                }
                // }
                 
                 // Случайное смещение по X
@@ -329,11 +330,11 @@
                 lightning.stop(); // Останавливаем эмиттер
                 lightning.killAll(); // Уничтожаем все частицы
                 lightning.destroy();
-            });
+                });
      
             }            
         
-    }
+        }
         const config = {
             type: Phaser.WEBGL,
             width: window.innerWidth,
