@@ -88,28 +88,44 @@
                 }
 				
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
-                const shape0 = new Phaser.Geom.Line(-150, -150, 150, 150);
-
-                const branchEmitter = this.add.particles(400, 0, 'flares', {
-                    frame: 'blue',
-                    blendMode: 'ADD',
-                    lifespan: 200,
-                    scale: { start: 0.8, end: 0 },
-                    speed: { min: 100, max: 400 },
-                    angle: { min: 60, max: 120 },
-                    emitZone: {
-                    type: 'edge',
-                    source: new Phaser.Geom.Line(0, 0, 800, 0),
-                    quantity: 30
-                    }
-                });
-
-                    // Запускаем анимацию молнии каждые 2 секунды
-    this.time.addEvent({
-        delay: 2000,
-        callback: () => this.createLightning(),
-        loop: true
+                // 1. Создаем форму молнии (линия с изломами)
+    const lightningShape = new Phaser.Geom.Line(100, 50, 700, 550);
+    Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
+    
+    // 2. Создаем эмиттер
+    this.lightning = this.add.particles(0, 0, 'flares', {
+        frame: 'white',
+        blendMode: 'ADD',
+        lifespan: 500,
+        quantity: 1,
+        scale: { start: 2, end: 0 },
+        alpha: { start: 1, end: 0.2 },
+        speed: { min: 50, max: 200 },
+        emit: false // Не стартуем автоматически
     });
+
+    // 3. Добавляем зону эмиссии вдоль формы молнии
+    this.lightning.addEmitZone({
+        type: 'edge',
+        source: lightningShape,
+        quantity: 64, // Количество точек вдоль линии
+        stepRate: 0.5 // Плотность распределения
+    });
+
+    // 4. Запускаем молнию
+// Взрываем 100 частиц мгновенно
+    this.lightning.explode(100);
+    
+    // Эффекты камеры
+    this.cameras.main.shake(500, 0.02);
+    this.cameras.main.flash(500, 255, 255, 255);
+    
+    // Автоматическое отключение через 0.5 секунды
+    this.time.delayedCall(500, () => {
+        this.lightning.stop(); // Останавливаем эмиттер
+        this.lightning.killAll(); // Уничтожаем все частицы
+    });
+
 
                 //emitter.addEmitZone({ type: 'edge', source: shape0, quantity: 64, total: 1 });
 
