@@ -316,14 +316,7 @@
                 lightning.killAll(); // Уничтожаем все частицы
                 lightning.destroy();
             });
-    
-    // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
-   // this.createNewCoin(); 
-   this.time.delayedCall(500, () => {
-    if (this.mesh) {
-        this.mesh.destroy();
-    }
-});
+     
             }            
         }
 
