@@ -105,44 +105,18 @@
                     stroke: '#000000',
                     strokeThickness: 4
                 }).setScrollFactor(0);
-
-                // 1. Создаем форму молнии (линия с изломами)
-    const lightningShape = new Phaser.Geom.Line(100, 50, 700, 550);
-    Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
     
-    // 2. Создаем эмиттер
-    this.lightning = this.add.particles(0, 0, 'flares', {
-        frame: 'white',
-        blendMode: 'ADD',
-        lifespan: 500,
-        quantity: 1,
-        scale: { start: 2, end: 0 },
-        alpha: { start: 1, end: 0.2 },
-        speed: { min: 50, max: 200 },
-        emit: false // Не стартуем автоматически
-    });
-
-    // 3. Добавляем зону эмиссии вдоль формы молнии
-    this.lightning.addEmitZone({
-        type: 'edge',
-        source: lightningShape,
-        quantity: 64, // Количество точек вдоль линии
-        stepRate: 0.5 // Плотность распределения
-    });
-
-    // 4. Запускаем молнию
-    // Взрываем 100 частиц мгновенно
-    this.lightning.explode(100);
-    
-    // Эффекты камеры
-    this.cameras.main.shake(500, 0.02);
-    this.cameras.main.flash(500, 255, 255, 255);
-    
-    // Автоматическое отключение через 0.5 секунды
-    this.time.delayedCall(500, () => {
-        this.lightning.stop(); // Останавливаем эмиттер
-        this.lightning.killAll(); // Уничтожаем все частицы
-    });
+                // 2. Создаем эмиттер
+                this.lightning = this.add.particles(0, 0, 'flares', {
+                    frame: 'white',
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
     
 
                 // Создаем первую монету
@@ -165,12 +139,14 @@
                 // Создаем новую монету
                 const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
                 const targetY = this.cameras.main.centerY + this.currentYOffset;				
-				
+				const targetX = this.cameras.main.centerX + randomX;
                 this.mesh = this.add.mesh(
-                    this.cameras.main.centerX + randomX,
+                    targetX,
                     startY, 
                     'texture'
                 );
+
+                triggerLightning(targetX, targetY)
               
                 this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
                 this.mesh.setScale(3);
@@ -307,22 +283,32 @@
                 }
             }
 
-triggerLightning() {
-    // Взрываем 100 частиц мгновенно
-    this.lightning.explode(100);
+            triggerLightning(x, y) {
+            // 1. Создаем форму молнии (линия с изломами)
+                const lightningShape = new Phaser.Geom.Line(x, 0, x, y);
+                Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
+            // 3. Добавляем зону эмиссии вдоль формы молнии
+                this.lightning.addEmitZone({
+                    type: 'edge',
+                    source: lightningShape,
+                    quantity: 64, // Количество точек вдоль линии
+                    stepRate: 0.5 // Плотность распределения
+                });                
+            // Взрываем 100 частиц мгновенно
+                this.lightning.explode(100);
     
-    // Эффекты камеры
-    this.cameras.main.shake(500, 0.02);
-    this.cameras.main.flash(500, 255, 255, 255);
+            // Эффекты камеры
+                this.cameras.main.shake(500, 0.02);
+                this.cameras.main.flash(500, 255, 255, 255);
     
-    // Автоматическое отключение через 0.5 секунды
-    this.time.delayedCall(500, () => {
-        this.lightning.stop(); // Останавливаем эмиттер
-        this.lightning.killAll(); // Уничтожаем все частицы
-    });
+            // Автоматическое отключение через 0.5 секунды
+                this.time.delayedCall(500, () => {
+                this.lightning.stop(); // Останавливаем эмиттер
+                this.lightning.killAll(); // Уничтожаем все частицы
+            });
     
     // Код продолжает выполняться сразу после запуска, не ждет 0.5 сек!
-    this.createNewCoin(); 
+   // this.createNewCoin(); 
 }            
 
         }
