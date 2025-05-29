@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>3D Flying Coins Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser-arcade-physics.min.js"></script>
+    <style>
+        body { 
+            margin: 0; 
+            overflow: hidden; 
+            background-color: #000;
+        }
+    </style>
+</head>
+<body>
+    <script>
+        const config = {
+            type: Phaser.WEBGL, // Важно: используем WebGL рендерер
+            width: 800,
+            height: 600,
+            backgroundColor: '#1a1a2e',
+            scene: {
+                preload: preload,
+                create: create,
+                update: update
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        let coins;
+        let light;
+
+        function preload() {
+            // Загружаем текстуру для монетки
+            this.load.image('coin', 'https://labs.phaser.io/assets/sprites/coin.png');
+        }
+
+        function create() {
+            // Создаем группу для хранения мешей монеток
+            coins = this.add.group();
+            
+            // Создаем источник света для 3D-эффекта
+            light = this.lights.addLight(0, 0, 400).setIntensity(2);
+            this.lights.enable().setAmbientColor(0x333333);
+            
+            // Обработчик кликов по экрану
+            this.input.on('pointerdown', (pointer) => {
+                createCoinMesh(this, pointer.x, pointer.y);
+            });
+            
+            // Обработчик движения мыши для перемещения света
+            this.input.on('pointermove', (pointer) => {
+                light.x = pointer.x;
+                light.y = pointer.y;
+            });
+            
+            // Инструкция для игрока
+            const style = { 
+                font: '20px Arial', 
+                fill: '#ffffff',
+                backgroundColor: 'rgba(0,0,0,0.5)',
+                padding: { x: 10, y: 5 }
+            };
+            this.add.text(20, 20, 'Кликайте по экрану, чтобы создавать 3D монетки!', style);
+            this.add.text(20, 60, 'Двигайте мышью, чтобы изменить освещение', style);
+        }
+
+        function update() {
+            // Обновляем позиции и вращение мешей
+            coins.getChildren().forEach(coin => {
+                // Обработка столкновений с границами
+                if (coin.x < 0 || coin.x > config.width) {
+                    coin.body.velocity.x *= -1;
+                }
+                if (coin.y < 0 || coin.y > config.height) {
+                    coin.body.velocity.y *= -1;
+                }
+                
+                // Вращение меша по трем осям
+                coin.mesh.rotationX += 0.01;
+                coin.mesh.rotationY += 0.02;
+                coin.mesh.rotationZ += 0.03;
+                
+                // Пульсация масштаба для эффекта "мерцания"
+                coin.mesh.scaleX = Math.sin(this.time.now / 200) * 0.1 + 1;
+                coin.mesh.scaleY = Math.cos(this.time.now / 300) * 0.1 + 1;
+            });
+        }
+
+        function createCoinMesh(scene, x, y) {
+            // Создаем физический спрайт (невидимый)
+            const physicsBody = scene.physics.add.sprite(x, y, null)
+                .setVisible(false)
+                .setCollideWorldBounds(true)
+                .setBounce(1);
+            
+            // Задаем случайную скорость
+            physicsBody.setVelocity(
+                Phaser.Math.Between(-300, 300),
+                Phaser.Math.Between(-300, 300)
+            );
+            
+            // Создаем 3D меш
+            const mesh = scene.add.mesh(x, y, 'coin');
+            
+            // Настраиваем геометрию меша
+            mesh.addVertices([
+                -50, -50, 0,  0, 0,
+                 50, -50, 0,  1, 0,
+                 50,  50, 0,  1, 1,
+                -50,  50, 0,  0, 1
+            ]);
+            
+            mesh.addIndices([0, 1, 2, 0, 2, 3]);
+            mesh.setPipeline('Light2D');
+            
+            // Начальное вращение
+            mesh.rotationX = Phaser.Math.Between(0, Math.PI * 2);
+            mesh.rotationY = Phaser.Math.Between(0, Math.PI * 2);
+            mesh.rotationZ = Phaser.Math.Between(0, Math.PI * 2);
+            
+            // Случайный размер
+            const scale = Phaser.Math.FloatBetween(0.7, 1.3);
+            mesh.setScale(scale);
+            
+            // Создаем пользовательский объект для связи физики и меша
+            const coinObj = scene.add.container(0, 0);
+            coinObj.add(mesh);
+            coinObj.mesh = mesh;
+            coinObj.body = physicsBody.body;
+            
+            // Связываем позиции меша и физического тела
+            scene.events.on('update', () => {
+                mesh.x = physicsBody.x;
+                mesh.y = physicsBody.y;
+                coinObj.x = physicsBody.x;
+                coinObj.y = physicsBody.y;
+            });
+            
+            // Добавляем в группу
+            coins.add(coinObj);
+        }
+    </script>
+</body>
+</html>
