@@ -99,10 +99,6 @@
             light = this.lights.addLight(0, 0, 400).setIntensity(2);
             this.lights.enable().setAmbientColor(0x333333);
             
-            // Обработчик кликов по экрану
-            this.input.on('pointerdown', (pointer) => {
-                createCoinMesh(this, pointer.x, pointer.y);
-            });
             
             // Обработчик движения мыши для перемещения света
             this.input.on('pointermove', (pointer) => {
