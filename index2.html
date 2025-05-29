@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000022">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            z-index: 1000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const isTelegram = /Telegram/.test(navigator.userAgent);
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.MainButton.show();
+        }
+
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                this.score = 0;
+                this.coinsCollected = 0;
+                this.rotSpeed = isTelegram ? 0.005 : 0.01;
+                this.scaleFactor = 0.001;
+                
+                // Физические параметры
+                this.gravity = 0.7;
+                this.bounceDamping = 0.8;
+                this.minHoldTime = 50;
+				this.minholdY = 30;
+                this.maxHoldTime = 800;
+                this.maxJumpForce = 25;
+                this.maxDx = 100;
+                this.maxDy = 100;
+                this.baseYOffset = 0;
+                
+                // Состояние объекта
+                this.isHolding = false;
+                this.isJumping = false;
+                this.velocityY = 0;
+                this.velocityX = 0;
+                this.velocityZ = 1;
+                this.currentSpin = 0;
+                this.curentScale = 2.5;
+                this.soundVolume = 0.6;
+                this.minImpactForSound = 1;
+                this.comboMultiplier = 1;
+                this.lastLandTime = 0;
+                this.comboTimeout = 2000; // 2 секунды для комбо
+                this.emit_flag = true;
+            }
+        
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                this.load.image('bg', 'assets/wtf.png');
+                this.load.obj('skull', 'assets/fantom.obj');
+                this.load.image('texture', 'assets/coin_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/magic.mp3');                
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                
+                this.lightningShape = new Phaser.Geom.Line();
+            }
+
+            create() {
+                if (window.Telegram?.WebApp?.onEvent) {
+                    Telegram.WebApp.onEvent('backButtonClicked', () => {
+                        Telegram.WebApp.close();
+                    });
+                }
+				
+				
+				// Создаем источник света для 3D-эффекта
+            light = this.lights.addLight(0, 0, 400).setIntensity(2);
+            this.lights.enable().setAmbientColor(0x333333);
+            
+            // Обработчик кликов по экрану
+            this.input.on('pointerdown', (pointer) => {
+                createCoinMesh(this, pointer.x, pointer.y);
+            });
+            
+            // Обработчик движения мыши для перемещения света
+            this.input.on('pointermove', (pointer) => {
+                light.x = pointer.x;
+                light.y = pointer.y;
+            });
+				
+				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
+
+                // Звуки
+                this.bounceSound = this.sound.add('coinDrop');
+                this.bounceSound.volume = this.soundVolume;
+                this.upSound = this.sound.add('coinUp');
+                this.upSound.volume = this.soundVolume;
+                this.mSound = this.sound.add('magic');
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;                
+
+                // Фон
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+                
+                // Счетчик
+				
+				this.scoreText = this.add.text(20, 30, 'Монет : 0', {
+                    font: '28px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setScrollFactor(0);
+                
+                //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
+
+                // Создаем первую монету
+                this.createNewCoin();
+               
+            }
+
+            createNewCoin() {
+                this.mSound.play();
+                // Уничтожаем старую монету, если есть
+                if (this.mesh) {
+                    this.mesh.destroy();
+                }
+               // }
+                
+                // Случайное смещение по X
+                const randomX = Phaser.Math.Between(-150, 150);
+                // Случайное смещение по Y (выше начальной позиции)
+                const randomYOffset = Phaser.Math.Between(100, 200);
+                this.currentYOffset = this.baseYOffset + randomYOffset;
+                
+                // Создаем новую монету
+                const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
+                const targetY = this.cameras.main.centerY + this.currentYOffset;				
+				const targetX = this.cameras.main.centerX + randomX;
+                this.mesh = this.add.mesh(
+                    targetX,
+                    startY, 
+                    'texture'
+                );
+
+                this.triggerLightning(targetX, targetY)
+              
+                this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
+                //Phaser.Math.FloatBetween(0, Math.PI * 2);
+            
+                this.mesh.setScale(3);
+                this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
+
+                // 2. Анимация падения с "отскоком"
+
+                this.appearTween = this.tweens.add({
+                    targets: this.mesh,
+                    alpha: {
+                        from: 0,
+                        to: 1
+                    },
+                    y: {
+                        from: startY,
+                        to: targetY
+                    },
+                    scaleX: 2.5,
+                    scaleY: 2.5,
+                   // angle: 360, // Полное вращение
+                    duration: 300,
+                    ease: 'Cubic.easeOut'
+                });
+
+                // Сброс состояния
+                this.isJumping = false;
+                this.isHolding = false;
+                this.velocityY = 0;
+                this.velocityX = 0;
+                this.velocityZ = 0;
+                this.currentSpin = 0;
+				this.curentScale = 3;
+                
+                // Обработчики событий
+                this.mesh.on('pointerdown', p => {
+                    if (!this.isJumping) {
+                        this.isHolding = true;
+                        this.holdStartTime = this.time.now;
+                        this.px_0 = p.x;
+                        this.py_0 = p.y;
+                    }
+                });
+
+                this.input.on('pointerup', p => {
+                    if (this.isHolding && !this.isJumping) {
+                        this.upSound.play();
+                        const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
+                        const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
+                        const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
+                        
+                        if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
+                            this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
+                            this.isJumping = true;
+                            this.isHolding = false;
+                            this.currentSpin = 0.3;// * holdDuration / 200;
+                        }
+                    }
+                });
+            }
+
+            update(time, delta) {
+                if (!this.isJumping) return;
+
+                // Физика прыжка
+                this.velocityY += this.gravity;
+                this.mesh.y += this.velocityY;
+                this.curentScale = this.curentScale / this.velocityZ;
+                this.mesh.setScale(this.curentScale);
+                this.mesh.x += this.velocityX;
+                
+                // Вращение в полете
+                this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
+                this.mesh.modelRotation.x += this.currentSpin;
+                
+                if (this.mesh.modelRotation.x > 2 * Math.PI) {
+                    this.mesh.modelRotation.x -= 2 * Math.PI;
+                }
+
+                // Обработка столкновения с "землей"
+                if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                   /*
+                    if (this.emit_flag) {
+                        this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
+                        this.createNewCoin();
+                        this.emit_flag=false;
+                        });
+                    }
+                    */
+                    this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
+                    this.velocityY *= -this.bounceDamping;
+                    this.velocityZ = 1 + (this.velocityZ - 1) / 3;
+                    this.velocityX = this.velocityX / 3;
+                    
+                    // Воспроизводим звук удара
+                    if (Math.abs(this.velocityY) > this.minImpactForSound) {
+                        this.bounceSound.play({
+                            volume: Phaser.Math.Clamp(Math.abs(this.velocityY)/this.maxJumpForce, 0.3, 1)
+                        });
+                    }
+
+                    // Проверка на остановку
+                    if (Math.abs(this.velocityY) < 1) {
+                        if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
+                            (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
+                            
+                            // 1. Останавливаем физику
+                            this.isJumping = false;
+                            this.velocityY = 0;
+                            this.velocityX = 0;
+        
+                            // 2. Анимация "подпрыгивания" перед исчезновением
+                            this.tweens.add({
+                                targets: this.mesh,
+                                y: this.mesh.y - 30, // Подбрасываем немного вверх
+                                duration: 150,
+                                ease: 'Power1',
+                                yoyo: true,
+                                onComplete: () => {
+                                // 3. Анимация исчезновения с вращением
+                                    this.tweens.add({
+                                        targets: this.mesh,
+                                        alpha: 0,
+                                        scaleX: 0.5,
+                                        scaleY: 0.5,
+                                        angle: 360, // Полное вращение
+                                        duration: 300,
+                                        ease: 'Cubic.easeOut',
+                                        onComplete: () => {
+                                            this.score += 1;
+                                            this.scoreText.setText(`Монет : ${this.score}`);
+                                            /*
+                                            this.time.delayedCall(250, () => {
+                                                if (this.mesh) {
+                                                    this.mesh.destroy();
+                                                    this.emit_flag=true;
+                                                }
+                                            });
+                                            */
+                                            this.createNewCoin();
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            this.mesh.modelRotation.x -= 0.1;
+                        }
+                    }
+                }
+            }
+
+            triggerLightning(x, y) {
+
+                // 2. Создаем эмиттер
+                const lightning = this.add.particles(0, 0, 'flares',{
+                    frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
+                this.lightningShape.setTo(x, 0, x, y);
+            
+                lightning.addEmitZone({
+                    type: 'edge',
+                    source: this.lightningShape,
+                    quantity: 64, // Количество точек вдоль линии
+                    stepRate: 0.5 // Плотность распределения
+                });
+                                
+            // Взрываем 100 частиц мгновенно
+                lightning.explode(100);
+    
+            // Эффекты камеры
+                this.cameras.main.shake(500, 0.02);
+                this.cameras.main.flash(500, 255, 255, 255);
+    
+            // Автоматическое отключение через 0.5 секунды
+                this.time.delayedCall(500, () => {
+                lightning.stop(); // Останавливаем эмиттер
+                lightning.killAll(); // Уничтожаем все частицы
+                lightning.destroy();
+                });
+     
+            }            
+        
+        }
+        const config = {
+            type: Phaser.WEBGL,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game',
+            scene: MainScene,
+            cameras: {
+                default: {
+                    type: 'OrthographicCamera',
+                    zoom: 1,
+                    near: -1000,
+                    far: 1000,
+                    position: { x:0, y:0, z:100 }
+                }
+            },
+            scale: { 
+                mode: Phaser.Scale.RESIZE, 
+                autoCenter: Phaser.Scale.CENTER_BOTH 
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60, 
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true 
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
