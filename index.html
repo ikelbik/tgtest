@@ -314,6 +314,9 @@
                                            // this.time.delayedCall(250, () => {
                                                 if (coin) {
                                                     coin.destroy();
+													if (coin.emit_flag){
+													  this.createNewCoinCoin()
+													}
                                                     coin.emit_flag=true;
                                                 }
                                             //});
