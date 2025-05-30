@@ -153,7 +153,7 @@
             
                 coin.setScale(2.5);
 				
-                coin.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
+                coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
 
                 // 2. Анимация падения с "отскоком"
 
@@ -194,7 +194,7 @@
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
-                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
+                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 85 / holdDuration;
                             coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             coin.isJumping = true;
                             coin.isHolding = false;
@@ -210,6 +210,13 @@
 			coins.getChildren().forEach(coin => {
 				coin.update();
                 if (!coin.isJumping) return;
+				
+				if (coin.emit_flag) {
+                    this.time.delayedCall(1000, () => { 
+                        this.createNewCoin();
+                        coin.emit_flag=false;
+                    });
+                }
 
                 // Физика прыжка
                 coin.velocityY += this.gravity;
@@ -228,14 +235,7 @@
 
                 // Обработка столкновения с "землей"
                 if (coin.y >= this.cameras.main.centerY + this.currentYOffset) {
-                   
-                    if (coin.emit_flag) {
-                        this.time.delayedCall(20, () => { // Задержка 200ms перед созданием
-                        this.createNewCoin();
-                        coin.emit_flag=false;
-                        });
-                    }
-                    
+                         
                     coin.y = this.cameras.main.centerY + this.currentYOffset;
                     coin.velocityY *= -this.bounceDamping;
                     coin.velocityZ = 1 + (coin.velocityZ - 1) / 3;
