@@ -51,6 +51,7 @@
 			this.currentSpin = 0;
 			this.curentScale = 2.5;
 			this.holdStartTime = 0;
+			this.upStartTime = 0;
 			this.px_0 = 0;
 			this.px_0 = 0;
 			}
@@ -188,6 +189,7 @@
                 this.input.on('pointerup', p => {
                     if (coin.isHolding && !coin.isJumping) {
                         this.upSound.play();
+						coin.upStartTime = this.time.now;
                         const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
                         const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx);
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy);
@@ -208,15 +210,21 @@
 
             update(time, delta) {
 			coins.getChildren().forEach(coin => {
-				coin.update();
+				//coin.update();
                 if (!coin.isJumping) return;
 				
+				/*
 				if (coin.emit_flag) {
                     this.time.delayedCall(5000, () => { 
                         this.createNewCoin();
                         coin.emit_flag=false;
                     });
                 }
+				*/
+				if (this.time.now - coin.upStartTime > 1000){
+				  this.createNewCoin();
+				}
+				
 
                 // Физика прыжка
                 coin.velocityY += this.gravity;
