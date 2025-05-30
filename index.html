@@ -217,7 +217,7 @@
 			coins.getChildren().forEach(coin => {
 				//coin.update();
 				if (!coin.isJumping){
-				    coin.modelRotation.x = 0.6*Math.sin(this.time.now*0.01 + 0);
+				    coin.modelRotation.x = 0.6-0.3*Math.sin(this.time.now*0.01 + 0);
 					coin.modelRotation.y = 0.3*Math.sin(this.time.now*0.01 + Math.PI/2);
 				}else{
                 //if (!coin.isJumping) return;
