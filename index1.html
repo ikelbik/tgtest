@@ -35,7 +35,25 @@
             tg.MainButton.show();
         }
 		let coins;
-
+		
+		class Coin extends Phaser.GameObjects.Mesh {
+			constructor(scene, x, y) {
+				super(scene, x, y, 'texture');
+				scene.add.existing(this);
+        
+			// Индивидуальные свойства для каждой монеты
+			this.isJumping = false;
+			this.isHolding = false;
+			this.velocityY = 0;
+			this.velocityX = 0;
+			this.velocityZ = 1;
+			this.currentSpin = 0;
+			this.curentScale = 2.5;
+			this.holdStartTime = 0;
+			this.px_0 = 0;
+			this.px_0 = 0;
+			}
+		}
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -55,19 +73,7 @@
                 this.maxDy = 100;
                 this.baseYOffset = 0;
                 
-                // Состояние объекта
-                this.isHolding = false;
-                this.isJumping = false;
-                this.velocityY = 0;
-                this.velocityX = 0;
-                this.velocityZ = 1;
-                this.currentSpin = 0;
-                this.curentScale = 2.5;
                 this.soundVolume = 0.6;
-                this.minImpactForSound = 1;
-                this.comboMultiplier = 1;
-                this.lastLandTime = 0;
-                this.comboTimeout = 2000; // 2 секунды для комбо
                 this.emit_flag = true;
             }
         
@@ -138,24 +144,18 @@
                 const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
                 const targetY = this.cameras.main.centerY + this.currentYOffset;				
 				const targetX = this.cameras.main.centerX + randomX;
-                this.mesh = this.add.mesh(
-                    targetX,
-                    startY, 
-                    'texture'
-                );
-
-                this.triggerLightning(targetX, targetY)
-              
-                this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
-                //Phaser.Math.FloatBetween(0, Math.PI * 2);
+    
+				const coin = new Coin(this, targetX, startY);
+                coin.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
             
-                this.mesh.setScale(3);
-                this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
+                coin.setScale(3);
+				
+                coin.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
 
                 // 2. Анимация падения с "отскоком"
 
                 this.appearTween = this.tweens.add({
-                    targets: this.mesh,
+                    targets: coin,
                     alpha: {
                         from: 0,
                         to: 1
@@ -171,100 +171,93 @@
                     ease: 'Cubic.easeOut'
                 });
 
-                // Сброс состояния
-                this.isJumping = false;
-                this.isHolding = false;
-                this.velocityY = 0;
-                this.velocityX = 0;
-                this.velocityZ = 0;
-                this.currentSpin = 0;
-				this.curentScale = 3;
                 
                 // Обработчики событий
-                this.mesh.on('pointerdown', p => {
-                    if (!this.isJumping) {
-                        this.isHolding = true;
-                        this.holdStartTime = this.time.now;
-                        this.px_0 = p.x;
-                        this.py_0 = p.y;
+                coin.on('pointerdown', p => {
+                    if (!coin.isJumping) {
+                        coin.isHolding = true;
+                        coin.holdStartTime = this.time.now;
+                        coin.px_0 = p.x;
+                        coin.py_0 = p.y;
                     }
                 });
 
-                this.input.on('pointerup', p => {
-                    if (this.isHolding && !this.isJumping) {
+                coin.on('pointerup', p => {
+                    if (coin.isHolding && !coin.isJumping) {
                         this.upSound.play();
-                        const holdDuration = Phaser.Math.Clamp(this.time.now - this.holdStartTime, 0, this.maxHoldTime);
-                        const holdX = Phaser.Math.Clamp(this.px_0 - p.x, -this.maxDx, this.maxDx);
-                        const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
+                        const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
+                        const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx);
+                        const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
-                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
-                            this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
-                            this.isJumping = true;
-                            this.isHolding = false;
-                            this.currentSpin = 0.3;// * holdDuration / 200;
+                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
+                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
+                            coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
+                            coin.isJumping = true;
+                            coin.isHolding = false;
+                            coin.currentSpin = 0.3;// * holdDuration / 200;
                         }
                     }
                 });
 				
-				coins.add(this.mesh);
+				coins.add(coin);
             }
 
             update(time, delta) {
-			coins.getChildren().forEach(mesh => {
-                if (!this.isJumping) return;
+			coins.getChildren().forEach(coin => {
+				coin.update();
+                if (!coin.isJumping) return;
 
                 // Физика прыжка
-                this.velocityY += this.gravity;
-                mesh.y += this.velocityY;
-                this.curentScale = this.curentScale / this.velocityZ;
-                mesh.setScale(this.curentScale);
-                mesh.x += this.velocityX;
+                coin.velocityY += this.gravity;
+                coin.y += coin.velocityY;
+                coin.curentScale = coin.curentScale / coin.velocityZ;
+                coin.setScale(coin.curentScale);
+                coin.x += coin.velocityX;
                 
                 // Вращение в полете
-                this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-                mesh.modelRotation.x += this.currentSpin;
+                coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * 0.98, 0, 10);
+                coin.modelRotation.x += coin.currentSpin;
                 
-                if (mesh.modelRotation.x > 2 * Math.PI) {
-                    mesh.modelRotation.x -= 2 * Math.PI;
+                if (coin.modelRotation.x > 2 * Math.PI) {
+                    coin.modelRotation.x -= 2 * Math.PI;
                 }
 
                 // Обработка столкновения с "землей"
-                if (mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                if (coin.y >= this.cameras.main.centerY + this.currentYOffset) {
                    
                     if (this.emit_flag) {
                         this.time.delayedCall(20, () => { // Задержка 200ms перед созданием
-                        this.createNewCoin();
+                        coin.createNewCoin();
                         this.emit_flag=false;
                         });
                     }
                     
-                    mesh.y = this.cameras.main.centerY + this.currentYOffset;
-                    this.velocityY *= -this.bounceDamping;
-                    this.velocityZ = 1 + (this.velocityZ - 1) / 3;
-                    this.velocityX = this.velocityX / 3;
+                    coin.y = this.cameras.main.centerY + this.currentYOffset;
+                    coin.velocityY *= -this.bounceDamping;
+                    coin.velocityZ = 1 + (coin.velocityZ - 1) / 3;
+                    coin.velocityX = coin.velocityX / 3;
                     
                     // Воспроизводим звук удара
-                    if (Math.abs(this.velocityY) > this.minImpactForSound) {
+                    if (Math.abs(coin.velocityY) > this.minImpactForSound) {
                         this.bounceSound.play({
-                            volume: Phaser.Math.Clamp(Math.abs(this.velocityY)/this.maxJumpForce, 0.3, 1)
+                            volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/this.maxJumpForce, 0.3, 1)
                         });
                     }
 
                     // Проверка на остановку
-                    if (Math.abs(this.velocityY) < 1) {
-                        if ((Math.abs(this.mesh.modelRotation.x) - 0.6 < 0.2) || 
-                            (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
+                    if (Math.abs(coin.velocityY) < 1) {
+                        if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
+                            (Math.abs(coin.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
                             // 1. Останавливаем физику
-                            this.isJumping = false;
-                            this.velocityY = 0;
-                            this.velocityX = 0;
+                            coin.isJumping = false;
+                            coin.velocityY = 0;
+                            coin.velocityX = 0;
         
                             // 2. Анимация "подпрыгивания" перед исчезновением
                             this.tweens.add({
-                                targets: mesh,
+                                targets: coin,
                                 y: mesh.y - 30, // Подбрасываем немного вверх
                                 duration: 150,
                                 ease: 'Power1',
@@ -272,7 +265,7 @@
                                 onComplete: () => {
                                 // 3. Анимация исчезновения с вращением
                                     this.tweens.add({
-                                        targets: this.mesh,
+                                        targets: coin,
                                         alpha: 0,
                                         scaleX: 0.5,
                                         scaleY: 0.5,
@@ -284,19 +277,18 @@
                                             this.scoreText.setText(`Монет : ${this.score}`);
                                             
                                             this.time.delayedCall(250, () => {
-                                                if (mesh) {
-                                                    mesh.destroy();
+                                                if (coin) {
+                                                    coin.destroy();
                                                     this.emit_flag=true;
                                                 }
                                             });
                                             
-                                            this.createNewCoin();
                                         }
                                     });
                                 }
                             });
                         } else {
-                            mesh.modelRotation.x -= 0.1;
+                            coin.modelRotation.x -= 0.1;
                         }
                     }
                 }
