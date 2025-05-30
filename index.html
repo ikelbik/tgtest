@@ -212,7 +212,7 @@
                 if (!coin.isJumping) return;
 				
 				if (coin.emit_flag) {
-                    this.time.delayedCall(1000, () => { 
+                    this.time.delayedCall(5000, () => { 
                         this.createNewCoin();
                         coin.emit_flag=false;
                     });
