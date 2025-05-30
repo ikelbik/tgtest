@@ -218,7 +218,7 @@
 				//coin.update();
 				if (!coin.isJumping){
 				    coin.modelRotation.x = 0.6*(Math.sin(this.time.now*0.001 + 0));
-					coin.modelRotation.y = 0.6*(Math.sin(this.time.now*0.001 + Math.PI/2));
+					coin.modelRotation.z = 0.6*(Math.sin(this.time.now*0.001 + Math.PI/2));
 				}else{
                 //if (!coin.isJumping) return;
 				
