@@ -55,6 +55,8 @@
 			this.px_0 = 0;
 			this.px_0 = 0;
 			this.rot_i = 0;
+			this.rot_amp = Phaser.Math.Between(1,3)/10;
+			this.rot_а = Phaser.Math.Between(1,5)/100;
 			}
 			
 			
@@ -220,8 +222,8 @@
 				if (!coin.isJumping){
 				  if (0.3-coin.rot_i>=0){
 					coin.rot_i += 0.001
-				    coin.modelRotation.x = 0.6-(0.3-coin.rot_i)*(Math.sin(this.time.now*0.01 + 0));
-					coin.modelRotation.z = (0.3-coin.rot_i)*(Math.sin(this.time.now*0.01 + Math.PI/2));
+				    coin.modelRotation.x = 0.6-(coin.rot_amp-coin.rot_i)*(Math.sin(this.time.now*coin.rot_f + 0));
+					coin.modelRotation.z = (coin.rot_amp-coin.rot_i)*(Math.sin(this.time.now*coin.rot_f + Math.PI/2));
 					} else return;
 				}else{
                 //if (!coin.isJumping) return;
