@@ -145,10 +145,11 @@
                 const targetY = this.cameras.main.centerY + this.currentYOffset;				
 				const targetX = this.cameras.main.centerX + randomX;
     
+				this.triggerLightning(targetX, targetY);
 				const coin = new Coin(this, targetX, startY);
                 coin.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
             
-                coin.setScale(3);
+                coin.setScale(2.5);
 				
                 coin.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
 
@@ -182,7 +183,7 @@
                     }
                 });
 
-                coin.on('pointerup', p => {
+                this.input.on('pointerup', p => {
                     if (coin.isHolding && !coin.isJumping) {
                         this.upSound.play();
                         const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
