@@ -34,6 +34,7 @@
             tg.expand();
             tg.MainButton.show();
         }
+		let coins;
 
         class MainScene extends Phaser.Scene {
             constructor() {
@@ -51,7 +52,7 @@
                 this.maxHoldTime = 800;
                 this.maxJumpForce = 25;
                 this.maxDx = 100;
-                this.maxDy = 60;
+                this.maxDy = 100;
                 this.baseYOffset = 0;
                 
                 // Состояние объекта
@@ -67,6 +68,7 @@
                 this.comboMultiplier = 1;
                 this.lastLandTime = 0;
                 this.comboTimeout = 2000; // 2 секунды для комбо
+                this.emit_flag = true;
             }
         
             preload() {
@@ -76,7 +78,10 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/flares.json');                                   
+                this.load.audio('magic', 'assets/magic.mp3');                
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                
+                this.lightningShape = new Phaser.Geom.Line();
             }
 
             create() {
@@ -85,40 +90,16 @@
                         Telegram.WebApp.close();
                     });
                 }
-
-
-
-        this.add.image(400, 300, 'bg'); // Фоновое изображение
-        
-        // Создаем эмиттер для молнии
-        this.lightningEmitter = this.add.particles(0, 0, 'flares', {
-            frame: 'white',
-            blendMode: 'ADD',
-            lifespan: 200,
-            speed: { min: 200, max: 400 },
-            scale: { start: 0.8, end: 0 },
-            alpha: { start: 1, end: 0 },
-            frequency: 60,
-            emitting: false
-        });
-
-        // Создаем зону появления частиц в форме молнии
-        this.lightningShape = new Phaser.Geom.Line();
-        this.lightningEmitter.addEmitZone({
-            type: 'edge',
-            source: this.lightningShape,
-            quantity: 64,
-            total: 1
-        });
-
 				
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
-                
+				coins = this.add.group();
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
                 this.bounceSound.volume = this.soundVolume;
                 this.upSound = this.sound.add('coinUp');
                 this.upSound.volume = this.soundVolume;
+                this.mSound = this.sound.add('magic');
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;                
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
@@ -131,6 +112,8 @@
                     stroke: '#000000',
                     strokeThickness: 4
                 }).setScrollFactor(0);
+                
+                //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
 
                 // Создаем первую монету
                 this.createNewCoin();
@@ -138,10 +121,12 @@
             }
 
             createNewCoin() {
+                this.mSound.play();
                 // Уничтожаем старую монету, если есть
                 if (this.mesh) {
                     this.mesh.destroy();
                 }
+               // }
                 
                 // Случайное смещение по X
                 const randomX = Phaser.Math.Between(-150, 150);
@@ -150,62 +135,41 @@
                 this.currentYOffset = this.baseYOffset + randomYOffset;
                 
                 // Создаем новую монету
-const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
-const targetY = this.cameras.main.centerY + this.currentYOffset;				
-				
+                const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
+                const targetY = this.cameras.main.centerY + this.currentYOffset;				
+				const targetX = this.cameras.main.centerX + randomX;
                 this.mesh = this.add.mesh(
-                    this.cameras.main.centerX + randomX,
+                    targetX,
                     startY, 
                     'texture'
                 );
+
+                this.triggerLightning(targetX, targetY)
               
                 this.mesh.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
+                //Phaser.Math.FloatBetween(0, Math.PI * 2);
+            
                 this.mesh.setScale(3);
                 this.mesh.setInteractive(new Phaser.Geom.Rectangle(-200, -200, 400, 400), Phaser.Geom.Rectangle.Contains);
-                
-                // 1. Устанавливаем начальную позицию ВЫШЕ экрана
-				
 
-// 2. Анимация падения с "отскоком"
+                // 2. Анимация падения с "отскоком"
 
-
-
-
-this.appearTween = this.tweens.add({
-   targets: this.mesh,
-    alpha: {
-        from: 0,
-        to: 1
-    },
-    y: {
-        from: startY,
-        to: targetY
-    },
-        
+                this.appearTween = this.tweens.add({
+                    targets: this.mesh,
+                    alpha: {
+                        from: 0,
+                        to: 1
+                    },
+                    y: {
+                        from: startY,
+                        to: targetY
+                    },
                     scaleX: 2.5,
                     scaleY: 2.5,
-                    angle: 360, // Полное вращение
+                   // angle: 360, // Полное вращение
                     duration: 300,
                     ease: 'Cubic.easeOut'
-
-/*
-    targets: this.mesh,
-    y: {
-        from: startY,
-        to: targetY
-    },
-    duration: 800, // Увеличенная длительность для плавности
-    ease: 'Bounce.out',
-    onStart: () => {
-        this.isAnimating = true; // Флаг анимации
-    },
-    onComplete: () => {
-        this.isAnimating = false;
-        // Дополнительный эффект после приземления
-
-    }
-*/
-});
+                });
 
                 // Сброс состояния
                 this.isJumping = false;
@@ -234,8 +198,8 @@ this.appearTween = this.tweens.add({
                         const holdY = Phaser.Math.Clamp(this.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 120 / holdDuration;
-                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 130 / holdDuration;
+                            this.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
+                            this.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 65 / holdDuration;
                             this.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             this.isJumping = true;
                             this.isHolding = false;
@@ -243,9 +207,12 @@ this.appearTween = this.tweens.add({
                         }
                     }
                 });
+				
+				coins.add(mesh);
             }
 
             update(time, delta) {
+			coins.getChildren().forEach(mesh => {
                 if (!this.isJumping) return;
 
                 // Физика прыжка
@@ -265,6 +232,14 @@ this.appearTween = this.tweens.add({
 
                 // Обработка столкновения с "землей"
                 if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                   /*
+                    if (this.emit_flag) {
+                        this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
+                        this.createNewCoin();
+                        this.emit_flag=false;
+                        });
+                    }
+                    */
                     this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
                     this.velocityZ = 1 + (this.velocityZ - 1) / 3;
@@ -283,80 +258,90 @@ this.appearTween = this.tweens.add({
                             (Math.abs(this.mesh.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
                             
                             // 1. Останавливаем физику
-        this.isJumping = false;
-        this.velocityY = 0;
-        this.velocityX = 0;
+                            this.isJumping = false;
+                            this.velocityY = 0;
+                            this.velocityX = 0;
         
-        // 2. Анимация "подпрыгивания" перед исчезновением
-        this.tweens.add({
-            targets: this.mesh,
-            y: this.mesh.y - 30, // Подбрасываем немного вверх
-            duration: 150,
-            ease: 'Power1',
-            yoyo: true,
-            onComplete: () => {
-                // 3. Анимация исчезновения с вращением
-                this.tweens.add({
-                    targets: this.mesh,
-                    alpha: 0,
-                    scaleX: 0.5,
-                    scaleY: 0.5,
-                    angle: 360, // Полное вращение
-                    duration: 300,
-                    ease: 'Cubic.easeOut',
-                    onComplete: () => {
-                        this.score += 1;
-                        this.scoreText.setText(`Монет : ${this.score}`);
-                        this.createNewCoin();
-                    }
-                });
-            }
-        });
-    } else {
-        this.mesh.modelRotation.x -= 0.1;
-    }
+                            // 2. Анимация "подпрыгивания" перед исчезновением
+                            this.tweens.add({
+                                targets: this.mesh,
+                                y: this.mesh.y - 30, // Подбрасываем немного вверх
+                                duration: 150,
+                                ease: 'Power1',
+                                yoyo: true,
+                                onComplete: () => {
+                                // 3. Анимация исчезновения с вращением
+                                    this.tweens.add({
+                                        targets: this.mesh,
+                                        alpha: 0,
+                                        scaleX: 0.5,
+                                        scaleY: 0.5,
+                                        angle: 360, // Полное вращение
+                                        duration: 300,
+                                        ease: 'Cubic.easeOut',
+                                        onComplete: () => {
+                                            this.score += 1;
+                                            this.scoreText.setText(`Монет : ${this.score}`);
+                                            /*
+                                            this.time.delayedCall(250, () => {
+                                                if (this.mesh) {
+                                                    this.mesh.destroy();
+                                                    this.emit_flag=true;
+                                                }
+                                            });
+                                            */
+                                            this.createNewCoin();
+                                        }
+                                    });
+                                }
+                            });
+                        } else {
+                            this.mesh.modelRotation.x -= 0.1;
+                        }
                     }
                 }
+			});
             }
-    createLightningEffect(x, y) {
-        // Генерируем случайную форму молнии
-        const startY = y - 200; // Начальная точка выше монеты
-        const points = [];
-        
-        // Создаем зигзагообразную траекторию
-        for(let i = 0; i < 10; i++) {
-            points.push(new Phaser.Geom.Point(
-                x + Phaser.Math.Between(-30, 30),
-                startY + (y - startY) * (i / 10)
-            ));
-        }
-        
-        // Обновляем форму молнии
-        Phaser.Geom.Line.FromPoints(points, this.lightningShape);
-        
-        // Активируем эмиттер
-        this.lightningEmitter.setPosition(x, startY);
-        this.lightningEmitter.explode(64, x, startY);
-        
-        // Добавляем свечение
-        this.add.rectangle(x, y, 100, 100, 0xffffff)
-            .setBlendMode('ADD')
-            .setAlpha(0.5)
-            .setDepth(-1)
-            .setScale(0)
-            .setRotation(Phaser.Math.FloatBetween(0, Math.PI));
-        
-        // Анимация вспышки
-        this.tweens.add({
-            targets: this.lightningEmitter,
-            alpha: 0,
-            duration: 200,
-            onComplete: () => this.lightningEmitter.setAlpha(1)
-        });
-    }
 
-        }
+            triggerLightning(x, y) {
 
+                // 2. Создаем эмиттер
+                const lightning = this.add.particles(0, 0, 'flares',{
+                    frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
+                    blendMode: 'ADD',
+                    lifespan: 500,
+                    quantity: 1,
+                    scale: { start: 2, end: 0 },
+                    alpha: { start: 1, end: 0.2 },
+                    speed: { min: 50, max: 200 },
+                    emit: false // Не стартуем автоматически
+                });
+                this.lightningShape.setTo(x, 0, x, y);
+            
+                lightning.addEmitZone({
+                    type: 'edge',
+                    source: this.lightningShape,
+                    quantity: 64, // Количество точек вдоль линии
+                    stepRate: 0.5 // Плотность распределения
+                });
+                                
+            // Взрываем 100 частиц мгновенно
+                lightning.explode(100);
+    
+            // Эффекты камеры
+                this.cameras.main.shake(500, 0.02);
+                this.cameras.main.flash(500, 255, 255, 255);
+    
+            // Автоматическое отключение через 0.5 секунды
+                this.time.delayedCall(500, () => {
+                lightning.stop(); // Останавливаем эмиттер
+                lightning.killAll(); // Уничтожаем все частицы
+                lightning.destroy();
+                });
+     
+            }            
+        
+        }
         const config = {
             type: Phaser.WEBGL,
             width: window.innerWidth,
