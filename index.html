@@ -155,7 +155,7 @@
                 coin.setScale(2.5);
 				
                 coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
-
+this.input.enableDebug(coin, 0xff00ff);
                 // 2. Анимация падения с "отскоком"
 
                 this.appearTween = this.tweens.add({
