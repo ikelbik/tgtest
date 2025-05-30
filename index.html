@@ -343,7 +343,7 @@
                     lifespan: 500,
                     quantity: 1,
                     scale: { start: 2, end: 0 },
-                    alpha: { start: 0.7, end: 0.2 },
+                    alpha: { start: 0.5, end: 0.2 },
                     speed: { min: 50, max: 200 },
                     emit: false // Не стартуем автоматически
                 });
@@ -360,8 +360,8 @@
                 lightning.explode(100);
     
             // Эффекты камеры
-                this.cameras.main.shake(500, 0.02);
-                this.cameras.main.flash(500, 255, 255, 255);
+                this.cameras.main.shake(300, 0.02);
+                this.cameras.main.flash(300, 215, 215, 215);
     
             // Автоматическое отключение через 0.5 секунды
                 this.time.delayedCall(500, () => {
