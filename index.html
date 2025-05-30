@@ -138,7 +138,7 @@
                // }
                 
                 // Случайное смещение по X
-                const randomX = Phaser.Math.Between(-150, 150);
+                const randomX = Phaser.Math.Between(-this.cameras.main.width/2.5, this.cameras.main.width/2.5);
                 // Случайное смещение по Y (выше начальной позиции)
                 const randomYOffset = Phaser.Math.Between(100, 200);
                 this.currentYOffset = this.baseYOffset + randomYOffset;
@@ -195,7 +195,7 @@
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
+                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 30 / holdDuration;
                             coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 85 / holdDuration;
                             coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             coin.isJumping = true;
@@ -221,7 +221,7 @@
                     });
                 }
 				*/
-				if ((this.time.now - coin.upStartTime > 1000)&&(coin.emit_flag)){
+				if ((this.time.now - coin.upStartTime > 700)&&(coin.emit_flag)){
 				  this.createNewCoin();
 				 console.log(this.time.now - coin.upStartTime);
                  coin.emit_flag=false;
