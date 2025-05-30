@@ -99,7 +99,7 @@
                         Telegram.WebApp.close();
                     });
                 }
-				
+
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 				coins = this.add.group();
                 // Звуки
@@ -154,8 +154,13 @@
             
                 coin.setScale(2.5);
 				
-                coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
+                //coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
+				
+				const circle = new Phaser.Geom.Circle(0, 0, 300);
+				coin.setInteractive({ hitArea: circle, hitAreaCallback: Phaser.Geom.Circle.Contains });
+				
 //this.input.enableDebug(coin, 0xff00ff);
+
                 // 2. Анимация падения с "отскоком"
 
                 this.appearTween = this.tweens.add({
@@ -211,7 +216,13 @@
             update(time, delta) {
 			coins.getChildren().forEach(coin => {
 				//coin.update();
-                if (!coin.isJumping) return;
+				if (!coin.isJumping){
+				    coin.modelRotation.x += wave.sine(this.time.now, 
+                           0.6,
+                           0.1,
+                           0);
+				}else{
+                //if (!coin.isJumping) return;
 				
 				/*
 				if (coin.emit_flag) {
@@ -304,6 +315,7 @@
                         }
                     }
                 }
+			}
 			});
             }
 
