@@ -246,7 +246,7 @@
 				*/
 				if ((this.time.now - coin.upStartTime > 500)&&(coin.emit_flag)){
 				  this.createNewCoin();
-				 console.log(this.time.now - coin.upStartTime);
+				// console.log(this.time.now - coin.upStartTime);
                  coin.emit_flag=false;
 				}
                 // Физика прыжка
@@ -311,12 +311,12 @@
                                             this.score += 1;
                                             this.scoreText.setText(`Монет : ${this.score}`);
                                             
-                                            this.time.delayedCall(250, () => {
+                                           // this.time.delayedCall(250, () => {
                                                 if (coin) {
                                                     coin.destroy();
                                                     coin.emit_flag=true;
                                                 }
-                                            });
+                                            //});
                                             
                                         }
                                     });
