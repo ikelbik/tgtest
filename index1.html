@@ -53,6 +53,8 @@
 			this.px_0 = 0;
 			this.px_0 = 0;
 			}
+			
+			
 		}
         class MainScene extends Phaser.Scene {
             constructor() {
@@ -229,7 +231,7 @@
                    
                     if (this.emit_flag) {
                         this.time.delayedCall(20, () => { // Задержка 200ms перед созданием
-                        coin.createNewCoin();
+                        this.createNewCoin();
                         this.emit_flag=false;
                         });
                     }
