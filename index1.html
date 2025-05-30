@@ -217,21 +217,21 @@
 
                 // Физика прыжка
                 this.velocityY += this.gravity;
-                this.mesh.y += this.velocityY;
+                mesh.y += this.velocityY;
                 this.curentScale = this.curentScale / this.velocityZ;
-                this.mesh.setScale(this.curentScale);
-                this.mesh.x += this.velocityX;
+                mesh.setScale(this.curentScale);
+                mesh.x += this.velocityX;
                 
                 // Вращение в полете
                 this.currentSpin = Phaser.Math.Clamp(this.currentSpin * 0.98, 0, 10);
-                this.mesh.modelRotation.x += this.currentSpin;
+                mesh.modelRotation.x += this.currentSpin;
                 
-                if (this.mesh.modelRotation.x > 2 * Math.PI) {
-                    this.mesh.modelRotation.x -= 2 * Math.PI;
+                if (mesh.modelRotation.x > 2 * Math.PI) {
+                    mesh.modelRotation.x -= 2 * Math.PI;
                 }
 
                 // Обработка столкновения с "землей"
-                if (this.mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
+                if (mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
                    /*
                     if (this.emit_flag) {
                         this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
@@ -240,7 +240,7 @@
                         });
                     }
                     */
-                    this.mesh.y = this.cameras.main.centerY + this.currentYOffset;
+                    mesh.y = this.cameras.main.centerY + this.currentYOffset;
                     this.velocityY *= -this.bounceDamping;
                     this.velocityZ = 1 + (this.velocityZ - 1) / 3;
                     this.velocityX = this.velocityX / 3;
@@ -264,8 +264,8 @@
         
                             // 2. Анимация "подпрыгивания" перед исчезновением
                             this.tweens.add({
-                                targets: this.mesh,
-                                y: this.mesh.y - 30, // Подбрасываем немного вверх
+                                targets: mesh,
+                                y: mesh.y - 30, // Подбрасываем немного вверх
                                 duration: 150,
                                 ease: 'Power1',
                                 yoyo: true,
@@ -296,7 +296,7 @@
                                 }
                             });
                         } else {
-                            this.mesh.modelRotation.x -= 0.1;
+                            mesh.modelRotation.x -= 0.1;
                         }
                     }
                 }
