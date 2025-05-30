@@ -90,7 +90,8 @@
                 this.load.image('texture', 'assets/coin_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.audio('magic', 'assets/rise.wav');                
+                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.audio('rotate', 'assets/rotate.mp3');     				
                 this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
                 
                 this.lightningShape = new Phaser.Geom.Line();
@@ -111,7 +112,9 @@
                 this.upSound = this.sound.add('coinUp');
                 this.upSound.volume = this.soundVolume;
                 this.mSound = this.sound.add('magic');
-                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;                
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;      
+                this.rSound = this.sound.add('rotate');
+                this.rSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10; 				
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
@@ -214,6 +217,7 @@
                 });
 				
 				coins.add(coin);
+				this.rSound.play();
             }
 
             update(time, delta) {
