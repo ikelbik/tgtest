@@ -155,7 +155,7 @@
                 coin.setScale(2.5);
 				
                 coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
-this.input.enableDebug(coin, 0xff00ff);
+//this.input.enableDebug(coin, 0xff00ff);
                 // 2. Анимация падения с "отскоком"
 
                 this.appearTween = this.tweens.add({
@@ -195,8 +195,8 @@ this.input.enableDebug(coin, 0xff00ff);
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy);
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 40 / holdDuration;
-                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 85 / holdDuration;
+                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 33 / holdDuration;
+                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 80 / holdDuration;
                             coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
                             coin.isJumping = true;
                             coin.isHolding = false;
