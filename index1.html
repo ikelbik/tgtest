@@ -234,7 +234,7 @@
                 if (mesh.y >= this.cameras.main.centerY + this.currentYOffset) {
                    
                     if (this.emit_flag) {
-                        this.time.delayedCall(200, () => { // Задержка 200ms перед созданием
+                        this.time.delayedCall(20, () => { // Задержка 200ms перед созданием
                         this.createNewCoin();
                         this.emit_flag=false;
                         });
@@ -284,8 +284,8 @@
                                             this.scoreText.setText(`Монет : ${this.score}`);
                                             
                                             this.time.delayedCall(250, () => {
-                                                if (this.mesh) {
-                                                    this.mesh.destroy();
+                                                if (mesh) {
+                                                    mesh.destroy();
                                                     this.emit_flag=true;
                                                 }
                                             });
