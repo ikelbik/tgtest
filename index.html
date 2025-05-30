@@ -216,9 +216,10 @@
             update(time, delta) {
 			coins.getChildren().forEach(coin => {
 				//coin.update();
-				if (!coin.isJumping){
-				    coin.modelRotation.x = 0.6-0.3*(Math.sin(this.time.now*0.01 + 0));
-					coin.modelRotation.z = 0.3*(Math.sin(this.time.now*0.01 + Math.PI/2));
+				if ((!coin.isJumping)&&(0.3-coin.rot_i>=0)){
+					coin.rot_i += 0.001
+				    coin.modelRotation.x = 0.6-(0.3-coin.rot_i)*(Math.sin(this.time.now*0.01 + 0));
+					coin.modelRotation.z = (0.3-coin.rot_i)*(Math.sin(this.time.now*0.01 + Math.PI/2));
 				}else{
                 //if (!coin.isJumping) return;
 				
