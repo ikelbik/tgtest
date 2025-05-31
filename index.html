@@ -104,34 +104,7 @@
                     });
                 }
 				
-				/////////////////////////
-				  this.debugValue = 50;
-  
-  // Фон ползунка
-  const track = this.add.rectangle(300, 100, 200, 10, 0x666666);
-  
-  // Ползунок
-  const thumb = this.add.circle(350, 100, 15, 0xffffff)
-    .setInteractive()
-    .on('drag', (pointer, dragX) => {
-      // Ограничение в пределах трека
-      dragX = Phaser.Math.Clamp(dragX, 50, 150);
-      thumb.setX(dragX);
-      
-      // Обновление значения (0-100)
-      this.debugValue = Math.round((dragX - 50) * 1.5);
-      valueText.setText(`Value: ${this.debugValue}`);
-    });
-
-  // Текст значения
-  const valueText = this.add.text(100, 130, `Value: ${this.debugValue}`, {
-    fontSize: '20px',
-    fill: '#fff'
-  });
-
-  // Включаем перетаскивание
-  this.input.setDraggable(thumb);
-				/////////////////////////
+				
 
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 				coins = this.add.group();
@@ -147,6 +120,17 @@
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+				
+    // Создаем слой для UI поверх всех элементов
+    this.uiLayer = this.add.layer();
+    
+    // Переменная для отладки
+    this.debugValue1 = 50;
+	    // Переменная для отладки
+    this.debugValue2 = 50;
+    
+    // Создаем элементы UI
+    this.createSlider();
                 
                 // Счетчик
 				
@@ -163,6 +147,34 @@
                 this.createNewCoin();
                
             }
+			
+			createSlider() {
+    // Трек ползунка
+    const track = this.add.rectangle(300, 100, 200, 10, 0x666666);
+    
+    // Ползунок (thumb)
+    const thumb = this.add.circle(350, 100, 15, 0xffffff)
+        .setInteractive()
+        .setDepth(100); // Высокий depth гарантирует поверхность
+    
+    // Текст значения
+    const valueText = this.add.text(300, 130, `Value: ${this.debugValue}`, {
+        fontSize: '20px',
+        fill: '#fff'
+    }).setDepth(100);
+    
+    // Добавляем все элементы UI на отдельный слой
+    this.uiLayer.addMultiple([track, thumb, valueText]);
+    
+    // Настройка перетаскивания
+    this.input.setDraggable(thumb);
+    thumb.on('drag', (pointer, dragX) => {
+        dragX = Phaser.Math.Clamp(dragX, 50, 150);
+        thumb.setX(dragX);
+        this.debugValue = Math.round((dragX - 50) * 1.5);
+        valueText.setText(`Value: ${this.debugValue}`);
+    });
+}
 
             createNewCoin() {
                 this.mSound.play();
