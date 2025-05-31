@@ -104,8 +104,6 @@
                     });
                 }
 				
-				
-
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 				coins = this.add.group();
                 // Звуки
@@ -130,7 +128,8 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider();
+    this.createSlider(0,debugValue1);
+	this.createSlider(100,debugValue2);
                 
                 // Счетчик
 				
@@ -148,31 +147,29 @@
                
             }
 			
-			createSlider() {
+		createSlider(x, dval) {
     // Трек ползунка
-    const track = this.add.rectangle(300, 100, 200, 10, 0x666666);
+    const track = this.add.rectangle(300, 100+x, 200, 10, 0x666666);
     
     // Ползунок (thumb)
-    const thumb = this.add.circle(350, 100, 15, 0xffffff)
-        .setInteractive()
-        .setDepth(100); // Высокий depth гарантирует поверхность
+    const thumb = this.add.circle(350, 100+x, 15, 0xffffff)
+        .setInteractive();
     
     // Текст значения
-    const valueText = this.add.text(300, 130, `Value: ${this.debugValue}`, {
+    const valueText = this.add.text(300, 130+x, `Value: 50`, {
         fontSize: '20px',
         fill: '#fff'
-    }).setDepth(100);
+    });
     
-    // Добавляем все элементы UI на отдельный слой
-    this.uiLayer.addMultiple([track, thumb, valueText]);
+    this.uiLayer.add([track, thumb, valueText]);
     
     // Настройка перетаскивания
     this.input.setDraggable(thumb);
     thumb.on('drag', (pointer, dragX) => {
         dragX = Phaser.Math.Clamp(dragX, 50, 150);
         thumb.setX(dragX);
-        this.debugValue = Math.round((dragX - 50) * 1.5);
-        valueText.setText(`Value: ${this.debugValue}`);
+        this.dVal = Math.round((dragX - 50) * 1.5);
+        valueText.setText(`Value: ${this.dVal}`);
     });
 }
 
@@ -386,7 +383,7 @@
                     lifespan: 500,
                     quantity: 1,
                     scale: { start: 2, end: 0 },
-                    alpha: { start: 0.5, end: 0.2 },
+                    alpha: { start: 0.4, end: 0.1 },
                     speed: { min: 50, max: 200 },
                     emit: false // Не стартуем автоматически
                 });
@@ -403,8 +400,8 @@
                 lightning.explode(100);
     
             // Эффекты камеры
-                this.cameras.main.shake(300, 0.02);
-                this.cameras.main.flash(300, 215, 215, 215);
+                this.cameras.main.shake(200, 0.01);
+                this.cameras.main.flash(200, 215, 215, 215);
     
             // Автоматическое отключение через 0.5 секунды
                 this.time.delayedCall(500, () => {
