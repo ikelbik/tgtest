@@ -128,7 +128,7 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,this.debugValue1, 'Сила');
+    this.createSlider(0,this.this.maxJumpForce, 'Сила');
 	this.createSlider(100,this.debugValue2, 'Плавность');
                 
                 // Счетчик
@@ -149,14 +149,14 @@
 			
 createSlider(x, dval, txt) {
     // Трек ползунка
-    const track = this.add.rectangle(300, 100+x, 200, 10, 0x666666);
+    const track = this.add.rectangle(100, 100+x, 200, 10, 0x666666);
     
     // Ползунок (thumb)
-    const thumb = this.add.circle(350, 100+x, 15, 0xffffff)
+    const thumb = this.add.circle(150, 100+x, 15, 0xffffff)
         .setInteractive();
     
     // Текст значения
-    const valueText = this.add.text(300, 130+x, txt, {
+    const valueText = this.add.text(100, 130+x, txt, {
         fontSize: '20px',
         fill: '#fff'
     });
@@ -165,8 +165,8 @@ createSlider(x, dval, txt) {
     
     // Настройка перетаскивания
     this.input.setDraggable(thumb);
-    thumb.on('drag', (pointer, dragX) => {
-        //dragX = Phaser.Math.Clamp(dragX, 50, 150);
+    thumb.on('drag', (pointer, dX) => {
+        dragX = Phaser.Math.Clamp(dX, 50, 150);
         thumb.setX(dragX);
         this.dVal = Math.round((dragX - 50) * 1.0);
         valueText.setText(txt + ' '+ this.dVal);
