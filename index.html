@@ -172,7 +172,7 @@ createSlider(x, dVal, txt) {
       });
 	}
 	
-    this.uiLayer.add([track, thumb, valueText]);
+    this.uiLayer.add([track, thumb, this.valueText]);
     
     this.input.setDraggable(thumb);
     thumb.on('drag', (pointer, dX) => {
@@ -180,11 +180,11 @@ createSlider(x, dVal, txt) {
         thumb.setX(dragX);
 		if (dVal==1){
           this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
-          valueText.setText(txt + ' '+ this.maxJumpForce);
+          this.valueText.setText(txt + ' '+ this.maxJumpForce);
 		 }
 		if (dVal==2){
           this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
-          valueText.setText(txt + ' '+ this.Curve);
+          this.valueText.setText(txt + ' '+ this.Curve);
 		 }		 
 		 
     });
