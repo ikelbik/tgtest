@@ -156,17 +156,17 @@ createSlider(x, dVal, txt) {
     const thumb = this.add.circle(125, 100+x, 15, 0xffffff)
         .setInteractive();
     
-	this.valueText=''
+	this.valueText='';
 	
 	if (dVal==1){
-          valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
+          this.valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
           fontSize: '20px',
           fill: '#fff'
       });
 	}
 	
 	if (dVal==2){
-          valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
+          this.valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
           fontSize: '20px',
           fill: '#fff'
       });
