@@ -166,7 +166,7 @@ createSlider(x, dval, txt) {
     // Настройка перетаскивания
     this.input.setDraggable(thumb);
     thumb.on('drag', (pointer, dX) => {
-        dragX = Phaser.Math.Clamp(dX, 50, 150);
+        const dragX = Phaser.Math.Clamp(dX, 50, 150);
         thumb.setX(dragX);
         this.dVal = Math.round((dragX - 50) * 1.0);
         valueText.setText(txt + ' '+ this.dVal);
