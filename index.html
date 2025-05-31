@@ -244,7 +244,7 @@ createSlider(x, dval, txt) {
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = - 35*this.maxJumpForce  holdY / holdDuration;
+                            coin.velocityY = - 35*this.maxJumpForce * holdY / holdDuration;
 						
                             coin.velocityZ = 1 + 0.08*this.maxJumpForce * holdY / holdDuration;
                             coin.velocityX = -this.maxJumpForce * holdX / 8;
