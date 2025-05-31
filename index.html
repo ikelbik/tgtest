@@ -103,6 +103,35 @@
                         Telegram.WebApp.close();
                     });
                 }
+				
+				/////////////////////////
+				  this.debugValue = 50;
+  
+  // Фон ползунка
+  const track = this.add.rectangle(100, 100, 200, 10, 0x666666);
+  
+  // Ползунок
+  const thumb = this.add.circle(150, 100, 15, 0xffffff)
+    .setInteractive()
+    .on('drag', (pointer, dragX) => {
+      // Ограничение в пределах трека
+      dragX = Phaser.Math.Clamp(dragX, 50, 150);
+      thumb.setX(dragX);
+      
+      // Обновление значения (0-100)
+      this.debugValue = Math.round((dragX - 50) * 1.5);
+      valueText.setText(`Value: ${this.debugValue}`);
+    });
+
+  // Текст значения
+  const valueText = this.add.text(100, 130, `Value: ${this.debugValue}`, {
+    fontSize: '20px',
+    fill: '#fff'
+  });
+
+  // Включаем перетаскивание
+  this.input.setDraggable(thumb);
+				/////////////////////////
 
 				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 				coins = this.add.group();
@@ -207,8 +236,10 @@
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 33 / holdDuration;
+						
                             coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 80 / holdDuration;
                             coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
+							console.log(coin.velocityX, ' ', coin.velocityY, ' ', coin.velocityZ);
                             coin.isJumping = true;
                             coin.isHolding = false;
                             coin.currentSpin = 0.3;// * holdDuration / 200;
