@@ -128,7 +128,7 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,this.this.maxJumpForce, 'Сила');
+    this.createSlider(0,this.maxJumpForce, 'Сила');
 	this.createSlider(100,this.debugValue2, 'Плавность');
                 
                 // Счетчик
@@ -156,7 +156,7 @@ createSlider(x, dval, txt) {
         .setInteractive();
     
     // Текст значения
-    const valueText = this.add.text(100, 130+x, txt, {
+    const valueText = this.add.text(100, 130+x, txt+' '+this.dVal, {
         fontSize: '20px',
         fill: '#fff'
     });
