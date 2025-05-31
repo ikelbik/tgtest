@@ -128,8 +128,8 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,debugValue1);
-	this.createSlider(100,debugValue2);
+    this.createSlider(0,this.debugValue1);
+	this.createSlider(100,this.debugValue2);
                 
                 // Счетчик
 				
@@ -147,7 +147,7 @@
                
             }
 			
-		createSlider(x, dval) {
+createSlider(x, dval) {
     // Трек ползунка
     const track = this.add.rectangle(300, 100+x, 200, 10, 0x666666);
     
