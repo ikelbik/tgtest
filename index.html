@@ -156,7 +156,7 @@ createSlider(x, dVal, txt) {
     const thumb = this.add.circle(125, 100+x, 15, 0xffffff)
         .setInteractive();
     
-	const valueText=''
+	this.valueText=''
 	
 	if (dVal==1){
           valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
