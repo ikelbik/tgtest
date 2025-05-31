@@ -108,10 +108,10 @@
 				  this.debugValue = 50;
   
   // Фон ползунка
-  const track = this.add.rectangle(500, 100, 200, 10, 0x666666);
+  const track = this.add.rectangle(300, 100, 200, 10, 0x666666);
   
   // Ползунок
-  const thumb = this.add.circle(550, 100, 15, 0xffffff)
+  const thumb = this.add.circle(350, 100, 15, 0xffffff)
     .setInteractive()
     .on('drag', (pointer, dragX) => {
       // Ограничение в пределах трека
