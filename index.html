@@ -75,7 +75,7 @@
                 this.minHoldTime = 0;
 				this.minholdY = 0;
                 this.maxHoldTime = 800;
-                this.maxJumpForce = 25;
+                this.maxJumpForce = 50;
                 this.maxDx = 100;
                 this.maxDy = 100;
                 this.baseYOffset = 0;
@@ -179,11 +179,11 @@ createSlider(x, dVal, txt) {
         const dragX = Phaser.Math.Clamp(dX, 50, 150);
         thumb.setX(dragX);
 		if (dVal==1){
-          this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
+          this.maxJumpForce = Math.round((dragX - 50) * 1.0);
           this.valueText.setText(txt + ' '+ this.maxJumpForce);
 		 }
 		if (dVal==2){
-          this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
+          this.maxJumpForce = Math.round((dragX - 50) * 1.0);
           this.valueText.setText(txt + ' '+ this.Curve);
 		 }		 
 		 
@@ -261,9 +261,9 @@ createSlider(x, dVal, txt) {
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = - 35*this.maxJumpForce * holdY / holdDuration;
+                            coin.velocityY = - 17*this.maxJumpForce * holdY / holdDuration;
 						
-                            coin.velocityZ = 1 + 0.08*this.maxJumpForce * holdY / holdDuration;
+                            coin.velocityZ = 1 + 0.04*this.maxJumpForce * holdY / holdDuration;
                             coin.velocityX = -this.maxJumpForce * holdX / 8;
 							console.log(coin.velocityX, ' ', coin.velocityY, ' ', coin.velocityZ);
                             coin.isJumping = true;
