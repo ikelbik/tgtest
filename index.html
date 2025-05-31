@@ -79,6 +79,7 @@
                 this.maxDx = 100;
                 this.maxDy = 100;
                 this.baseYOffset = 0;
+				this.Curve = 1;
                 
                 this.soundVolume = 0.6;
             }
@@ -128,8 +129,8 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,this.maxJumpForce, 'Сила');
-	this.createSlider(100,this.debugValue2, 'Плавность');
+    this.createSlider(0,1, 'Сила');
+	this.createSlider(100,2, 'Плавность');
                 
                 // Счетчик
 				
@@ -155,21 +156,35 @@ createSlider(x, dVal, txt) {
     const thumb = this.add.circle(150, 100+x, 15, 0xffffff)
         .setInteractive();
     
-    // Текст значения
-    const valueText = this.add.text(100, 130+x, txt+' '+this.dVal, {
-        fontSize: '20px',
-        fill: '#fff'
-    });
-    
+	if (dVal==1){
+      const valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
+          fontSize: '20px',
+          fill: '#fff'
+      });
+	}
+	
+	if (dVal==2){
+      const valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
+          fontSize: '20px',
+          fill: '#fff'
+      });
+	}
+	
     this.uiLayer.add([track, thumb, valueText]);
     
-    // Настройка перетаскивания
     this.input.setDraggable(thumb);
     thumb.on('drag', (pointer, dX) => {
         const dragX = Phaser.Math.Clamp(dX, 50, 150);
         thumb.setX(dragX);
-        this.dVal = Math.round((dragX - 50) * 1.0);
-        valueText.setText(txt + ' '+ this.dVal);
+		if (dVal==1){
+          this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
+          valueText.setText(txt + ' '+ this.maxJumpForce);
+		 }
+		if (dVal==2){
+          this.this.maxJumpForce = Math.round((dragX - 50) * 1.0);
+          valueText.setText(txt + ' '+ this.Curve);
+		 }		 
+		 
     });
 }
 
