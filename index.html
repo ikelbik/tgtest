@@ -153,18 +153,20 @@ createSlider(x, dVal, txt) {
     const track = this.add.rectangle(100, 100+x, 200, 10, 0x666666);
     
     // Ползунок (thumb)
-    const thumb = this.add.circle(150, 100+x, 15, 0xffffff)
+    const thumb = this.add.circle(125, 100+x, 15, 0xffffff)
         .setInteractive();
     
+	const valueText=''
+	
 	if (dVal==1){
-      const valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
+          valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
           fontSize: '20px',
           fill: '#fff'
       });
 	}
 	
 	if (dVal==2){
-      const valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
+          valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
           fontSize: '20px',
           fill: '#fff'
       });
