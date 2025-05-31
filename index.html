@@ -169,7 +169,7 @@ createSlider(x, dval, txt) {
         //dragX = Phaser.Math.Clamp(dragX, 50, 150);
         thumb.setX(dragX);
         this.dVal = Math.round((dragX - 50) * 1.0);
-        valueText.setText(txt +'${this.dVal}`);
+        valueText.setText(txt + ' '+ this.dVal);
     });
 }
 
