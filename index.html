@@ -128,8 +128,8 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,this.debugValue1);
-	this.createSlider(100,this.debugValue2);
+    this.createSlider(0,this.debugValue1, 'Сила');
+	this.createSlider(100,this.debugValue2, 'Плавность');
                 
                 // Счетчик
 				
@@ -147,7 +147,7 @@
                
             }
 			
-createSlider(x, dval) {
+createSlider(x, dval, txt) {
     // Трек ползунка
     const track = this.add.rectangle(300, 100+x, 200, 10, 0x666666);
     
@@ -156,7 +156,7 @@ createSlider(x, dval) {
         .setInteractive();
     
     // Текст значения
-    const valueText = this.add.text(300, 130+x, `Value: 50`, {
+    const valueText = this.add.text(300, 130+x, txt, {
         fontSize: '20px',
         fill: '#fff'
     });
@@ -166,10 +166,10 @@ createSlider(x, dval) {
     // Настройка перетаскивания
     this.input.setDraggable(thumb);
     thumb.on('drag', (pointer, dragX) => {
-        dragX = Phaser.Math.Clamp(dragX, 50, 150);
+        //dragX = Phaser.Math.Clamp(dragX, 50, 150);
         thumb.setX(dragX);
-        this.dVal = Math.round((dragX - 50) * 1.5);
-        valueText.setText(`Value: ${this.dVal}`);
+        this.dVal = Math.round((dragX - 50) * 1.0);
+        valueText.setText(txt +'${this.dVal}`);
     });
 }
 
@@ -240,14 +240,14 @@ createSlider(x, dval) {
                         this.upSound.play();
 						coin.upStartTime = this.time.now;
                         const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
-                        const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx);
-                        const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy);
+                        const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx)/this.maxDx;
+                        const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = -this.maxJumpForce * (6.5 * holdY / (6 * this.maxDy)) * 33 / holdDuration;
+                            coin.velocityY = - 35*this.maxJumpForce  holdY / holdDuration;
 						
-                            coin.velocityZ = 1 + this.maxJumpForce * (holdY / (987 * this.maxDy)) * 80 / holdDuration;
-                            coin.velocityX = -this.maxJumpForce * (holdX / (9 * this.maxDx));
+                            coin.velocityZ = 1 + 0.08*this.maxJumpForce * holdY / holdDuration;
+                            coin.velocityX = -this.maxJumpForce * holdX / 8;
 							console.log(coin.velocityX, ' ', coin.velocityY, ' ', coin.velocityZ);
                             coin.isJumping = true;
                             coin.isHolding = false;
