@@ -395,8 +395,8 @@ createSlider(yOffset, dVal, txt) {
 
 			triggerLightning(x, y) {
 				const points = [];
-				const segments = 25; // Количество сегментов в молнии
-				const maxDeviation = 80; // Максимальное отклонение от прямой
+				const segments = 15; // Количество сегментов в молнии
+				const maxDeviation = 70; // Максимальное отклонение от прямой
     
 				points.push(new Phaser.Math.Vector2(x, 0));
     
@@ -419,8 +419,8 @@ createSlider(yOffset, dVal, txt) {
 					blendMode: 'ADD',
 					lifespan: { min: 100, max: 300 },
 					quantity: 3,
-					scale: { start: 1.5, end: 0 },
-					alpha: { start: 0.8, end: 0.1 },
+					scale: { start: 1.2, end: 0 },
+					alpha: { start: 0.6, end: 0.0 },
 					advance: 0,
 					emitZone: {
 					type: 'edge',
