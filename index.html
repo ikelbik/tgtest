@@ -42,22 +42,31 @@
 				scene.add.existing(this);
         
 			// Индивидуальные свойства для каждой монеты
-			this.isJumping = false;
-			this.isHolding = false;
-			this.emit_flag=true;
-			this.velocityY = 0;
-			this.velocityX = 0;
-			this.velocityZ = 1;
-			this.currentSpin = 0;
-			this.curentScale = 2.5;
-			this.holdStartTime = 0;
-			this.upStartTime = 0;
-			this.px_0 = 0;
-			this.px_0 = 0;
-			this.rot_i = 0;
-			this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
-			this.rot_f = Phaser.Math.FloatBetween(0.01,0.05);
+				this.isJumping = false;
+				this.isHolding = false;
+				this.emit_flag=true;
+				this.velocityY = 0;
+				this.velocityX = 0;
+				this.velocityZ = 1;
+				this.currentSpin = 0;
+				this.curentScale = 2.5;
+				this.holdStartTime = 0;
+				this.upStartTime = 0;
+				this.px_0 = 0;
+				this.px_0 = 0;
+				this.rot_i = 0;
+				this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
+				this.rot_f = Phaser.Math.FloatBetween(0.01,0.05);
+				this.setTint(0xFFFFFF); // Белый цвет (полная яркость)
+				this.setAlpha(1.0); // Полная непрозрачность
 			}
+			adjustBrightness(factor) {
+				// Комбинируем tint и alpha для контроля яркости
+				const value = Math.floor(255 * factor);
+				const tint = Phaser.Display.Color.GetColor(value, value, value);
+				this.setTint(tint);
+				//this.setAlpha(factor);
+			}			
 			
 			
 		}
@@ -314,6 +323,8 @@ createSlider(yOffset, dVal, txt) {
                 coin.curentScale = coin.curentScale / coin.velocityZ;
                 coin.setScale(coin.curentScale);
                 coin.x += coin.velocityX;
+				
+				coin.adjustBrightness(Math.sqrt(coin.curentScale/2.5));
                 
                 // Вращение в полете
                 coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * 0.98, 0, 10);
