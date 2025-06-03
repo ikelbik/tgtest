@@ -56,7 +56,7 @@
 				this.px_0 = 0;
 				this.rot_i = 0;
 				this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
-				this.rot_f = Phaser.Math.FloatBetween(0.01,0.05);
+				this.rot_f = Phaser.Math.FloatBetween(0.03,0.05);
 				this.setTint(0xFFFFFF); // Белый цвет (полная яркость)
 				this.setAlpha(1.0); // Полная непрозрачность
 			}
@@ -443,10 +443,10 @@ createSlider(yOffset, dVal, txt) {
     
 				lightning.explode(64);
     
-				this.time.delayedCall(50, () => {
+				this.time.delayedCall(30, () => {
 				lightning.explode(32);
 				});
-				this.time.delayedCall(30, () => {
+				this.time.delayedCall(10, () => {
 					lightning.explode(16);
 				});
 			
