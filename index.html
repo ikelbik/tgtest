@@ -75,7 +75,9 @@
                 this.minHoldTime = 0;
 				this.minholdY = 0;
                 this.maxHoldTime = 800;
-                this.maxJumpForce = 50;
+                this.maxJumpForceX = 25;
+                this.maxJumpForceY = 50;
+                this.maxJumpForceZ = 50;				
                 this.maxDx = 100;
                 this.maxDy = 100;
                 this.baseYOffset = 0;
@@ -129,8 +131,8 @@
     this.debugValue2 = 50;
     
     // Создаем элементы UI
-    this.createSlider(0,1, 'Сила');
-	//this.createSlider(100,2, 'Плавность');
+    this.createSlider(0,1, 'Сила вверх');
+	this.createSlider(100,2, 'Сила вперед');
                 
                 // Счетчик
 				
@@ -148,48 +150,41 @@
                
             }
 			
-createSlider(x, dVal, txt) {
-    // Трек ползунка
-    const track = this.add.rectangle(100, 100+x, 200, 10, 0x666666);
+createSlider(yOffset, dVal, txt) {
+    // Вычисляем начальную позицию ползунка на основе текущего значения
+    const initialPosition = 50 + (dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ);
     
-    // Ползунок (thumb)
-    const thumb = this.add.circle(125, 100+x, 15, 0xffffff)
-        .setInteractive();
+    // Создаем элементы UI
+    const trackY = 100 + yOffset;
+    const track = this.add.rectangle(100, trackY, 200, 10, 0x666666);
+    const thumb = this.add.circle(initialPosition, trackY, 15, 0xffffff).setInteractive();
     
-	this.valueText='';
-	
-	if (dVal==1){
-          this.valueText = this.add.text(100, 130+x, txt+' '+this.maxJumpForce, {
-          fontSize: '20px',
-          fill: '#fff'
-      });
-	}
-	
-	if (dVal==2){
-          this.valueText = this.add.text(100, 130+x, txt+' '+this.Curve, {
-          fontSize: '20px',
-          fill: '#fff'
-      });
-	}
-	
-    this.uiLayer.add([track, thumb, this.valueText]);
-    
+    // Текст с текущим значением
+    const valueText = this.add.text(100, trackY + 30, `${txt}: ${dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ}`, {
+        fontSize: '20px',
+        fill: '#fff'
+    });
+
+    this.uiLayer.add([track, thumb, valueText]);
     this.input.setDraggable(thumb);
-    thumb.on('drag', (pointer, dX) => {
-        const dragX = Phaser.Math.Clamp(dX, 50, 150);
-        thumb.setX(dragX);
-		if (dVal==1){
-          this.maxJumpForce = Math.round((dragX - 50) * 1.0);
-          this.valueText.setText(txt + ' '+ this.maxJumpForce);
-		 }
-		if (dVal==2){
-          this.maxJumpForce = Math.round((dragX - 50) * 1.0);
-          this.valueText.setText(txt + ' '+ this.Curve);
-		 }		 
-		 
+    
+    thumb.on('drag', (pointer, dragX, dragY) => {
+        // Корректное вычисление новой позиции с учетом движения мыши
+     //  const newX = Phaser.Math.Clamp(thumb.x + dragX, 50, 150);
+	    const newX = dragX
+        thumb.setX(newX);
+        
+        const value = Math.round(newX - 50);
+        
+        if (dVal === 1) {
+            this.maxJumpForceY = value;
+            valueText.setText(`${txt}: ${this.maxJumpForceY}`);
+        } else if (dVal === 2) {
+            this.maxJumpForceZ = value;
+            valueText.setText(`${txt}: ${this.maxJumpForceZ}`);
+        }
     });
 }
-
             createNewCoin() {
                 this.mSound.play();
                 // Уничтожаем старую монету, если есть
@@ -261,10 +256,10 @@ createSlider(x, dVal, txt) {
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = - 17*this.maxJumpForce * holdY / holdDuration;
+                            coin.velocityY = - 17*this.maxJumpForceY * holdY / holdDuration;
 						
-                            coin.velocityZ = 1 + 0.04*this.maxJumpForce * holdY / holdDuration;
-                            coin.velocityX = -this.maxJumpForce * holdX / 8;
+                            coin.velocityZ = 1 + 0.04*this.maxJumpForceZ * holdY / holdDuration;
+                            coin.velocityX = -this.maxJumpForceX * holdX / 8;
 							console.log(coin.velocityX, ' ', coin.velocityY, ' ', coin.velocityZ);
                             coin.isJumping = true;
                             coin.isHolding = false;
@@ -333,7 +328,7 @@ createSlider(x, dVal, txt) {
                    // if (Math.abs(coin.velocityY) > this.minImpactForSound) {
 					if (true){
 							this.bounceSound.play({
-                            volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/this.maxJumpForce, 0.3, 1)
+                            volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
                         });
                     }
 
