@@ -65,7 +65,7 @@
 				const value = Math.floor(255 * factor);
 				const tint = Phaser.Display.Color.GetColor(value, value, value);
 				this.setTint(tint);
-				//this.setAlpha(factor);
+				//this.setAlpha(Math.pow(factor, 0.3));
 			}			
 			
 			
@@ -324,7 +324,7 @@ createSlider(yOffset, dVal, txt) {
                 coin.setScale(coin.curentScale);
                 coin.x += coin.velocityX;
 				
-				coin.adjustBrightness(Math.sqrt(coin.curentScale/2.5));
+				coin.adjustBrightness(Math.pow(coin.curentScale/2.5, 0.25));
                 
                 // Вращение в полете
                 coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * 0.98, 0, 10);
