@@ -393,43 +393,59 @@ createSlider(yOffset, dVal, txt) {
 			});
             }
 
-            triggerLightning(x, y) {
+			triggerLightning(x, y) {
+				const points = [];
+				const segments = 25; // Количество сегментов в молнии
+				const maxDeviation = 80; // Максимальное отклонение от прямой
+    
+				points.push(new Phaser.Math.Vector2(x, 0));
+    
+				for (let i = 1; i < segments; i++) {
+					const progress = i / segments;
+					const yPos = y * progress;
+        
+					const deviation = maxDeviation * Math.sin(progress * Math.PI);
+					const xDev = Phaser.Math.Between(-deviation, deviation);
+        
+					points.push(new Phaser.Math.Vector2(x + xDev, yPos));
+				}
+    
+				points.push(new Phaser.Math.Vector2(x, y));
+    
+				const lightningCurve = new Phaser.Curves.Spline(points);
+    
+				const lightning = this.add.particles(0, 0, 'flares', {
+					frame: { frames: ['white', 'yellow', 'blue'], cycle: true },
+					blendMode: 'ADD',
+					lifespan: { min: 100, max: 300 },
+					quantity: 3,
+					scale: { start: 1.5, end: 0 },
+					alpha: { start: 0.8, end: 0.1 },
+					advance: 0,
+					emitZone: {
+					type: 'edge',
+					source: lightningCurve,
+					quantity: 64,
+					stepRate: 0
+					}
+				});
+    
+				lightning.explode(64);
+    
+				this.time.delayedCall(50, () => {
+				lightning.explode(32);
+				});
+				this.time.delayedCall(30, () => {
+					lightning.explode(16);
+				});
+			
 
-                // 2. Создаем эмиттер
-                const lightning = this.add.particles(0, 0, 'flares',{
-                    frame: { frames: [ 'red', 'green', 'blue', 'white', 'yellow' ], cycle: true },
-                    blendMode: 'ADD',
-                    lifespan: 500,
-                    quantity: 1,
-                    scale: { start: 2, end: 0 },
-                    alpha: { start: 0.4, end: 0.1 },
-                    speed: { min: 50, max: 200 },
-                    emit: false // Не стартуем автоматически
-                });
-                this.lightningShape.setTo(x, 0, x, y);
-            
-                lightning.addEmitZone({
-                    type: 'edge',
-                    source: this.lightningShape,
-                    quantity: 64, // Количество точек вдоль линии
-                    stepRate: 0.5 // Плотность распределения
-                });
-                                
-            // Взрываем 100 частиц мгновенно
-                lightning.explode(100);
+				this.cameras.main.shake(100, 0.01);
     
-            // Эффекты камеры
-                this.cameras.main.shake(200, 0.01);
-                this.cameras.main.flash(200, 215, 215, 215);
-    
-            // Автоматическое отключение через 0.5 секунды
-                this.time.delayedCall(500, () => {
-                lightning.stop(); // Останавливаем эмиттер
-                lightning.killAll(); // Уничтожаем все частицы
-                lightning.destroy();
-                });
-     
-            }            
+				this.time.delayedCall(500, () => {
+				lightning.destroy();
+				});
+			}           
         
         }
         const config = {
