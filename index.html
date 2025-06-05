@@ -150,11 +150,11 @@
 				//this.plane.width=1024;
 				//this.plane.height=528;
 				
-				const scaleX = -1;
+				const scaleX = this.cameras.main.width / this.bg.width;//-1;
 				const scaleY = this.cameras.main.height / this.bg.height;
-				const scale = Math.max(scaleX, scaleY);
+				const scale = Math.min(scaleX, scaleY);
 				
-				//console.log(this.bg.width);
+				console.log(scaleX, ' ', scaleY);
 				this.plane.setScale(scale);
 				this.plane.y = this.cameras.main.height - 264*scale;
 				this.stnLevel = this.cameras.main.height - 528*scale
@@ -231,7 +231,7 @@
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
-
+				
 				coin.cshdw.setPosition(targetX - 5, targetY + 10);
 				coin.cshdw.setDepth(1.5);
 				coin.cshdw.setScale(1.8,1.0);
