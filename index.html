@@ -157,15 +157,17 @@
 				if (this.cameras.main.width>this.cameras.main.height) {
 					this.bg.setScale(scaleY).setScrollFactor(0);
 					this.scale = scaleY;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.bg.height - 264)*scaleY;
+					this.stnLevel = (this.bg.height - 528)*scaleY;
 				} else{
 					this.bg.setScale(scaleX).setScrollFactor(0);
 					this.scale = scaleX;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.bg.height - 264);
+					this.stnLevel = (this.bg.height - 528);					
 				}
-				
-				//console.log(scaleX, ' ', scaleY);
-				this.plane.setScale(this.scale);
-				this.plane.y = (this.bg.height - 264)*this.scale;
-				this.stnLevel = (this.bg.height - 528)*this.scale;
+			
     
 				//this.bg.setScale(scale).setScrollFactor(0);
 				
