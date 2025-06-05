@@ -152,18 +152,20 @@
 				
 				const scaleX = this.cameras.main.width / this.bg.width;//-1;
 				const scaleY = this.cameras.main.height / this.bg.height;
-				const scale = Math.min(scaleX, scaleY);
-				
+				//const scale = Math.min(scaleX, scaleY);
+				this.scale = 1;
 				if (this.cameras.main.width>this.cameras.main.height) {
 					this.bg.setScale(scaleY).setScrollFactor(0);
+					this.scale = scaleY;
 				} else{
 					this.bg.setScale(scaleX).setScrollFactor(0);
+					this.scale = scaleX;
 				}
 				
 				//console.log(scaleX, ' ', scaleY);
-				this.plane.setScale(scale);
-				this.plane.y = this.cameras.main.height - 264*scale;
-				this.stnLevel = this.cameras.main.height - 528*scale
+				this.plane.setScale(this.scale);
+				this.plane.y = (this.bg.height - 264)*this.scale;
+				this.stnLevel = (this.bg.height - 528)*this.scale;
     
 				//this.bg.setScale(scale).setScrollFactor(0);
 				
@@ -238,9 +240,9 @@
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
 				
-				coin.cshdw.setPosition(targetX - 5, targetY + 10);
+				coin.cshdw.setPosition(targetX - 5, targetY + 3);
 				coin.cshdw.setDepth(1.5);
-				coin.cshdw.setScale(1.8,1.0);
+				coin.cshdw.setScale(1.9,1.0);
 				coin.cshdw.setAlpha(0.3);
 				
 				const circle = new Phaser.Geom.Circle(0, 0, 300);
@@ -319,20 +321,20 @@
                         coin.z += coin.velocityZ * dt;
                         coin.y += coin.velocityY * dt;
 						if (coin.cshdw){
-							coin.cshdw.y -= -coin.y_o_s + 150 * (coin.z - 1)-30;
+							coin.cshdw.y -= -coin.y_o_s + 150 * (coin.z - 1)-3;
                         }
 						coin.y -= -coin.y_o + 150 * (coin.z - 1);
                         coin.y_o = 150 * (coin.z - 1);
-                        coin.y_o_s = 150 * (coin.z - 1)-30;						
+                        coin.y_o_s = 150 * (coin.z - 1)-3;						
                         coin.curentScale = 2.5 / coin.z;
                         coin.setScale(coin.curentScale);
 						if (coin.cshdw){
-							coin.cshdw.setScale(1.8/coin.z, 1.2*Math.sin(coin.modelRotation.x)/coin.z);
+							coin.cshdw.setScale(1.9/coin.z, 1.2*Math.sin(coin.modelRotation.x)/coin.z);
 						}
 						//console.log(coin.modelRotation.x);
                         coin.x += coin.velocityX * dt;
 						if (coin.cshdw){
-							coin.cshdw.x = coin.x;	
+							coin.cshdw.x = coin.x-5;	
 						}
                         coin.adjustBrightness(Math.pow(coin.curentScale / 2.5, 0.25));
                         
