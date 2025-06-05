@@ -150,7 +150,7 @@
 				);			
 
 				//this.cshdw.setAlpha(0.7);				
-				//this.plane.setZ(0);
+				this.plane.setZ(1);
 				this.plane.setDepth(1);
 				//this.plane.width=1024;
 				//this.plane.height=528;
@@ -247,8 +247,8 @@
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
-				
-				
+				coin.setZ(2);
+			
 				//coin.getScreenSize(this.cameras);
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
@@ -357,6 +357,7 @@
                         
                         if (coin.z >= 2) {
                             coin.setDepth(0);
+							coin.setZ(3);
 
                         }
 						
