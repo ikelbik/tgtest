@@ -41,41 +41,45 @@
 				super(scene, x, y, 'texture');
 				scene.add.existing(this);
         
-			// Индивидуальные свойства для каждой монеты
-				this.isJumping = false;
-				this.isHolding = false;
-				this.emit_flag=true;
-				this.velocityY = 0;
-				this.velocityX = 0;
-				this.velocityZ = 1;
-				this.currentSpin = 0;
-				this.curentScale = 2.5;
-				this.holdStartTime = 0;
-				this.upStartTime = 0;
-				this.px_0 = 0;
-				this.px_0 = 0;
-				this.rot_i = 0;
-				this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
-				this.rot_f = Phaser.Math.FloatBetween(0.03,0.05);
-				this.setTint(0xFFFFFF); // Белый цвет (полная яркость)
-				this.setAlpha(1.0); // Полная непрозрачность
+			    this.isJumping = false;
+			    this.isHolding = false;
+			    this.emit_flag=true;
+			    this.velocityY = 0;
+			    this.velocityX = 0;
+			    this.velocityZ = 1;
+			    this.currentSpin = 0;
+			    this.curentScale = 2.5;
+			    this.holdStartTime = 0;
+			    this.upStartTime = 0;
+			    this.px_0 = 0;
+			    this.py_0 = 0;
+			    this.rot_i = 0;
+			    this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
+			    this.rot_f = Phaser.Math.FloatBetween(0.03,0.05);
+			    this.setTint(0xFFFFFF);
+			    this.setAlpha(1.0);
+			    this.isAppogey = false;
+			    this.y_o = 0;
+				this.y_o_s = 0;
+				this.shd_sx = 1;
+				this.shd_sy = 1;
+				this.cshdw = scene.add.plane(
+					0 ,
+					0,
+					'cshdw'
+				);		
 			}
 			adjustBrightness(factor) {
-				// Комбинируем tint и alpha для контроля яркости
 				const value = Math.floor(255 * factor);
 				const tint = Phaser.Display.Color.GetColor(value, value, value);
 				this.setTint(tint);
-				//this.setAlpha(Math.pow(factor, 0.3));
 			}			
-			
-			
 		}
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
                 this.score = 0;
                 this.coinsCollected = 0;
-                this.rotSpeed = isTelegram ? 0.005 : 0.01;
                 this.scaleFactor = 0.001;
                 
                 // Физические параметры
@@ -85,21 +89,24 @@
 				this.minholdY = 0;
                 this.maxHoldTime = 800;
                 this.maxJumpForceX = 25;
-                this.maxJumpForceY = 50;
-                this.maxJumpForceZ = 50;				
+                this.maxJumpForceY = 60;
+                this.maxJumpForceZ = 60;				
                 this.maxDx = 100;
                 this.maxDy = 100;
-                this.baseYOffset = 0;
+                this.baseYOffset = 200;
 				this.Curve = 1;
+				this.stnLevel = 0;
                 
                 this.soundVolume = 0.6;
             }
         
             preload() {
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                this.load.image('bg', 'assets/bg1.jpg');
-                this.load.obj('skull', 'assets/fantom.obj');
-                this.load.image('texture', 'assets/coin_txt.png');
+                this.load.image('bg', 'https://vifaniya.ru/ggc/assets/bg1.jpg');
+                this.load.image('ttext', 'https://vifaniya.ru/ggc/assets/table.png');				
+                this.load.obj('coin', 'assets/fantom.obj');
+                this.load.image('texture', 'https://vifaniya.ru/ggc/assets/coin_txt.png');
+				this.load.image('cshdw', 'https://vifaniya.ru/ggc/assets/shadow.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
                 this.load.audio('magic', 'assets/rise.wav');  
@@ -116,7 +123,6 @@
                     });
                 }
 				
-				//console.log(this.cameras.main.width, ' ', this.cameras.main.height)
 				coins = this.add.group();
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
@@ -130,28 +136,39 @@
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-				const scaleX = this.cameras.main.width / this.bg.width;
+				
+				this.plane = this.add.plane(
+					this.cameras.main.centerX ,
+					this.cameras.main.height-264,
+					'ttext'
+				);			
+
+				//this.cshdw.setAlpha(0.7);				
+				this.plane.setZ(0);
+				this.plane.setDepth(1);
+				//this.plane.width=1024;
+				//this.plane.height=528;
+				
+				const scaleX = -1;
 				const scaleY = this.cameras.main.height / this.bg.height;
 				const scale = Math.max(scaleX, scaleY);
+				
+				//console.log(this.bg.width);
+				this.plane.setScale(scale);
+				this.plane.y = this.cameras.main.height - 264*scale;
+				this.stnLevel = this.cameras.main.height - 528*scale
     
 				this.bg.setScale(scale).setScrollFactor(0);
 				
-				
-				
-    // Создаем слой для UI поверх всех элементов
-    this.uiLayer = this.add.layer();
+				this.uiLayer = this.add.layer();
     
-    // Переменная для отладки
-    this.debugValue1 = 50;
-	    // Переменная для отладки
-    this.debugValue2 = 50;
+                this.debugValue1 = 50;
+                this.debugValue2 = 50;
     
-    // Создаем элементы UI
-    this.createSlider(0,1, 'Сила вверх');
-	this.createSlider(100,2, 'Сила вперед');
+                this.createSlider(0,1, 'Сила вверх');
+                this.createSlider(100,2, 'Сила вперед');
                 
                 // Счетчик
-				
 				this.scoreText = this.add.text(20, 30, 'Монет : 0', {
                     font: '28px Arial',
                     fill: '#ffffff',
@@ -159,101 +176,86 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-                //Phaser.Geom.Line.Rotate(lightningShape, Phaser.Math.DegToRad(-15));
-
-                // Создаем первую монету
                 this.createNewCoin();
-               
             }
 			
-createSlider(yOffset, dVal, txt) {
-    // Вычисляем начальную позицию ползунка на основе текущего значения
-    const initialPosition = 50 + (dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ);
-    
-    // Создаем элементы UI
-    const trackY = 100 + yOffset;
-    const track = this.add.rectangle(100, trackY, 200, 10, 0x666666);
-    const thumb = this.add.circle(initialPosition, trackY, 15, 0xffffff).setInteractive();
-    
-    // Текст с текущим значением
-    const valueText = this.add.text(100, trackY + 30, `${txt}: ${dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ}`, {
-        fontSize: '20px',
-        fill: '#fff'
-    });
+            createSlider(yOffset, dVal, txt) {
+                const initialPosition =  (dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ);
+                
+                const trackY = 100 + yOffset;
+                const track = this.add.rectangle(100, trackY, 200, 10, 0x666666);
+                const thumb = this.add.circle(initialPosition, trackY, 15, 0xffffff).setInteractive();
+                
+                const valueText = this.add.text(100, trackY + 30, `${txt}: ${dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ}`, {
+                    fontSize: '20px',
+                    fill: '#fff'
+                });
+            
+                this.uiLayer.add([track, thumb, valueText]);
+                this.input.setDraggable(thumb);
+                
+                thumb.on('drag', (pointer, dragX, dragY) => {
+                    const newX = dragX
+                    thumb.setX(newX);
+                    
+                    const value = Math.round(newX);
+                    
+                    if (dVal === 1) {
+                        this.maxJumpForceY = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceY}`);
+                    } else if (dVal === 2) {
+                        this.maxJumpForceZ = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceZ}`);
+                    }
+                });
+            }
 
-    this.uiLayer.add([track, thumb, valueText]);
-    this.input.setDraggable(thumb);
-    
-    thumb.on('drag', (pointer, dragX, dragY) => {
-        // Корректное вычисление новой позиции с учетом движения мыши
-     //  const newX = Phaser.Math.Clamp(thumb.x + dragX, 50, 150);
-	    const newX = dragX
-        thumb.setX(newX);
-        
-        const value = Math.round(newX - 50);
-        
-        if (dVal === 1) {
-            this.maxJumpForceY = value;
-            valueText.setText(`${txt}: ${this.maxJumpForceY}`);
-        } else if (dVal === 2) {
-            this.maxJumpForceZ = value;
-            valueText.setText(`${txt}: ${this.maxJumpForceZ}`);
-        }
-    });
-}
             createNewCoin() {
                 this.mSound.play();
-                // Уничтожаем старую монету, если есть
-               // if (this.mesh) {
-               //     this.mesh.destroy();
-               // }
-               // }
+                const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
+                const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.0);
+                this.currentYOffset = this.baseYOffset - 150*randomZOffset;
                 
-                // Случайное смещение по X
-                const randomX = Phaser.Math.Between(-this.cameras.main.width/2.5, this.cameras.main.width/2.5);
-                // Случайное смещение по Y (выше начальной позиции)
-                const randomYOffset = Phaser.Math.Between(100, 200);
-                this.currentYOffset = this.baseYOffset + randomYOffset;
-                
-                // Создаем новую монету
-                const startY = this.cameras.main.centerY - 300; // Начинаем выше экрана
+                const startY = this.cameras.main.centerY - 300;
                 const targetY = this.cameras.main.centerY + this.currentYOffset;				
 				const targetX = this.cameras.main.centerX + randomX;
     
 				this.triggerLightning(targetX, targetY);
 				const coin = new Coin(this, targetX, startY);
-                coin.addVerticesFromObj('skull', 0.1).panZ(7).modelRotation.x += 0.6;
+                coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
             
-                coin.setScale(2.5);
+			    console.log(coin.width);
 				
-                //coin.setInteractive(new Phaser.Geom.Rectangle(-300, -300, 600, 600), Phaser.Geom.Rectangle.Contains);
+				coin.z += 1+randomZOffset;
+				coin.curentScale = coin.curentScale/coin.z;
+                coin.setScale(coin.curentScale);
+				coin.setDepth(2);
+
+				coin.cshdw.setPosition(targetX - 5, targetY + 10);
+				coin.cshdw.setDepth(1.5);
+				coin.cshdw.setScale(1.8,1.0);
+				coin.cshdw.setAlpha(0.3);
 				
 				const circle = new Phaser.Geom.Circle(0, 0, 300);
 				coin.setInteractive({ hitArea: circle, hitAreaCallback: Phaser.Geom.Circle.Contains });
 				
-//this.input.enableDebug(coin, 0xff00ff);
-
-                // 2. Анимация падения с "отскоком"
-
                 this.appearTween = this.tweens.add({
                     targets: coin,
-                    alpha: {
-                        from: 0,
-                        to: 1
-                    },
-                    y: {
-                        from: startY,
-                        to: targetY
-                    },
+                    alpha: { from: 0, to: 1 },
+                    y: { from: startY, to: targetY },
                     scaleX: 2.5,
                     scaleY: 2.5,
-                   // angle: 360, // Полное вращение
                     duration: 300,
                     ease: 'Cubic.easeOut'
                 });
-
+				
+				this.appearTween = this.tweens.add({
+                    targets: coin.cshdw,
+                    alpha: { from: 0, to: 0.3 },
+					duration: 300
+                });
+				
                 
-                // Обработчики событий
                 coin.on('pointerdown', p => {
                     if (!coin.isJumping) {
                         coin.isHolding = true;
@@ -273,13 +275,12 @@ createSlider(yOffset, dVal, txt) {
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             coin.velocityY = - 17*this.maxJumpForceY * holdY / holdDuration;
-						
-                            coin.velocityZ = 1 + 0.04*this.maxJumpForceZ * holdY / holdDuration;
+                            coin.velocityZ = 0 + 0.04*this.maxJumpForceZ * holdY / holdDuration;
                             coin.velocityX = -this.maxJumpForceX * holdX / 8;
-							console.log(coin.velocityX, ' ', coin.velocityY, ' ', coin.velocityZ);
                             coin.isJumping = true;
+							coin.isAppogey = false;
                             coin.isHolding = false;
-                            coin.currentSpin = 0.3;// * holdDuration / 200;
+                            coin.currentSpin = 0.3;
                         }
                     }
                 });
@@ -289,125 +290,137 @@ createSlider(yOffset, dVal, txt) {
             }
 
             update(time, delta) {
-			coins.getChildren().forEach(coin => {
-				//coin.update();
-				if (!coin.isJumping){
-				 // if (coin.rot_amp-coin.rot_i>=0){
-				//	  coin.rot_i += 0.001
-				//    coin.modelRotation.x = 0.6-(coin.rot_amp-coin.rot_i)*(Math.sin(this.time.now*coin.rot_f + 0));
-				//	  coin.modelRotation.z = (coin.rot_amp-coin.rot_i)*(Math.sin(this.time.now*coin.rot_f + Math.PI/2));
-				 if (coin.rot_amp>=0.01){
-					  coin.rot_amp *= 1/(1+coin.rot_f)
-				      coin.modelRotation.x = 0.6-(coin.rot_amp)*(Math.sin(this.time.now*coin.rot_f + 0));
-					  coin.modelRotation.z = (coin.rot_amp)*(Math.sin(this.time.now*coin.rot_f + Math.PI/2));
-					} else return;
-				}else{
-                //if (!coin.isJumping) return;
-				
-				/*
-				if (coin.emit_flag) {
-                    this.time.delayedCall(5000, () => { 
-                        this.createNewCoin();
-                        coin.emit_flag=false;
-                    });
-                }
-				*/
-				if ((this.time.now - coin.upStartTime > 500)&&(coin.emit_flag)){
-				  this.createNewCoin();
-				// console.log(this.time.now - coin.upStartTime);
-                 coin.emit_flag=false;
-				}
-                // Физика прыжка
-                coin.velocityY += this.gravity;
-                coin.y += coin.velocityY;
-                coin.curentScale = coin.curentScale / coin.velocityZ;
-                coin.setScale(coin.curentScale);
-                coin.x += coin.velocityX;
-				
-				coin.adjustBrightness(Math.pow(coin.curentScale/2.5, 0.25));
+                const dt = delta / 16.66667; // Нормализация к 60 FPS
                 
-                // Вращение в полете
-                coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * 0.98, 0, 10);
-                coin.modelRotation.x += coin.currentSpin;
-                
-                if (coin.modelRotation.x > 2 * Math.PI) {
-                    coin.modelRotation.x -= 2 * Math.PI;
-                }
+                coins.getChildren().forEach(coin => {
+                    if (!coin.isJumping) {
+                        if (coin.rot_amp >= 0.01) {
+                            coin.rot_amp *= 1 / (1 + coin.rot_f);
+                            coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
+                            coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
+							//console.log(coin.modelRotation.z);
+							coin.cshdw.setScale(1.8*Math.cos(coin.modelRotation.z), 1.2*Math.cos(coin.modelRotation.x));
+                        }
+                    } else {
+                        if ((this.time.now - coin.upStartTime > 500) && coin.emit_flag) {
+                            this.createNewCoin();
+                            coin.emit_flag = false;
+                        }
+                        
+                        // Применяем dt для независимости от FPS
+                        coin.velocityY += this.gravity * dt;
+                        coin.z += coin.velocityZ * dt;
+                        coin.y += coin.velocityY * dt;
+						if (coin.cshdw){
+							coin.cshdw.y -= -coin.y_o_s + 150 * (coin.z - 1)-30;
+                        }
+						coin.y -= -coin.y_o + 150 * (coin.z - 1);
+                        coin.y_o = 150 * (coin.z - 1);
+                        coin.y_o_s = 150 * (coin.z - 1)-30;						
+                        coin.curentScale = 2.5 / coin.z;
+                        coin.setScale(coin.curentScale);
+						if (coin.cshdw){
+							coin.cshdw.setScale(1.8/coin.z, 1.2*Math.sin(coin.modelRotation.x)/coin.z);
+						}
+						console.log(coin.modelRotation.x);
+                        coin.x += coin.velocityX * dt;
+						if (coin.cshdw){
+							coin.cshdw.x = coin.x;	
+						}
+                        coin.adjustBrightness(Math.pow(coin.curentScale / 2.5, 0.25));
+                        
+                        // Корректировка вращения с dt
+                        coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
+                        coin.modelRotation.x += coin.currentSpin * dt;
+                        
+                        if (coin.z >= 2) {
+                            coin.setDepth(0);
 
-                // Обработка столкновения с "землей"
-                if (coin.y >= this.cameras.main.centerY + this.currentYOffset) {
-                         
-                    coin.y = this.cameras.main.centerY + this.currentYOffset;
-                    coin.velocityY *= -this.bounceDamping;
-                    coin.velocityZ = 1 + (coin.velocityZ - 1) / 3;
-                    coin.velocityX = coin.velocityX / 3;
-                    
-                    // Воспроизводим звук удара
-                   // if (Math.abs(coin.velocityY) > this.minImpactForSound) {
-					if (true){
-							this.bounceSound.play({
-                            volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
-                        });
-                    }
+                        }
+						
+						if (coin.z >= 1.6) {
 
-                    // Проверка на остановку
-                    if (Math.abs(coin.velocityY) < 1) {
-                        if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
-                            (Math.abs(coin.modelRotation.x) - (Math.PI + 0.6) < 0.2)) {
-                            
-                            // 1. Останавливаем физику
-                            coin.isJumping = false;
-                            coin.velocityY = 0;
-                            coin.velocityX = 0;
+							if (coin.cshdw){
+								coin.cshdw.destroy();
+							}
+                        }
+
+                        if (coin.y >= this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1)) {
+                            if (coin.z < 2) {
+                                coin.y = this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1);
+                                coin.velocityY *= -this.bounceDamping;
+                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
+                                coin.velocityX = coin.velocityX / 3;
+                                
+                                if (Math.abs(coin.velocityY) > 1) {
+                                    this.bounceSound.play({
+                                        volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
+                                    });
+                                }
+
+                                if (Math.abs(coin.velocityY) < 1) {
+                                    if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
+                                        (Math.abs(coin.modelRotation.x) - (2*Math.PI + 0.6) < 0.2)) {
+                                        coin.isJumping = false;
+                                        coin.velocityY = 0;
+                                        coin.velocityX = 0;
         
-                            // 2. Анимация "подпрыгивания" перед исчезновением
-                            this.tweens.add({
-                                targets: coin,
-                                y: coin.y - 30, // Подбрасываем немного вверх
-                                duration: 150,
-                                ease: 'Power1',
-                                yoyo: true,
-                                onComplete: () => {
-                                // 3. Анимация исчезновения с вращением
-                                    this.tweens.add({
-                                        targets: coin,
-                                        alpha: 0,
-                                        scaleX: 0.5,
-                                        scaleY: 0.5,
-                                        angle: 360, // Полное вращение
-                                        duration: 300,
-                                        ease: 'Cubic.easeOut',
-                                        onComplete: () => {
-                                            this.score += 1;
-                                            this.scoreText.setText(`Монет : ${this.score}`);
-                                            
-                                           // this.time.delayedCall(250, () => {
-                                                if (coin) {
-                                                    coin.destroy();
-													if (coin.emit_flag){
-													  this.createNewCoin();
-													}
-                                                    coin.emit_flag=true;
-                                                }
-                                            //});
-                                            
+                                        this.tweens.add({
+                                            targets: coin,
+                                            y: coin.y - 0,
+                                            duration: 150,
+                                            ease: 'Power1',
+                                            yoyo: true,
+                                            onComplete: () => {
+                                                this.tweens.add({
+                                                    targets: [coin, coin.cshdw],
+                                                    alpha: 0,
+                                                    //scaleX: 0.5,
+                                                    //scaleY: 0.5,
+                                                    //angle: 360,
+													//alpha: { from: 1, to: 0.0 },
+                                                    duration: 300,
+                                                    ease: 'Cubic.easeOut',
+                                                    onComplete: () => {
+                                                        this.score += 1;
+                                                        this.scoreText.setText(`Монет : ${this.score}`);
+														if (coin.cshdw){
+															coin.cshdw.destroy();
+														}
+                                                        coin.destroy();
+
+                                                        if (coin.emit_flag) {
+                                                            this.createNewCoin();
+                                                        }
+                                                        coin.emit_flag = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        coin.modelRotation.x -= 0.3;
+                                    }
+                                }
+                            } else {
+                                if (coin.y >= this.stnLevel) {
+                                    this.time.delayedCall(100, () => {
+                                        coin.destroy();
+										coin.cshdw.destroy();
+                                        if (coin.emit_flag) {
+                                            this.createNewCoin();
                                         }
                                     });
                                 }
-                            });
-                        } else {
-                            coin.modelRotation.x -= 0.1;
+                            }
                         }
                     }
-                }
-			}
-			});
+                });
             }
 
 			triggerLightning(x, y) {
 				const points = [];
-				const segments = 15; // Количество сегментов в молнии
-				const maxDeviation = 70; // Максимальное отклонение от прямой
+				const segments = 15;
+				const maxDeviation = 70;
     
 				points.push(new Phaser.Math.Vector2(x, 0));
     
@@ -444,17 +457,16 @@ createSlider(yOffset, dVal, txt) {
 				lightning.explode(64);
     
 				this.time.delayedCall(30, () => {
-				lightning.explode(32);
+				    lightning.explode(32);
 				});
 				this.time.delayedCall(10, () => {
 					lightning.explode(16);
 				});
 			
-
 				this.cameras.main.shake(100, 0.01);
     
 				this.time.delayedCall(500, () => {
-				lightning.destroy();
+				    lightning.destroy();
 				});
 			}           
         
