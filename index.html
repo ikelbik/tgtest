@@ -68,12 +68,42 @@
 					0,
 					'cshdw'
 				);		
+				this.c_width=0;
+				this.c_height=0;
 			}
 			adjustBrightness(factor) {
 				const value = Math.floor(255 * factor);
 				const tint = Phaser.Display.Color.GetColor(value, value, value);
 				this.setTint(tint);
-			}			
+			}		
+			calculateProjection() {
+				const worldMatrix = this.getWorldTransformMatrix();
+				const vertices = this.geometry.attributes.position.data;
+    
+				// Сбросим границы
+				projectionBounds.minX = Infinity;
+				projectionBounds.minZ = Infinity;
+				projectionBounds.maxX = -Infinity;
+				projectionBounds.maxZ = -Infinity;
+
+				const tempVec = new Phaser.Math.Vector4();
+    
+				for (let i = 0; i < vertices.length; i += 3) {
+					// Преобразуем вершину в мировые координаты
+					tempVec.set(vertices[i], vertices[i+1], vertices[i+2], 1);
+					worldMatrix.transformVec4(tempVec);
+        
+					// Проекция на плоскость Y=0 (игнорируем Y)
+					projectionBounds.minX = Math.min(projectionBounds.minX, tempVec.x);
+					projectionBounds.maxX = Math.max(projectionBounds.maxX, tempVec.x);
+					projectionBounds.minZ = Math.min(projectionBounds.minZ, tempVec.z);
+					projectionBounds.maxZ = Math.max(projectionBounds.maxZ, tempVec.z);
+					
+				}
+				this.width = projectionBounds.maxX - projectionBounds.minX;
+				this.height = projectionBounds.maxZ - projectionBounds.minZ;
+			}
+			
 		}
         class MainScene extends Phaser.Scene {
             constructor() {
@@ -241,6 +271,10 @@
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
+				
+				//coin.calculateProjection();
+				
+				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
 				
 				coin.cshdw.setPosition(targetX - 5, targetY + 3);
 				coin.cshdw.setDepth(1.5);
@@ -480,8 +514,65 @@
 				    lightning.destroy();
 				});
 			}           
+     
+	 
+	 
+	 
+getMeshScreenSize(coin, camera) {
+    // 1. Создаем временный вектор для преобразований
+    const worldPos = new Phaser.Math.Vector3();
+    const screenPos = new Phaser.Math.Vector3();
+    
+    // 2. Получаем экранные координаты крайних точек
+    const points = [
+        new Phaser.Math.Vector3(-1, 0, 0),  // левая
+        new Phaser.Math.Vector3(1, 0, 0),   // правая
+        new Phaser.Math.Vector3(0, -1, 0),  // верхняя
+        new Phaser.Math.Vector3(0, 1, 0)    // нижняя
+    ];
+    
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    // 3. Преобразуем точки в экранные координаты
+    points.forEach(point => {
+        // Применяем масштаб и поворот монеты
+        point.clone().scale(coin.scale * 0.1).applyMatrix3(coin.getWorldTransformMatrix());
         
+        // Преобразуем в мировые координаты
+        worldPos.set(
+            coin.x + point.x,
+            coin.y + point.y,
+            coin.z + point.z
+        );
+        
+        // Проецируем на экран
+        camera.project(worldPos, screenPos);
+        
+        // Обновляем границы
+        minX = Math.min(minX, screenPos.x);
+        minY = Math.min(minY, screenPos.y);
+        maxX = Math.max(maxX, screenPos.x);
+        maxY = Math.max(maxY, screenPos.y);
+    });
+    
+    // 4. Рассчитываем размеры
+    return {
+        width: maxX - minX,
+        height: maxY - minY,
+        x: minX,
+        y: minY
+    };
+}
+	 
+	 
+	 
+	 
+	 
         }
+		
+	
+		
         const config = {
             type: Phaser.WEBGL,
             width: window.innerWidth,
