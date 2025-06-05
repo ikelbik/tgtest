@@ -123,6 +123,7 @@
             }
 
             create() {
+				console.log('111');
                 if (window.Telegram?.WebApp?.onEvent) {
                     Telegram.WebApp.onEvent('backButtonClicked', () => {
                         Telegram.WebApp.close();
