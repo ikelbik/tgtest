@@ -154,12 +154,18 @@
 				const scaleY = this.cameras.main.height / this.bg.height;
 				const scale = Math.min(scaleX, scaleY);
 				
-				console.log(scaleX, ' ', scaleY);
+				if (this.cameras.main.width>this.cameras.main.height) {
+					this.bg.setScale(scaleY).setScrollFactor(0);
+				} else{
+					this.bg.setScale(scaleX).setScrollFactor(0);
+				}
+				
+				//console.log(scaleX, ' ', scaleY);
 				this.plane.setScale(scale);
 				this.plane.y = this.cameras.main.height - 264*scale;
 				this.stnLevel = this.cameras.main.height - 528*scale
     
-				this.bg.setScale(scale).setScrollFactor(0);
+				//this.bg.setScale(scale).setScrollFactor(0);
 				
 				this.uiLayer = this.add.layer();
     
@@ -225,7 +231,7 @@
 				const coin = new Coin(this, targetX, startY);
                 coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
             
-			    console.log(coin.width);
+			    //console.log(coin.width);
 				
 				coin.z += 1+randomZOffset;
 				coin.curentScale = coin.curentScale/coin.z;
@@ -323,7 +329,7 @@
 						if (coin.cshdw){
 							coin.cshdw.setScale(1.8/coin.z, 1.2*Math.sin(coin.modelRotation.x)/coin.z);
 						}
-						console.log(coin.modelRotation.x);
+						//console.log(coin.modelRotation.x);
                         coin.x += coin.velocityX * dt;
 						if (coin.cshdw){
 							coin.cshdw.x = coin.x;	
