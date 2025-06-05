@@ -76,35 +76,10 @@
 				const tint = Phaser.Display.Color.GetColor(value, value, value);
 				this.setTint(tint);
 			}		
-			calculateProjection() {
-				const worldMatrix = this.getWorldTransformMatrix();
-				const vertices = this.geometry.attributes.position.data;
-    
-				// Сбросим границы
-				projectionBounds.minX = Infinity;
-				projectionBounds.minZ = Infinity;
-				projectionBounds.maxX = -Infinity;
-				projectionBounds.maxZ = -Infinity;
 
-				const tempVec = new Phaser.Math.Vector4();
-    
-				for (let i = 0; i < vertices.length; i += 3) {
-					// Преобразуем вершину в мировые координаты
-					tempVec.set(vertices[i], vertices[i+1], vertices[i+2], 1);
-					worldMatrix.transformVec4(tempVec);
-        
-					// Проекция на плоскость Y=0 (игнорируем Y)
-					projectionBounds.minX = Math.min(projectionBounds.minX, tempVec.x);
-					projectionBounds.maxX = Math.max(projectionBounds.maxX, tempVec.x);
-					projectionBounds.minZ = Math.min(projectionBounds.minZ, tempVec.z);
-					projectionBounds.maxZ = Math.max(projectionBounds.maxZ, tempVec.z);
-					
-				}
-				this.width = projectionBounds.maxX - projectionBounds.minX;
-				this.height = projectionBounds.maxZ - projectionBounds.minZ;
-			}
+}
 			
-		}
+		
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -272,7 +247,7 @@
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
 				
-				//coin.calculateProjection();
+				//coin.getScreenSize(this.cameras);
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
 				
