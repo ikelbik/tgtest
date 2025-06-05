@@ -150,8 +150,9 @@
 				);			
 
 				//this.cshdw.setAlpha(0.7);				
-				this.plane.setZ(1);
+				//this.plane.setZ(0);
 				this.plane.setDepth(1);
+				this.plane.z=0;
 				//this.plane.width=1024;
 				//this.plane.height=528;
 				
@@ -173,7 +174,7 @@
 					this.stnLevel = (this.bg.height - 528);					
 				}
 			
-				console.log(this.plane.y);
+				//console.log(this.plane.y);
     
 				//this.bg.setScale(scale).setScrollFactor(0);
 				
@@ -247,8 +248,8 @@
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
-				coin.setZ(2);
-			
+				
+				
 				//coin.getScreenSize(this.cameras);
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
@@ -357,7 +358,6 @@
                         
                         if (coin.z >= 2) {
                             coin.setDepth(0);
-							coin.setZ(3);
 
                         }
 						
