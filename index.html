@@ -59,7 +59,7 @@
 			    this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
 			    this.rot_f = Phaser.Math.FloatBetween(0.03,0.05);
 			    this.setTint(0xFFFFFF);
-			    this.setAlpha(1.0);
+			    this.setAlpha(1);
 			    this.isAppogey = false;
 			    this.y_o = 0;
 				this.y_o_s = 0;
@@ -360,7 +360,7 @@
 						if (coin.cshdw){
 							coin.cshdw.x = coin.x-5;	
 						}
-                        //coin.adjustBrightness(Math.pow(coin.z / 2.5, 0.25));
+                        coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
                         
                         // Корректировка вращения с dt
                         //coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
@@ -378,6 +378,7 @@
 						}	
 						if ((coin.z >= 2.8) && (coin.z < 4)) {
 							coin.d_x = 3;
+							coin.cshdw.setVisible(true);
 						}			
 						if (coin.z >= 4) {
 							coin.d_x = 4;
@@ -389,6 +390,7 @@
 						
 						if (coin.d_x == 2){
 							coin.setDepth(0);
+							coin.cshdw.setVisible(false);
 						}
 						
 						//console.log(coin.d_x, ' ', coin.y, ' ' ,this.stnLevel);
@@ -396,7 +398,7 @@
 						if ((coin.d_x == 2) && (coin.y >= this.stnLevel)) {
 							if (coin.del_flag){
 								coin.cshdw.destroy();
-								this.time.delayedCall(200, () => {	
+								this.time.delayedCall(100, () => {	
 									coin.destroy();
 									coin.cshdw.destroy();		
 								});
@@ -425,6 +427,7 @@
                                         coin.isJumping = false;
                                         coin.velocityY = 0;
                                         coin.velocityX = 0;
+										coin.cshdw.setVisible(false);
                                                 this.tweens.add({
                                                     targets: [coin, coin.cshdw],
                                                     alpha: 0,
