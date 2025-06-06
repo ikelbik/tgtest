@@ -35,7 +35,7 @@
             tg.MainButton.show();
         }
 		let coins;
-		
+			
 		class Coin extends Phaser.GameObjects.Mesh {
 			constructor(scene, x, y) {
 				super(scene, x, y, 'texture');
@@ -145,10 +145,11 @@
 				
 				this.plane = this.add.plane(
 					this.cameras.main.centerX ,
-					this.cameras.main.height-264,
+					this.cameras.main.height-264, 
 					'ttext'
-				);			
+				).panZ(0.7);			
 
+				
 				//this.cshdw.setAlpha(0.7);				
 				//this.plane.setZ(0);
 				this.plane.setDepth(1);
@@ -194,9 +195,11 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-                this.createNewCoin(1);
-				this.createNewCoin(2);
-				this.createNewCoin(3);
+				this.mesh = this.add.mesh(this.cameras.main.centerX , this.cameras.main.centerY , 'cshdw');
+				this.mesh.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.y +=0.6;
+                this.createNewCoin();
+				//this.createNewCoin(2);
+				//this.createNewCoin(3);
             }
 			
             createSlider(yOffset, dVal, txt) {
@@ -230,7 +233,7 @@
                 });
             }
 
-            createNewCoin(z) {
+            createNewCoin() {
                 this.mSound.play();
                 const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
                 const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.0);
@@ -249,9 +252,9 @@
 				coin.z += 1+randomZOffset;
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
-				coin.setDepth(z+1);
+				coin.setDepth(2);
 				
-				coin.setZ(3-z);
+				//coin.setZ(3-z);
 				//coin.getScreenSize(this.cameras);
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
