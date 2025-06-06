@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000022">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            color: white;
+            font-family: Arial, sans-serif;
+            font-size: 24px;
+            z-index: 1000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+    </style>
+</head>
+<body>
+    <div id="game"></div>
+
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script>
+        const isTelegram = /Telegram/.test(navigator.userAgent);
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.MainButton.show();
+        }
+		let coins;
+			
+		class Coin extends Phaser.GameObjects.Mesh {
+			constructor(scene, x, y) {
+				super(scene, x, y, 'texture');
+				scene.add.existing(this);
+        
+			    this.isJumping = false;
+			    this.isHolding = false;
+			    this.emit_flag=true;
+			    this.velocityY = 0;
+			    this.velocityX = 0;
+			    this.velocityZ = 1;
+			    this.currentSpin = 0;
+			    this.curentScale = 2.5;
+			    this.holdStartTime = 0;
+			    this.upStartTime = 0;
+			    this.px_0 = 0;
+			    this.py_0 = 0;
+			    this.rot_i = 0;
+			    this.rot_amp = Phaser.Math.FloatBetween(0.25,0.45);
+			    this.rot_f = Phaser.Math.FloatBetween(0.03,0.05);
+			    this.setTint(0xFFFFFF);
+			    this.setAlpha(1.0);
+			    this.isAppogey = false;
+			    this.y_o = 0;
+				this.y_o_s = 0;
+				this.shd_sx = 1;
+				this.shd_sy = 1;
+				this.cshdw = scene.add.plane(
+					0 ,
+					0,
+					'cshdw'
+				);		
+				this.c_width=0;
+				this.c_height=0;
+				
+			}
+			adjustBrightness(factor) {
+				const value = Math.floor(255 * factor);
+				const tint = Phaser.Display.Color.GetColor(value, value, value);
+				this.setTint(tint);
+			}		
+
+}
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                this.score = 0;
+                this.coinsCollected = 0;
+                this.scaleFactor = 0.001;
+                
+                // Физические параметры
+                this.gravity = 0.5;
+                this.bounceDamping = 0.8;
+                this.minHoldTime = 0;
+				this.minholdY = 0;
+                this.maxHoldTime = 800;
+                this.maxJumpForceX = 25;
+                this.maxJumpForceY = 60;
+                this.maxJumpForceZ = 60;				
+                this.maxDx = 100;
+                this.maxDy = 100;
+                this.baseYOffset = 200;
+				this.Curve = 1;
+				this.stnLevel = 0;
+                
+                this.soundVolume = 0.6;
+            }
+        
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                //this.load.image('bg', 'https://vifaniya.ru/ggc/assets/bg1.jpg');
+                this.load.image('bg', 'assets/bg1.jpg');
+                this.load.image('ttext', 'assets/table.png');				
+                this.load.obj('coin', 'assets/fantom.obj');
+                this.load.image('texture', 'assets/coin_txt.png');
+				this.load.image('cshdw', 'assets/shadow.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.audio('rotate', 'assets/rotate.wav');     				
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                
+                this.lightningShape = new Phaser.Geom.Line();
+            }
+
+            create() {
+				console.log('111');
+                if (window.Telegram?.WebApp?.onEvent) {
+                    Telegram.WebApp.onEvent('backButtonClicked', () => {
+                        Telegram.WebApp.close();
+                    });
+                }
+				
+				coins = this.add.group();
+                // Звуки
+                this.bounceSound = this.sound.add('coinDrop');
+                this.bounceSound.volume = this.soundVolume;
+                this.upSound = this.sound.add('coinUp');
+                this.upSound.volume = this.soundVolume;
+                this.mSound = this.sound.add('magic');
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;      
+                this.rSound = this.sound.add('rotate');
+                this.rSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10; 				
+
+                // Фон
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+				
+				this.plane = this.add.plane(
+					this.cameras.main.centerX ,
+					this.cameras.main.height-264, 
+					'ttext'
+				).panZ(0);			
+
+				
+				//this.cshdw.setAlpha(0.7);				
+				//this.plane.setZ(0);
+				this.plane.setDepth(1);
+				this.plane.z=0;
+				//this.plane.width=1024;
+				//this.plane.height=528;
+				
+				const scaleX = this.cameras.main.width / this.bg.width;//-1;
+				const scaleY = this.cameras.main.height / this.bg.height;
+				//const scale = Math.min(scaleX, scaleY);
+				this.scale = 1;
+				if (this.cameras.main.width>this.cameras.main.height) {
+					this.bg.setScale(scaleY).setScrollFactor(0);
+					this.scale = scaleY;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.bg.height - 264)*scaleY;
+					this.stnLevel = (this.bg.height - 528)*scaleY;
+				} else{
+					this.bg.setScale(scaleX).setScrollFactor(0);
+					this.scale = scaleX;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*scaleX)- 264*scaleX;
+					this.stnLevel = (this.cameras.main.height) - 528*scaleX;				
+				}
+			
+				//console.log(this.plane.y);
+    
+				//this.bg.setScale(scale).setScrollFactor(0);
+				
+				this.uiLayer = this.add.layer();
+    
+                this.debugValue1 = 50;
+                this.debugValue2 = 50;
+    
+                this.createSlider(0,1, 'Сила вверх');
+                this.createSlider(100,2, 'Сила вперед');
+                
+                // Счетчик
+				this.scoreText = this.add.text(20, 30, 'Монет : 0', {
+                    font: '28px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setScrollFactor(0);
+                
+				this.mesh = this.add.mesh(this.cameras.main.centerX , this.cameras.main.centerY , 'cshdw');
+				this.mesh.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.y +=0.6;
+                this.createNewCoin();
+				//this.createNewCoin(2);
+				//this.createNewCoin(3);
+            }
+			
+            createSlider(yOffset, dVal, txt) {
+                const initialPosition =  (dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ);
+                
+                const trackY = 100 + yOffset;
+                const track = this.add.rectangle(100, trackY, 200, 10, 0x666666);
+                const thumb = this.add.circle(initialPosition, trackY, 15, 0xffffff).setInteractive();
+                
+                const valueText = this.add.text(100, trackY + 30, `${txt}: ${dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ}`, {
+                    fontSize: '20px',
+                    fill: '#fff'
+                });
+            
+                this.uiLayer.add([track, thumb, valueText]);
+                this.input.setDraggable(thumb);
+                
+                thumb.on('drag', (pointer, dragX, dragY) => {
+                    const newX = dragX
+                    thumb.setX(newX);
+                    
+                    const value = Math.round(newX);
+                    
+                    if (dVal === 1) {
+                        this.maxJumpForceY = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceY}`);
+                    } else if (dVal === 2) {
+                        this.maxJumpForceZ = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceZ}`);
+                    }
+                });
+            }
+
+            createNewCoin() {
+                this.mSound.play();
+                const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
+                const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.2);
+                this.currentYOffset = this.baseYOffset - 150*randomZOffset;
+                
+                const startY = this.cameras.main.centerY - 300;
+                const targetY = this.cameras.main.centerY + this.currentYOffset;				
+				const targetX = this.cameras.main.centerX + randomX;
+    
+				this.triggerLightning(targetX, targetY);
+				const coin = new Coin(this, targetX, startY);
+                coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
+            
+			    //console.log(coin.width);
+				
+				coin.z += 1+randomZOffset;
+				coin.curentScale = coin.curentScale/coin.z;
+                coin.setScale(coin.curentScale);
+				coin.setDepth(2);
+				
+				//coin.setZ(3-z);
+				//coin.getScreenSize(this.cameras);
+				
+				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
+				
+				coin.cshdw.setPosition(targetX - 5, targetY + 3);
+				coin.cshdw.setDepth(1.5);
+				coin.cshdw.setScale(1.9,1.0);
+				coin.cshdw.setAlpha(0.3);
+				
+				const circle = new Phaser.Geom.Circle(0, 0, 300);
+				coin.setInteractive({ hitArea: circle, hitAreaCallback: Phaser.Geom.Circle.Contains });
+				
+                this.appearTween = this.tweens.add({
+                    targets: coin,
+                    alpha: { from: 0, to: 1 },
+                    y: { from: startY, to: targetY },
+                    scaleX: 2.5,
+                    scaleY: 2.5,
+                    duration: 300,
+                    ease: 'Cubic.easeOut'
+                });
+				
+				this.appearTween = this.tweens.add({
+                    targets: coin.cshdw,
+                    alpha: { from: 0, to: 0.3 },
+					duration: 300
+                });
+				
+                
+                coin.on('pointerdown', p => {
+                    if (!coin.isJumping) {
+                        coin.isHolding = true;
+                        coin.holdStartTime = this.time.now;
+                        coin.px_0 = p.x;
+                        coin.py_0 = p.y;
+                    }
+                });
+
+                this.input.on('pointerup', p => {
+                    if (coin.isHolding && !coin.isJumping) {
+                        this.upSound.play();
+						coin.upStartTime = this.time.now;
+                        const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
+                        const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx)/this.maxDx;
+                        const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
+                        
+                        if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
+                            coin.velocityY = - 17*this.maxJumpForceY * holdY / holdDuration;
+                            coin.velocityZ = 0 + 0.04*this.maxJumpForceZ * holdY / holdDuration;
+                            coin.velocityX = -this.maxJumpForceX * holdX / 8;
+                            coin.isJumping = true;
+							coin.isAppogey = false;
+                            coin.isHolding = false;
+                            coin.currentSpin = 0.3;
+                        }
+                    }
+                });
+				
+				coins.add(coin);
+				this.rSound.play();
+            }
+
+            update(time, delta) {
+                const dt = delta / 16.66667; // Нормализация к 60 FPS
+                
+                coins.getChildren().forEach(coin => {
+                    if (!coin.isJumping) {
+                        if (coin.rot_amp >= 0.01) {
+                            coin.rot_amp *= 1 / (1 + coin.rot_f);
+                            coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
+                            coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
+							//console.log(coin.modelRotation.z);
+							coin.cshdw.setScale(1.8*Math.cos(coin.modelRotation.z), 1.2*Math.cos(coin.modelRotation.x));
+                        }
+                    } else {
+                        if ((this.time.now - coin.upStartTime > 500) && coin.emit_flag) {
+                            this.createNewCoin();
+                            coin.emit_flag = false;
+                        }
+                        
+                        // Применяем dt для независимости от FPS
+                        coin.velocityY += this.gravity * dt;
+                        coin.z += coin.velocityZ * dt;
+                        coin.y += coin.velocityY * dt;
+						if (coin.cshdw){
+							coin.cshdw.y -= -coin.y_o_s + 150 * (coin.z - 1)-3;
+                        }
+						coin.y -= -coin.y_o + 150 * (coin.z - 1);
+                        coin.y_o = 150 * (coin.z - 1);
+                        coin.y_o_s = 150 * (coin.z - 1)-3;						
+                        coin.curentScale = 2.5 / coin.z;
+                        coin.setScale(coin.curentScale);
+						if (coin.cshdw){
+							coin.cshdw.setScale(1.9/coin.z, 1.2*Math.sin(coin.modelRotation.x)/coin.z);
+						}
+						//console.log(coin.modelRotation.x);
+                        coin.x += coin.velocityX * dt;
+						if (coin.cshdw){
+							coin.cshdw.x = coin.x-5;	
+						}
+                        coin.adjustBrightness(Math.pow(coin.curentScale / 2.5, 0.25));
+                        
+                        // Корректировка вращения с dt
+                        coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
+                        coin.modelRotation.x += coin.currentSpin * dt;
+                        
+                        if (coin.z >= 2) {
+                            coin.setDepth(0);
+
+                        }
+						
+						if (coin.z >= 1.6) {
+
+							if (coin.cshdw){
+								coin.cshdw.destroy();
+							}
+                        }
+
+                        if (coin.y >= this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1)) {
+                            if (coin.z < 2) {
+                                coin.y = this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1);
+                                coin.velocityY *= -this.bounceDamping;
+                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
+                                coin.velocityX = coin.velocityX / 3;
+                                
+                                if (Math.abs(coin.velocityY) > 1) {
+                                    this.bounceSound.play({
+                                        volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
+                                    });
+                                }
+
+                                if (Math.abs(coin.velocityY) < 1) {
+                                    if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
+                                        (Math.abs(coin.modelRotation.x) - (2*Math.PI + 0.6) < 0.2)) {
+                                        coin.isJumping = false;
+                                        coin.velocityY = 0;
+                                        coin.velocityX = 0;
+        
+                                        this.tweens.add({
+                                            targets: coin,
+                                            y: coin.y - 0,
+                                            duration: 150,
+                                            ease: 'Power1',
+                                            yoyo: true,
+                                            onComplete: () => {
+                                                this.tweens.add({
+                                                    targets: [coin, coin.cshdw],
+                                                    alpha: 0,
+                                                    //scaleX: 0.5,
+                                                    //scaleY: 0.5,
+                                                    //angle: 360,
+													//alpha: { from: 1, to: 0.0 },
+                                                    duration: 300,
+                                                    ease: 'Cubic.easeOut',
+                                                    onComplete: () => {
+                                                        this.score += 1;
+                                                        this.scoreText.setText(`Монет : ${this.score}`);
+														if (coin.cshdw){
+															coin.cshdw.destroy();
+														}
+                                                        coin.destroy();
+
+                                                        if (coin.emit_flag) {
+                                                            this.createNewCoin();
+                                                        }
+                                                        coin.emit_flag = true;
+                                                    }
+                                                });
+                                            }
+                                        });
+                                    } else {
+                                        coin.modelRotation.x -= 0.3;
+                                    }
+                                }
+                            } else {
+                                if (coin.y >= this.stnLevel) {
+                                    this.time.delayedCall(100, () => {
+                                        coin.destroy();
+										coin.cshdw.destroy();
+                                        if (coin.emit_flag) {
+                                            this.createNewCoin();
+                                        }
+                                    });
+                                }
+                            }
+                        }
+                    }
+                });
+            }
+
+			triggerLightning(x, y) {
+				const points = [];
+				const segments = 15;
+				const maxDeviation = 70;
+    
+				points.push(new Phaser.Math.Vector2(x, 0));
+    
+				for (let i = 1; i < segments; i++) {
+					const progress = i / segments;
+					const yPos = y * progress;
+        
+					const deviation = maxDeviation * Math.sin(progress * Math.PI);
+					const xDev = Phaser.Math.Between(-deviation, deviation);
+        
+					points.push(new Phaser.Math.Vector2(x + xDev, yPos));
+				}
+    
+				points.push(new Phaser.Math.Vector2(x, y));
+    
+				const lightningCurve = new Phaser.Curves.Spline(points);
+    
+				const lightning = this.add.particles(0, 0, 'flares', {
+					frame: { frames: ['white', 'yellow', 'blue'], cycle: true },
+					blendMode: 'ADD',
+					lifespan: { min: 100, max: 300 },
+					quantity: 3,
+					scale: { start: 1.2, end: 0 },
+					alpha: { start: 0.6, end: 0.0 },
+					advance: 0,
+					emitZone: {
+					type: 'edge',
+					source: lightningCurve,
+					quantity: 64,
+					stepRate: 0
+					}
+				});
+    
+				lightning.explode(64);
+    
+				this.time.delayedCall(30, () => {
+				    lightning.explode(32);
+				});
+				this.time.delayedCall(10, () => {
+					lightning.explode(16);
+				});
+			
+				this.cameras.main.shake(100, 0.01);
+    
+				this.time.delayedCall(500, () => {
+				    lightning.destroy();
+				});
+			}           
+     
+	 
+	 
+	 
+getMeshScreenSize(coin, camera) {
+    // 1. Создаем временный вектор для преобразований
+    const worldPos = new Phaser.Math.Vector3();
+    const screenPos = new Phaser.Math.Vector3();
+    
+    // 2. Получаем экранные координаты крайних точек
+    const points = [
+        new Phaser.Math.Vector3(-1, 0, 0),  // левая
+        new Phaser.Math.Vector3(1, 0, 0),   // правая
+        new Phaser.Math.Vector3(0, -1, 0),  // верхняя
+        new Phaser.Math.Vector3(0, 1, 0)    // нижняя
+    ];
+    
+    let minX = Infinity, minY = Infinity;
+    let maxX = -Infinity, maxY = -Infinity;
+    
+    // 3. Преобразуем точки в экранные координаты
+    points.forEach(point => {
+        // Применяем масштаб и поворот монеты
+        point.clone().scale(coin.scale * 0.1).applyMatrix3(coin.getWorldTransformMatrix());
+        
+        // Преобразуем в мировые координаты
+        worldPos.set(
+            coin.x + point.x,
+            coin.y + point.y,
+            coin.z + point.z
+        );
+        
+        // Проецируем на экран
+        camera.project(worldPos, screenPos);
+        
+        // Обновляем границы
+        minX = Math.min(minX, screenPos.x);
+        minY = Math.min(minY, screenPos.y);
+        maxX = Math.max(maxX, screenPos.x);
+        maxY = Math.max(maxY, screenPos.y);
+    });
+    
+    // 4. Рассчитываем размеры
+    return {
+        width: maxX - minX,
+        height: maxY - minY,
+        x: minX,
+        y: minY
+    };
+}
+	 
+	 
+	 
+	 
+	 
+        }
+		
+	
+		
+        const config = {
+            type: Phaser.WEBGL,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game',
+            scene: MainScene,
+            cameras: {
+                default: {
+                    type: 'OrthographicCamera',
+                    zoom: 1,
+                    near: -1000,
+                    far: 1000,
+                    position: { x:0, y:0, z:100 }
+                }
+            },
+            scale: { 
+                mode: Phaser.Scale.RESIZE, 
+                autoCenter: Phaser.Scale.CENTER_BOTH 
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60, 
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true 
+            }
+        };
+
+        const game = new Phaser.Game(config);
+        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>
