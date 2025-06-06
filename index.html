@@ -43,7 +43,9 @@
         
 			    this.isJumping = false;
 			    this.isHolding = false;
-			    this.emit_flag=true;
+			    this.emit_flag = true;
+				this.del_flag = true;
+				this.floor_f = false
 			    this.velocityY = 0;
 			    this.velocityX = 0;
 			    this.velocityZ = 1;
@@ -66,6 +68,8 @@
 				this.cshdw = scene.add.mesh(0 , 0 , 'cshdw');	
 				this.c_width=0;
 				this.c_height=0;
+				this.d_x = 0;
+				
 				
 			}
 			adjustBrightness(factor) {
@@ -98,6 +102,7 @@
 				this.scaleY = 1;
 				this.scale = 1;
 				this.stnLevel = 0;
+				this.perspective = 35;
                 
                 this.soundVolume = 0.6;
             }
@@ -236,7 +241,7 @@
             createNewCoin() {
                 this.mSound.play();
                 const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
-                const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.2);
+                const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.0);
                 this.currentYOffset = this.baseYOffset - 150*randomZOffset;
                 
                 const startY = this.cameras.main.centerY - 300;
@@ -302,7 +307,7 @@
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             coin.velocityY = - 17*this.maxJumpForceY * holdY / holdDuration;
-                            coin.velocityZ = 0 + 0.04*this.maxJumpForceZ * holdY / holdDuration;
+                            coin.velocityZ = 0 + 0.07*this.maxJumpForceZ * holdY / holdDuration;
                             coin.velocityX = -this.maxJumpForceX * holdX / 8;
                             coin.isJumping = true;
 							coin.isAppogey = false;
@@ -332,6 +337,7 @@
                         if ((this.time.now - coin.upStartTime > 500) && coin.emit_flag) {
                             this.createNewCoin();
                             coin.emit_flag = false;
+							console.log('wtf');
                         }
                         
                         // Применяем dt для независимости от FPS
@@ -339,11 +345,11 @@
                         coin.z += coin.velocityZ * dt;
                         coin.y += coin.velocityY * dt;
 						if (coin.cshdw){
-							coin.cshdw.y -= -coin.y_o_s + 150 * (coin.z - 1)-5;
+							coin.cshdw.y -= -coin.y_o_s +  this.perspective * (coin.z - 1)-0;
                         }
-						coin.y -= -coin.y_o + 150 * (coin.z - 1);
-                        coin.y_o = 150 * (coin.z - 1);
-                        coin.y_o_s = 150 * (coin.z - 1)-5;						
+						coin.y -= -coin.y_o + this.perspective * (coin.z - 1);
+                        coin.y_o = this.perspective * (coin.z - 1);
+                        coin.y_o_s = this.perspective * (coin.z - 1)-0;						
                         coin.curentScale = 2.5 / coin.z;
                         coin.setScale(coin.curentScale);
 						if (coin.cshdw){
@@ -354,27 +360,115 @@
 						if (coin.cshdw){
 							coin.cshdw.x = coin.x-5;	
 						}
-                        coin.adjustBrightness(Math.pow(coin.curentScale / 2.5, 0.25));
+                        //coin.adjustBrightness(Math.pow(coin.z / 2.5, 0.25));
                         
                         // Корректировка вращения с dt
-                        coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
+                        //coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
                         coin.modelRotation.x += coin.currentSpin * dt;
-                        
-                        if (coin.z >= 2) {
-                            coin.setDepth(0);
+						if (coin.modelRotation.x > 2*Math.PI){
+							coin.modelRotation.x =- 2*Math.PI;
+						}
+                        coin.d_x = 0; 
+						coin.floor_f = false;
+						if (coin.z <= 1.9){
+							coin.d_x = 1;
+						}
+						if ((coin.z > 1.9) && (coin.z <= 2.8)) {
+							coin.d_x = 2;
+						}	
+						if ((coin.z >= 2.8) && (coin.z < 4)) {
+							coin.d_x = 3;
+						}			
+						if (coin.z >= 4) {
+							coin.d_x = 4;
+						}			
+						
+						if (coin.y >= this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1)) {
+							coin.floor_f = true;
+						}
+						
+						if (coin.d_x == 2){
+							coin.setDepth(0);
+						}
+						
+						//console.log(coin.d_x, ' ', coin.y, ' ' ,this.stnLevel);
+						
+						if ((coin.d_x == 2) && (coin.y >= this.stnLevel)) {
+							if (coin.del_flag){
+								coin.cshdw.destroy();
+								this.time.delayedCall(200, () => {	
+									coin.destroy();
+									coin.cshdw.destroy();		
+								});
+								//coin.emit_flag = true;
+								coin.del_flag = false;				
+	 							//console.log('in');
+							}
+						}					
+						
+						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
+								console.log('out');
+								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
+								coin.velocityY *= -this.bounceDamping;
+                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
+                                coin.velocityX = coin.velocityX / 3;
+                                
+                                if (Math.abs(coin.velocityY) > 1) {
+                                    this.bounceSound.play({
+                                        volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
+                                    });
+                                }
 
+                                if (Math.abs(coin.velocityY) < 1) {
+                                    if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
+                                        (Math.abs(coin.modelRotation.x) - (2*Math.PI + 0.6) < 0.2)) {
+                                        coin.isJumping = false;
+                                        coin.velocityY = 0;
+                                        coin.velocityX = 0;
+                                                this.tweens.add({
+                                                    targets: [coin, coin.cshdw],
+                                                    alpha: 0,
+                                                    duration: 300,
+                                                    ease: 'Cubic.easeOut',
+                                                    onComplete: () => {
+                                                        this.score += 1;
+                                                        this.scoreText.setText(`Монет : ${this.score}`);
+														if(coin.del_flag){
+															this.time.delayedCall(200, () => {	
+																coin.destroy();
+																coin.cshdw.destroy();		
+															});	
+															coin.emit_flag = true;
+															coin.del_flag = false;
+														}
+                                                    }
+                                                });
+                                            
+                                       
+                                    } else {
+                                        coin.modelRotation.x -= 0.3;
+                                    }						
+							
+								}
+						}
+						
+						
+						/*
+                        if (coin.z >= 1.7) {
+                            coin.setDepth(0);
                         }
 						
-						if (coin.z >= 1.6) {
+						if (coin.z >= 1.7) {
 
 							if (coin.cshdw){
 								coin.cshdw.destroy();
 							}
                         }
-
-                        if (coin.y >= this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1)) {
-                            if (coin.z < 2) {
-                                coin.y = this.cameras.main.centerY + this.currentYOffset - 150 * (coin.z - 1);
+						console.log(coin.z);
+						/*
+                        if (coin.y >= this.cameras.main.centerY + this.currentYOffset - 40 * (coin.z - 1)) {
+                            if ((coin.z < 1.7) || ( (coin.z > 2.5)&&(coin.z < 3.8) )) {
+                                coin.y = this.cameras.main.centerY + this.currentYOffset - 50 * (coin.z - 1);
                                 coin.velocityY *= -this.bounceDamping;
                                 coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
                                 coin.velocityX = coin.velocityX / 3;
@@ -429,17 +523,29 @@
                                     }
                                 }
                             } else {
-                                if (coin.y >= this.stnLevel) {
-                                    this.time.delayedCall(100, () => {
-                                        coin.destroy();
-										coin.cshdw.destroy();
-                                        if (coin.emit_flag) {
-                                            this.createNewCoin();
-                                        }
-                                    });
-                                }
-                            }
+							
+								if ((coin.z > 1.7) && (coin.z < 3.8)) {
+									if (coin.y >= this.stnLevel) {
+										this.time.delayedCall(100, () => {
+											coin.destroy();
+											coin.cshdw.destroy();
+											if (coin.emit_flag) {
+												this.createNewCoin();
+											}
+											coin.emit_flag = true;
+										});
+									}
+								} else{
+								
+									coin.velocityZ *= -this.bounceDamping;
+									// coin.velocityY *= 1;
+									console.log('111');
+								
+								}
+                            
+							}
                         }
+						*/
                     }
                 });
             }
