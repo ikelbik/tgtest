@@ -103,6 +103,9 @@
 				this.scale = 1;
 				this.stnLevel = 0;
 				this.perspective = 35;
+				this.target_x = 0;
+				this.target_y = 0;
+				this.target_r = 240;
                 
                 this.soundVolume = 0.6;
             }
@@ -111,7 +114,8 @@
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 //this.load.image('bg', 'https://vifaniya.ru/ggc/assets/bg1.jpg');
                 this.load.image('bg', 'assets/bg1.jpg');
-                this.load.image('ttext', 'assets/table.png');				
+                this.load.image('ttext', 'assets/table.png');	
+                this.load.image('safetext', 'assets/safe.png');				
                 this.load.obj('coin', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
 				this.load.image('cshdw', 'assets/shd_txt.png');
@@ -149,13 +153,22 @@
 					this.cameras.main.centerX ,
 					this.cameras.main.height-264, 
 					'ttext'
-				).panZ(0);			
+				).panZ(0);	
 
+				this.safeplane = this.add.plane(
+					this.cameras.main.centerX ,
+					this.cameras.main.height-364, 
+					'safetext'
+				).panZ(0);				
 				
 				//this.cshdw.setAlpha(0.7);				
 				//this.plane.setZ(0);
 				this.plane.setDepth(1);
 				this.plane.z=0;
+				
+				this.safeplane.setDepth(0.5);
+				this.safeplane.z=0;				
+				
 				//this.plane.width=1024;
 				//this.plane.height=528;
 				
@@ -168,6 +181,10 @@
 					this.scale = this.scaleY;
 					this.plane.setScale(this.scale);
 					this.plane.y = (this.bg.height - 264)*this.scaleY;
+					
+					this.safeplane.setScale(this.scale);
+					this.safeplane.y = (this.bg.height - 764)*this.scaleY;					
+					
 					this.stnLevel = (this.bg.height - 528)*this.scaleY;
 					this.baseYOffset = 350*this.scaleY;
 				} else{
@@ -175,10 +192,17 @@
 					this.scale = this.scaleX;
 					this.plane.setScale(this.scale);
 					this.plane.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 264*this.scaleX;
+					
+					this.safeplane.setScale(this.scale);
+					this.safeplane.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 764*this.scaleX;					
+					
 					this.stnLevel = (this.cameras.main.height) - 528*this.scaleX;	
 					this.baseYOffset = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 264*this.scaleX;					
 				    this.baseYOffset = 350*this.scaleX;
 				}
+				
+				this.target_x = this.cameras.main.centerX;
+				this.target_y = this.cameras.main.centerY - 220*this.scale;
 			
 				//console.log(this.baseYOffset, ' ', this.scaleX, ' ', this.scaleY);
 				//this.bg.setScale(scale).setScrollFactor(0);
@@ -199,8 +223,8 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-				//this.mesh = this.add.mesh(this.cameras.main.centerX , this.cameras.main.centerY , 'cshdw');
-				//this.mesh.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.x +=0.6;
+			//	this.mesh = this.add.mesh(this.target_x - 240*this.scale, this.target_y , 'cshdw');
+			//	this.mesh.addVerticesFromObj('coin',0.1).panZ(97).modelRotation.x +=1.6;
 				
                 this.createNewCoin();
 				//this.createNewCoin(2);
@@ -325,6 +349,10 @@
                 const dt = delta / 16.66667; // Нормализация к 60 FPS
                 
                 coins.getChildren().forEach(coin => {
+				    if (coins.getChildren().length==0) {
+						this.createNewCoin();
+                         coin.emit_flag = false;
+					}
                     if (!coin.isJumping) {
                         if (coin.rot_amp >= 0.01) {
                             coin.rot_amp *= 1 / (1 + coin.rot_f);
@@ -335,11 +363,12 @@
                         }
                     } else {
                         if ((this.time.now - coin.upStartTime > 500) && coin.emit_flag) {
+					   //if ((this.time.now - coin.upStartTime > 500) || (coins.getChildren().length < 1)){
                             this.createNewCoin();
                             coin.emit_flag = false;
-							console.log('wtf');
                         }
-                        
+						//console.log(coins.getChildren().length);
+
                         // Применяем dt для независимости от FPS
                         coin.velocityY += this.gravity * dt;
                         coin.z += coin.velocityZ * dt;
@@ -355,7 +384,7 @@
 						if (coin.cshdw){
 							coin.cshdw.setScale(2.5/coin.z, 2.5*Math.sin(coin.modelRotation.x)/coin.z);
 						}
-						//console.log(coin.modelRotation.x);
+						
                         coin.x += coin.velocityX * dt;
 						if (coin.cshdw){
 							coin.cshdw.x = coin.x-5;	
@@ -376,12 +405,16 @@
 						if ((coin.z > 1.9) && (coin.z <= 2.8)) {
 							coin.d_x = 2;
 						}	
-						if ((coin.z >= 2.8) && (coin.z < 4)) {
+						if ((coin.z >= 2.8) && (coin.z < 4.2)) {
 							coin.d_x = 3;
 							coin.cshdw.setVisible(true);
 						}			
-						if (coin.z >= 4) {
+						if (coin.z >= 4.2) {
+							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
 							coin.d_x = 4;
+							if (rd < this.target_r*this.scale){
+								coin.d_x = 5;
+							}
 						}			
 						
 						if (coin.y >= this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1)) {
@@ -389,27 +422,67 @@
 						}
 						
 						if (coin.d_x == 2){
-							coin.setDepth(0);
+							coin.setDepth(0.7);
 							coin.cshdw.setVisible(false);
 						}
 						
-						//console.log(coin.d_x, ' ', coin.y, ' ' ,this.stnLevel);
+						if (coin.d_x == 4){
+							coin.z = 4.2;
+							//console.log(coin.velocityZ);
+							if (coin.velocityZ < 0.04){
+								coin.velocityZ = -0.04;//this.bounceDamping;
+							} else {
+								coin.velocityZ = -0.04;
+							}
+							if (coin.y < 100){
+								coin.velocityZ = -0.004;//this.bounceDamping;
+							}
+							//console.log(coin.x, ' ', this.target_x + (this.target_r-20)*this.scale)
+							if (coin.x > this.target_x + (this.target_r-20)*this.scale){
+								coin.velocityX = -Math.abs(coin.velocityY/2);//this.bounceDamping;
+							}
+								
+						}
 						
 						if ((coin.d_x == 2) && (coin.y >= this.stnLevel)) {
 							if (coin.del_flag){
 								coin.cshdw.destroy();
 								this.time.delayedCall(100, () => {	
-									coin.destroy();
-									coin.cshdw.destroy();		
+									coin.destroy();		
 								});
-								//coin.emit_flag = true;
 								coin.del_flag = false;				
-	 							//console.log('in');
 							}
-						}					
-						
+						}	
+
+						if (coin.d_x == 5) {
+							coin.setDepth(0);
+							if (coin.del_flag){
+								this.score += 1;
+								this.scoreText.setText(`Монет : ${this.score}`);
+								coin.cshdw.destroy();
+								this.time.delayedCall(200, () => {	
+									coin.destroy();		
+								});
+								coin.del_flag = false;				
+							}
+						}							
+
+						/*
+						if (coin.y < 20) {
+							if (coin.del_flag){
+								coin.cshdw.destroy();
+									if (coins.getChildren().length==1){
+										coin.emit_flag = true;
+									}									
+								this.time.delayedCall(100, () => {		
+									coin.destroy();		
+								});
+								coin.del_flag = false;
+							}
+						}							
+						*/
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
-								console.log('out');
+								//console.log('out');
 								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
 								coin.velocityY *= -this.bounceDamping;
                                 coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
@@ -427,15 +500,13 @@
                                         coin.isJumping = false;
                                         coin.velocityY = 0;
                                         coin.velocityX = 0;
-										coin.cshdw.setVisible(false);
+										 coin.cshdw.setVisible(false);
                                                 this.tweens.add({
                                                     targets: [coin, coin.cshdw],
                                                     alpha: 0,
                                                     duration: 300,
                                                     ease: 'Cubic.easeOut',
                                                     onComplete: () => {
-                                                        this.score += 1;
-                                                        this.scoreText.setText(`Монет : ${this.score}`);
 														if(coin.del_flag){
 															this.time.delayedCall(200, () => {	
 																coin.destroy();
