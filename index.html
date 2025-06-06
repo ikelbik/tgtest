@@ -194,7 +194,9 @@
                     strokeThickness: 4
                 }).setScrollFactor(0);
                 
-                this.createNewCoin();
+                this.createNewCoin(1);
+				this.createNewCoin(2);
+				this.createNewCoin(3);
             }
 			
             createSlider(yOffset, dVal, txt) {
@@ -228,15 +230,15 @@
                 });
             }
 
-            createNewCoin() {
+            createNewCoin(z) {
                 this.mSound.play();
                 const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
                 const randomZOffset = Phaser.Math.FloatBetween(0.0, 0.0);
                 this.currentYOffset = this.baseYOffset - 150*randomZOffset;
                 
                 const startY = this.cameras.main.centerY - 300;
-                const targetY = this.cameras.main.centerY + this.currentYOffset;				
-				const targetX = this.cameras.main.centerX + randomX;
+                const targetY = this.cameras.main.centerY + this.currentYOffset - z*10;				
+				const targetX = this.cameras.main.centerX;// + randomX;
     
 				this.triggerLightning(targetX, targetY);
 				const coin = new Coin(this, targetX, startY);
@@ -247,9 +249,9 @@
 				coin.z += 1+randomZOffset;
 				coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
-				coin.setDepth(2);
+				coin.setDepth(5-z);
 				
-				
+				coin.setZ(3-z);
 				//coin.getScreenSize(this.cameras);
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
