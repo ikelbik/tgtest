@@ -96,6 +96,7 @@
                 this.baseYOffset = 200;
 				this.scaleX = 1;
 				this.scaleY = 1;
+				this.scale = 1;
 				this.stnLevel = 0;
                 
                 this.soundVolume = 0.6;
@@ -108,7 +109,7 @@
                 this.load.image('ttext', 'assets/table.png');				
                 this.load.obj('coin', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
-				this.load.image('cshdw', 'https://vifaniya.ru/ggc/assets/shd_txt.png');
+				this.load.image('cshdw', 'assets/shd_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
                 this.load.audio('magic', 'assets/rise.wav');  
@@ -246,7 +247,6 @@
 				const coin = new Coin(this, targetX, startY);
                 coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
 
-			    
 				coin.z += 1+randomZOffset;
 				//coin.curentScale = coin.curentScale/coin.z;
 				coin.curentScale = coin.curentScale;
@@ -258,9 +258,9 @@
 				
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
 				coin.cshdw.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.x +=0.8;
-				coin.cshdw.setPosition(targetX - 5, targetY + 20);
+				coin.cshdw.setPosition(targetX - 5*this.scale, targetY + 20*this.scale);
 				coin.cshdw.setDepth(1.5);
-				coin.cshdw.setScale(2.5);
+				coin.cshdw.setScale(2.8);
 				coin.cshdw.setAlpha(0.3);
 				
 				const circle = new Phaser.Geom.Circle(0, 0, 300);
