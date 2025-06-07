@@ -271,8 +271,8 @@
                 const targetY = this.cameras.main.centerY + this.currentYOffset;				
 				const targetX = this.cameras.main.centerX + randomX;
     			
-				this.plane.setAlpha(0);
-				this.safeplane.setAlpha(0);
+				//this.plane.setAlpha(0);
+				//this.safeplane.setAlpha(0);
 	
 				this.triggerLightning(targetX, targetY);
 				
@@ -575,7 +575,7 @@
 					stepRate: 0
 					}
 				});
-    
+				lightning.setDepth(2);
 				lightning.explode(64);
     
 				this.time.delayedCall(30, () => {
@@ -589,8 +589,8 @@
     
 				this.time.delayedCall(200, () => {
 				    lightning.destroy();
-				this.plane.setAlpha(1);
-				this.safeplane.setAlpha(1);
+				//this.plane.setAlpha(1);
+				//this.safeplane.setAlpha(1);
 				});
 			}           	 
 	 
