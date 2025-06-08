@@ -150,7 +150,7 @@
 
                 // Фон
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
-				
+
 				this.plane = this.add.plane(
 					this.cameras.main.centerX ,
 					this.cameras.main.height-264, 
@@ -166,10 +166,10 @@
 				//this.cshdw.setAlpha(0.7);				
 				//this.plane.setZ(0);
 				this.plane.setDepth(1);
-				this.plane.z=0;
+				this.plane.z=1;
 				
 				this.safeplane.setDepth(0.5);
-				this.safeplane.z=0;				
+				this.safeplane.z=0.5;				
 				
 				//this.plane.width=1024;
 				//this.plane.height=528;
@@ -211,7 +211,7 @@
 				this.b1 = (this.zfactor/this.perspective + 1)*0.37;
 				this.b2 = (this.zfactor/this.perspective + 1)*0.57;
 				this.b3 = (this.zfactor/this.perspective + 1)*1;				
-				console.log(this.b1, ' ', this.b2, ' ', this.b3);
+				//console.log(this.b1, ' ', this.b2, ' ', this.b3);
 				
 				//console.log(this.baseYOffset, ' ', this.scaleX, ' ', this.scaleY);
 				//this.bg.setScale(scale).setScrollFactor(0);
@@ -472,12 +472,12 @@
 						}	
 
 						if (coin.d_x == 5) {
-							coin.setDepth(0);
-							coin.cshdw.destroy();
+							coin.setDepth(0.4);
+							coin.cshdw.destroy();							
 							if (coin.del_flag){
 								this.score += 1;
 								this.scoreText.setText(`Монет : ${this.score}`);								
-								this.time.delayedCall(200, () => {	
+								this.time.delayedCall(1000, () => {	
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
