@@ -68,8 +68,7 @@
 				this.cshdw = scene.add.mesh(0 , 0 , 'cshdw');	
 				this.c_width=0;
 				this.c_height=0;
-				this.d_x = 0;
-				
+				this.d_x = 0;				
 				
 			}
 			adjustBrightness(factor) {
@@ -102,11 +101,15 @@
 				this.scaleY = 1;
 				this.scale = 1;
 				this.stnLevel = 0;
-				this.perspective = 35;
+				this.perspective = 56;
 				this.target_x = 0;
 				this.target_y = 0;
-				this.target_r = 240;               
+				this.target_r = 240;   
+				this.zfactor = 250;				
                 this.soundVolume = 0.6;
+				this.b1 = 1;
+				this.b2 = 1;
+				this.b3 = 1;			
             }
         
             preload() {
@@ -202,7 +205,14 @@
 				
 				this.target_x = this.cameras.main.centerX;
 				this.target_y = this.cameras.main.centerY - 220*this.scale;
-			
+				this.perspective *= this.scale;
+				this.zfactor *= this.scale;
+				
+				this.b1 = (this.zfactor/this.perspective + 1)*0.37;
+				this.b2 = (this.zfactor/this.perspective + 1)*0.57;
+				this.b3 = (this.zfactor/this.perspective + 1)*1;				
+				console.log(this.b1, ' ', this.b2, ' ', this.b3);
+				
 				//console.log(this.baseYOffset, ' ', this.scaleX, ' ', this.scaleY);
 				//this.bg.setScale(scale).setScrollFactor(0);
 				
@@ -284,7 +294,7 @@
 				coin.curentScale = coin.curentScale;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(2);
-			
+				
 				//coin.setZ(3-z);
 				//coin.getScreenSize(this.cameras);
 				
@@ -334,8 +344,8 @@
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = - 17*this.maxJumpForceY * holdY / holdDuration;
-                            coin.velocityZ = 0 + 0.07*this.maxJumpForceZ * holdY / holdDuration;
+                            coin.velocityY = -Phaser.Math.Clamp(17*this.maxJumpForceY * holdY / holdDuration, 3, 23);
+                            coin.velocityZ = Phaser.Math.Clamp(0 + 0.07*this.maxJumpForceZ * holdY / holdDuration, 0.07, 0.1);
                             coin.velocityX = -this.maxJumpForceX * holdX / 8;
                             coin.isJumping = true;
 							coin.isAppogey = false;
@@ -346,17 +356,17 @@
                 });
 				
 				coins.add(coin);
-				this.rSound.play();
+				//this.rSound.play();
             }
 
             update(time, delta) {
                 const dt = delta / 16.66667; // Нормализация к 60 FPS
-                
-                coins.getChildren().forEach(coin => {
-				    if (coins.getChildren().length==0) {
+                if (coins.getChildren().length==0) {
 						this.createNewCoin();
-                         coin.emit_flag = false;
+                         //coin.emit_flag = false;
 					}
+                coins.getChildren().forEach(coin => {
+
                     if (!coin.isJumping) {
                         if (coin.rot_amp >= 0.01) {
                             coin.rot_amp *= 1 / (1 + coin.rot_f);
@@ -378,13 +388,13 @@
                         coin.z += coin.velocityZ * dt;
                         coin.y += coin.velocityY * dt;
 						if (coin.cshdw){
-							coin.cshdw.y -= -coin.y_o_s +  this.perspective * (coin.z - 1)-0;
-							const dsh_y = Phaser.Math.Clamp(coin.y - coin.cshdw.y, 3.3, 100)
-							coin.cshdw.setAlpha(0.7 - 1/dsh_y);
+							coin.cshdw.y -= -coin.y_o +  this.perspective * (coin.z - 1);
+							const dsh_y = Phaser.Math.Clamp((coin.cshdw.y-coin.y)/5, 3.3, 100)
+							coin.cshdw.setAlpha(1/dsh_y);
+							console.log(dsh_y);
                         }
 						coin.y -= -coin.y_o + this.perspective * (coin.z - 1);
-                        coin.y_o = this.perspective * (coin.z - 1);
-                        coin.y_o_s = this.perspective * (coin.z - 1)-0;						
+                        coin.y_o = this.perspective * (coin.z - 1);					
                         coin.curentScale = 2.5 / coin.z;
                         coin.setScale(coin.curentScale);
 						if (coin.cshdw){
@@ -405,17 +415,17 @@
 						}
                         coin.d_x = 0; 
 						coin.floor_f = false;
-						if (coin.z <= 1.9){
+						if (coin.z <= this.b1){
 							coin.d_x = 1;
 						}
-						if ((coin.z > 1.9) && (coin.z <= 2.8)) {
+						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
 							coin.d_x = 2;
 						}	
-						if ((coin.z >= 2.8) && (coin.z < 4.2)) {
+						if ((coin.z >= this.b2) && (coin.z < this.b3)) {
 							coin.d_x = 3;
 							coin.cshdw.setVisible(true);
 						}			
-						if (coin.z >= 4.2) {
+						if (coin.z >= this.b3) {
 							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
 							coin.d_x = 4;
 							if (rd < this.target_r*this.scale){
@@ -434,7 +444,7 @@
 						}
 						
 						if (coin.d_x == 4){
-							coin.z = 4.2;
+							coin.z = this.b3;
 							//console.log(coin.velocityZ);
 							if (coin.velocityZ < 0.04){
 								coin.velocityZ = -0.04;//this.bounceDamping;
@@ -514,6 +524,7 @@
                                                     duration: 300,
                                                     ease: 'Cubic.easeOut',
                                                     onComplete: () => {
+													
 														if(coin.del_flag){
 															this.time.delayedCall(200, () => {	
 																coin.destroy();
