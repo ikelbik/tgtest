@@ -43,6 +43,20 @@
 			.catch(error => console.log("Ошибка блокировки: ", error));
 			}
 		}
+		
+		function getViewportSize() {
+			if (window.Telegram?.WebApp) {
+				return {
+					width: Telegram.WebApp.viewportWidth,
+					height: Telegram.WebApp.viewportHeight
+				};
+			} else {
+				return {
+					width: window.innerWidth,
+					height: window.innerHeight
+				};
+			}
+		}
 			
 		class Coin extends Phaser.GameObjects.Mesh {
 			constructor(scene, x, y) {
@@ -148,6 +162,9 @@
                     });
                 }
 				
+				const size = getViewportSize();
+				//console.log("Размер экрана:", size.width, "x", size.height);
+				
 				coins = this.add.group();
                 // Звуки
                 this.bounceSound = this.sound.add('coinDrop');
@@ -237,8 +254,10 @@
                 this.createSlider(100,2, 'Сила вперед');
                 
                 // Счетчик
-				this.scoreText = this.add.text(20, 30, 'Монет : 0', {
-                    font: '28px Arial',
+				//this.scoreText = this.add.text(20, 30, 'Монет : 0', {
+				const txt =  size.width+"x"+size.height;
+                this.scoreText = this.add.text(20, 30, txt, {
+					font: '28px Arial',
                     fill: '#ffffff',
                     stroke: '#000000',
                     strokeThickness: 4
