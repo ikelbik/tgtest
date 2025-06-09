@@ -44,6 +44,31 @@
 			}
 		}
 		
+		function updateViewportSize() {
+			let width, height;
+  
+			if (Telegram.WebApp.viewportWidth) {
+				width = Telegram.WebApp.viewportWidth;
+				height = Telegram.WebApp.viewportHeight;
+			} else {
+			// Фолбэк
+			width = window.innerWidth;
+			height = window.innerHeight;
+			}
+		}
+		
+		window.addEventListener('DOMContentLoaded', () => {
+			if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+				Telegram.WebApp.ready();
+    
+				// Получаем текущий размер
+				updateViewportSize();
+    
+				// Следим за изменениями
+				Telegram.WebApp.onEvent('viewportChanged', updateViewportSize);
+			}
+		});
+		
 		function getViewportSize() {
 			if (window.Telegram?.WebApp) {
 				return {
