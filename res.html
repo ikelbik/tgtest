@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Screen Resolution Detector</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            font-family: 'Segoe UI', system-ui, sans-serif;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 95%;
+            width: 100%;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            text-align: center;
+        }
+        
+        h1 {
+            color: white;
+            margin-bottom: 25px;
+            font-size: 28px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+        
+        .info-card {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+        
+        .resolution {
+            font-size: 42px;
+            font-weight: 700;
+            color: #ffdd40;
+            margin: 15px 0;
+            text-shadow: 0 0 10px rgba(255, 221, 64, 0.5);
+        }
+        
+        .details {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            margin-top: 25px;
+        }
+        
+        .detail-card {
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 15px;
+            margin: 10px;
+            flex: 1;
+            min-width: 150px;
+        }
+        
+        .label {
+            font-size: 16px;
+            color: #a0d2ff;
+            margin-bottom: 8px;
+        }
+        
+        .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: white;
+        }
+        
+        .device-info {
+            font-size: 18px;
+            color: #c5e1a5;
+            margin-top: 20px;
+        }
+        
+        .explanation {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            margin-top: 25px;
+            text-align: left;
+            color: #e0e0e0;
+            font-size: 15px;
+            line-height: 1.5;
+        }
+        
+        .explanation h3 {
+            color: #ffcc80;
+            margin-bottom: 10px;
+            text-align: center;
+        }
+        
+        @media (max-width: 480px) {
+            h1 { font-size: 22px; }
+            .resolution { font-size: 32px; }
+            .detail-card { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Истинное разрешение экрана</h1>
+        
+        <div class="info-card">
+            <div class="resolution" id="physicalResolution">0 × 0</div>
+            <div class="device-info" id="deviceInfo">Определение...</div>
+        </div>
+        
+        <div class="details">
+            <div class="detail-card">
+                <div class="label">CSS-пиксели</div>
+                <div class="value" id="cssResolution">0 × 0</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="label">Плотность пикселей</div>
+                <div class="value" id="dpr">1.0</div>
+            </div>
+            
+            <div class="detail-card">
+                <div class="label">Соотношение сторон</div>
+                <div class="value" id="aspectRatio">0:0</div>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3>Техническая справка</h3>
+            <p>• <strong>Истинное разрешение</strong> - физические пиксели дисплея (ширина × высота)</p>
+            <p>• <strong>CSS-пиксели</strong> - логические пиксели, используемые в веб-верстке</p>
+            <p>• <strong>Плотность пикселей (DPR)</strong> - соотношение физических пикселей к CSS-пикселям</p>
+            <p>• На устройствах с высоким DPR (Retina-дисплеи) один CSS-пиксель состоит из нескольких физических</p>
+        </div>
+    </div>
+
+    <script>
+        function updateResolution() {
+            // Получаем физическое разрешение экрана
+            const physicalWidth = Math.round(screen.width * (window.devicePixelRatio || 1));
+            const physicalHeight = Math.round(screen.height * (window.devicePixelRatio || 1));
+            
+            // Получаем CSS-разрешение
+            const cssWidth = document.documentElement.clientWidth;
+            const cssHeight = document.documentElement.clientHeight;
+            
+            // Получаем плотность пикселей
+            const dpr = window.devicePixelRatio || 1;
+            
+            // Рассчитываем соотношение сторон
+            const gcd = (a, b) => b ? gcd(b, a % b) : a;
+            const ratio = gcd(physicalWidth, physicalHeight);
+            const aspectRatio = `${physicalWidth / ratio}:${physicalHeight / ratio}`;
+            
+            // Определяем тип устройства
+            let deviceType = "Неизвестное устройство";
+            if (cssWidth < 768) deviceType = "Мобильное устройство";
+            else if (cssWidth < 992) deviceType = "Планшет";
+            else deviceType = "Десктоп/ноутбук";
+            
+            // Обновляем данные на странице
+            document.getElementById('physicalResolution').textContent = 
+                `${physicalWidth} × ${physicalHeight}`;
+            
+            document.getElementById('cssResolution').textContent = 
+                `${cssWidth} × ${cssHeight}`;
+            
+            document.getElementById('dpr').textContent = dpr.toFixed(2);
+            
+            document.getElementById('aspectRatio').textContent = aspectRatio;
+            
+            document.getElementById('deviceInfo').textContent = 
+                `${deviceType} | ${navigator.platform || 'Неизвестная платформа'}`;
+        }
+        
+        // Инициализация Telegram Web App
+        document.addEventListener('DOMContentLoaded', () => {
+            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+                Telegram.WebApp.ready();
+                Telegram.WebApp.expand();
+                
+                // Используем данные Telegram, если доступны
+                Telegram.WebApp.onEvent('viewportChanged', updateResolution);
+            }
+            
+            // Обновляем разрешение при запуске
+            updateResolution();
+            
+            // Обновляем при изменении размера окна или ориентации
+            window.addEventListener('resize', updateResolution);
+            window.addEventListener('orientationchange', updateResolution);
+        });
+    </script>
+</body>
+</html>
