@@ -1,211 +1,753 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">	
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-    <title>Screen Resolution Detector</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="theme-color" content="#000022">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
-            font-family: 'Segoe UI', system-ui, sans-serif;
-            padding: 20px;
-        }
-        
-        .container {
-            max-width: 95%;
-            width: 100%;
-            background: rgba(255, 255, 255, 0.15);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
-            border: 1px solid rgba(255, 255, 255, 0.2);
-            text-align: center;
-        }
-        
-        h1 {
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
+        #score {
+            position: absolute;
+            top: 20px;
+            left: 20px;
             color: white;
-            margin-bottom: 25px;
-            font-size: 28px;
-            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
-        }
-        
-        .info-card {
-            background: rgba(0, 0, 0, 0.4);
-            border-radius: 15px;
-            padding: 25px;
-            margin-bottom: 25px;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
-        }
-        
-        .resolution {
-            font-size: 42px;
-            font-weight: 700;
-            color: #ffdd40;
-            margin: 15px 0;
-            text-shadow: 0 0 10px rgba(255, 221, 64, 0.5);
-        }
-        
-        .details {
-            display: flex;
-            justify-content: space-around;
-            flex-wrap: wrap;
-            margin-top: 25px;
-        }
-        
-        .detail-card {
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 15px;
-            margin: 10px;
-            flex: 1;
-            min-width: 150px;
-        }
-        
-        .label {
-            font-size: 16px;
-            color: #a0d2ff;
-            margin-bottom: 8px;
-        }
-        
-        .value {
+            font-family: Arial, sans-serif;
             font-size: 24px;
-            font-weight: 600;
-            color: white;
-        }
-        
-        .device-info {
-            font-size: 18px;
-            color: #c5e1a5;
-            margin-top: 20px;
-        }
-        
-        .explanation {
-            background: rgba(0, 0, 0, 0.3);
-            border-radius: 12px;
-            padding: 20px;
-            margin-top: 25px;
-            text-align: left;
-            color: #e0e0e0;
-            font-size: 15px;
-            line-height: 1.5;
-        }
-        
-        .explanation h3 {
-            color: #ffcc80;
-            margin-bottom: 10px;
-            text-align: center;
-        }
-        
-        @media (max-width: 480px) {
-            h1 { font-size: 22px; }
-            .resolution { font-size: 32px; }
-            .detail-card { min-width: 100%; }
+            z-index: 1000;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <h1>Истинное разрешение экрана</h1>
-        
-        <div class="info-card">
-            <div class="resolution" id="physicalResolution">0 × 0</div>
-            <div class="device-info" id="deviceInfo">Определение...</div>
-        </div>
-        
-        <div class="details">
-            <div class="detail-card">
-                <div class="label">CSS-пиксели</div>
-                <div class="value" id="cssResolution">0 × 0</div>
-            </div>
-            
-            <div class="detail-card">
-                <div class="label">Плотность пикселей</div>
-                <div class="value" id="dpr">1.0</div>
-            </div>
-            
-            <div class="detail-card">
-                <div class="label">Соотношение сторон</div>
-                <div class="value" id="aspectRatio">0:0</div>
-            </div>
-        </div>
-        
-        <div class="explanation">
-            <h3>Техническая справка</h3>
-            <p>• <strong>Истинное разрешение</strong> - физические пиксели дисплея (ширина × высота)</p>
-            <p>• <strong>CSS-пиксели</strong> - логические пиксели, используемые в веб-верстке</p>
-            <p>• <strong>Плотность пикселей (DPR)</strong> - соотношение физических пикселей к CSS-пикселям</p>
-            <p>• На устройствах с высоким DPR (Retina-дисплеи) один CSS-пиксель состоит из нескольких физических</p>
-        </div>
-    </div>
+    <div id="game"></div>
 
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        function updateResolution() {
-            // Получаем физическое разрешение экрана
-            const physicalWidth = Math.round(screen.width * (window.devicePixelRatio || 1));
-            const physicalHeight = Math.round(screen.height * (window.devicePixelRatio || 1));
-            
-            // Получаем CSS-разрешение
-            const cssWidth = document.documentElement.clientWidth;
-            const cssHeight = document.documentElement.clientHeight;
-            
-            // Получаем плотность пикселей
-            const dpr = window.devicePixelRatio || 1;
-            
-            // Рассчитываем соотношение сторон
-            const gcd = (a, b) => b ? gcd(b, a % b) : a;
-            const ratio = gcd(physicalWidth, physicalHeight);
-            const aspectRatio = `${physicalWidth / ratio}:${physicalHeight / ratio}`;
-            
-            // Определяем тип устройства
-            let deviceType = "Неизвестное устройство";
-            if (cssWidth < 768) deviceType = "Мобильное устройство";
-            else if (cssWidth < 992) deviceType = "Планшет";
-            else deviceType = "Десктоп/ноутбук";
-            
-            // Обновляем данные на странице
-            document.getElementById('physicalResolution').textContent = 
-                `${physicalWidth} × ${physicalHeight}`;
-            
-            document.getElementById('cssResolution').textContent = 
-                `${cssWidth} × ${cssHeight}`;
-            
-            document.getElementById('dpr').textContent = dpr.toFixed(2);
-            
-            document.getElementById('aspectRatio').textContent = aspectRatio;
-            
-            document.getElementById('deviceInfo').textContent = 
-                `${deviceType} | ${navigator.platform || 'Неизвестная платформа'}`;
+        const isTelegram = /Telegram/.test(navigator.userAgent);
+        const tg = window.Telegram?.WebApp;
+        if (tg) {
+            tg.expand();
+            tg.MainButton.show();
         }
+		let coins;
+		
+		function lockScreen() {
+			if ('screen' in window && window.screen.orientation && window.screen.orientation.lock) {
+			window.screen.orientation.lock('landscape')
+			.catch(error => console.log("Ошибка блокировки: ", error));
+			}
+		}
+		
+		function updateViewportSize() {
+			let width, height;
+  
+			if (Telegram.WebApp.viewportWidth) {
+				width = Telegram.WebApp.viewportWidth;
+				height = Telegram.WebApp.viewportHeight;
+			} else {
+			// Фолбэк
+			width = window.innerWidth;
+			height = window.innerHeight;
+			}
+		}
+		
+		window.addEventListener('DOMContentLoaded', () => {
+			if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
+				Telegram.WebApp.ready();
+    
+				// Получаем текущий размер
+				updateViewportSize();
+    
+				// Следим за изменениями
+				Telegram.WebApp.onEvent('viewportChanged', updateViewportSize);
+			}
+		});
+		
+		function getViewportSize() {
+			if (window.Telegram?.WebApp) {
+				return {
+					width: Telegram.WebApp.viewportWidth,
+					height: Telegram.WebApp.viewportHeight
+				};
+			} else {
+				return {
+					width: window.innerWidth,
+					height: window.innerHeight
+				};
+			}
+		}
+			
+		class Coin extends Phaser.GameObjects.Mesh {
+			constructor(scene, x, y) {
+				super(scene, x, y, 'texture');
+				scene.add.existing(this);
         
-        // Инициализация Telegram Web App
-        document.addEventListener('DOMContentLoaded', () => {
-            if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
-                Telegram.WebApp.ready();
-                Telegram.WebApp.expand();
+			    this.isJumping = false;
+			    this.isHolding = false;
+			    this.emit_flag = true;
+				this.del_flag = true;
+				this.floor_f = false
+			    this.velocityY = 0;
+			    this.velocityX = 0;
+			    this.velocityZ = 1;
+			    this.currentSpin = 0;
+			    this.curentScale = 2.5;
+			    this.holdStartTime = 0;
+			    this.upStartTime = 0;
+			    this.px_0 = 0;
+			    this.py_0 = 0;
+			    this.rot_i = 0;
+			    this.rot_amp = Phaser.Math.FloatBetween(0.05,0.15);
+			    this.rot_f = Phaser.Math.FloatBetween(0.07,0.1);
+			    this.setTint(0xFFFFFF);
+			    this.setAlpha(1);
+			    this.isAppogey = false;
+			    this.y_o = 0;
+			    this.s_y_o = 0;				
+				this.shd_sx = 1;
+				this.shd_sy = 1;
+				this.cshdw = scene.add.mesh(0 , 0 , 'cshdw');	
+				this.c_width=0;
+				this.c_height=0;
+				this.d_x = 0;		
+				this.yoffset = 0;				
+				
+			}
+			adjustBrightness(factor) {
+				const value = Math.floor(255 * factor);
+				const tint = Phaser.Display.Color.GetColor(value, value, value);
+				this.setTint(tint);
+			}		
+
+}
+        class MainScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MainScene' });
+                this.score = 0;
+                this.coinsCollected = 0;
+                this.scaleFactor = 0.001;
                 
-                // Используем данные Telegram, если доступны
-                Telegram.WebApp.onEvent('viewportChanged', updateResolution);
+                // Физические параметры
+                this.gravity = 0.5;
+                this.bounceDamping = 0.8;
+                this.minHoldTime = 0;
+				this.minholdY = 0;
+                this.maxHoldTime = 800;
+                this.maxJumpForceX = 25;
+                this.maxJumpForceY = 60;
+                this.maxJumpForceZ = 60;				
+                this.maxDx = 100;
+                this.maxDy = 100;
+                this.baseYOffset = 200;
+				this.scaleX = 1;
+				this.scaleY = 1;
+				this.scale = 1;
+				this.stnLevel = 0;
+				this.perspective = 56;
+				this.target_x = 0;
+				this.target_y = 0;
+				this.target_r = 240;   
+				this.zfactor = 250;				
+                this.soundVolume = 0.6;
+				this.b1 = 1;
+				this.b2 = 1;
+				this.b3 = 1;	
+				this.coin_h = 30;	
+				this.e_flag = true;	
             }
+        
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                //this.load.image('bg', 'https://vifaniya.ru/ggc/assets/bg1.jpg');
+                this.load.image('bg', 'assets/bg1.jpg');
+                this.load.image('ttext', 'assets/table.png');	
+                this.load.image('safetext', 'assets/safe.png');				
+                this.load.obj('coin', 'assets/fantom.obj');
+                this.load.image('texture', 'assets/coin_txt.png');
+				this.load.image('cshdw', 'assets/shd_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.audio('rotate', 'assets/rotate.wav');     				
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                
+                this.lightningShape = new Phaser.Geom.Line();
+            }
+
+            create() {
+                if (window.Telegram?.WebApp?.onEvent) {
+                    Telegram.WebApp.onEvent('backButtonClicked', () => {
+                        Telegram.WebApp.close();
+                    });
+                }
+				
+				const size = getViewportSize();
+				//console.log("Размер экрана:", size.width, "x", size.height);
+				
+				coins = this.add.group();
+                // Звуки
+                this.bounceSound = this.sound.add('coinDrop');
+                this.bounceSound.volume = this.soundVolume;
+                this.upSound = this.sound.add('coinUp');
+                this.upSound.volume = this.soundVolume;
+                this.mSound = this.sound.add('magic');
+                this.mSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10;      
+                this.rSound = this.sound.add('rotate');
+                this.rSound.volume = this.soundVolume - Phaser.Math.Between(0,3)/10; 				
+
+                // Фон
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+
+				this.plane = this.add.plane(
+					this.cameras.main.centerX ,
+					this.cameras.main.height-264, 
+					'ttext'
+				).panZ(0);	
+
+				this.safeplane = this.add.plane(
+					this.cameras.main.centerX ,
+					this.cameras.main.height-364, 
+					'safetext'
+				).panZ(0);				
+				
+				//this.cshdw.setAlpha(0.7);				
+				//this.plane.setZ(0);
+				this.plane.setDepth(1);
+				this.plane.z=1;
+				
+				this.safeplane.setDepth(0.5);
+				this.safeplane.z=0.5;				
+				
+				//this.plane.width=1024;
+				//this.plane.height=528;
+				
+				this.scaleX = this.cameras.main.width / this.bg.width;//-1;
+				this.scaleY = this.cameras.main.height / this.bg.height;
+				//const scale = Math.min(scaleX, scaleY);
+				this.scale = 1;
+				if (this.cameras.main.width>this.cameras.main.height) {
+					this.bg.setScale(this.scaleY).setScrollFactor(0);
+					this.scale = this.scaleY;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.bg.height - 264)*this.scaleY;
+					
+					this.safeplane.setScale(this.scale);
+					this.safeplane.y = (this.bg.height - 754)*this.scaleY;					
+					
+					this.stnLevel = (this.bg.height - 528)*this.scaleY;
+					this.baseYOffset = 350*this.scaleY;
+				} else{
+					this.bg.setScale(this.scaleX).setScrollFactor(0);
+					this.scale = this.scaleX;
+					this.plane.setScale(this.scale);
+					this.plane.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 264*this.scaleX;
+					
+					this.safeplane.setScale(this.scale);
+					this.safeplane.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 754*this.scaleX;					
+					
+					this.stnLevel = (this.cameras.main.height) - 528*this.scaleX;	
+					this.baseYOffset = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- 264*this.scaleX;					
+				    this.baseYOffset = 350*this.scaleX;
+				}
+				
+				this.target_x = this.cameras.main.centerX;
+				this.target_y = this.cameras.main.centerY - 220*this.scale;
+				this.perspective *= this.scale;
+				this.zfactor *= this.scale;
+				this.coin_h *= this.scale;
+				
+				this.b1 = (this.zfactor/this.perspective + 1)*0.37;
+				this.b2 = (this.zfactor/this.perspective + 1)*0.57;
+				this.b3 = (this.zfactor/this.perspective + 1)*1;				
+				//console.log(this.b1, ' ', this.b2, ' ', this.b3);
+				
+				//console.log(this.baseYOffset, ' ', this.scaleX, ' ', this.scaleY);
+				//this.bg.setScale(scale).setScrollFactor(0);
+				
+				this.uiLayer = this.add.layer();
+    
+                this.debugValue1 = 50;
+                this.debugValue2 = 50;
+    
+                this.createSlider(0,1, 'Сила вверх');
+                this.createSlider(100,2, 'Сила вперед');
+                
+                // Счетчик
+				//this.scoreText = this.add.text(20, 30, 'Монет : 0', {
+				const txt =  Telegram.WebApp.viewportWidth+"x"+size.height;
+                this.scoreText = this.add.text(20, 30, txt, {
+					font: '28px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setScrollFactor(0);
+                
+			//	this.mesh = this.add.mesh(this.target_x - 240*this.scale, this.target_y , 'cshdw');
+			//	this.mesh.addVerticesFromObj('coin',0.1).panZ(97).modelRotation.x +=1.6;
+				
+				this.is_n = Phaser.Math.Between(1,5)
+				
+				this.createMultiCoin(this.is_n);
+                //this.createNewCoin();
+				//this.createNewCoin(2);
+				//this.createNewCoin(3);
+            }
+			
+            createSlider(yOffset, dVal, txt) {
+                const initialPosition =  (dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ);
+                
+                const trackY = 100 + yOffset;
+                const track = this.add.rectangle(100, trackY, 200, 10, 0x666666);
+                const thumb = this.add.circle(initialPosition, trackY, 15, 0xffffff).setInteractive();
+                
+                const valueText = this.add.text(100, trackY + 30, `${txt}: ${dVal === 1 ? this.maxJumpForceY : this.maxJumpForceZ}`, {
+                    fontSize: '20px',
+                    fill: '#fff'
+                });
             
-            // Обновляем разрешение при запуске
-            updateResolution();
-            
-            // Обновляем при изменении размера окна или ориентации
-            window.addEventListener('resize', updateResolution);
-            window.addEventListener('orientationchange', updateResolution);
-        });
+                this.uiLayer.add([track, thumb, valueText]);
+                this.input.setDraggable(thumb);
+                
+                thumb.on('drag', (pointer, dragX, dragY) => {
+                    const newX = dragX
+                    thumb.setX(newX);
+                    
+                    const value = Math.round(newX);
+                    
+                    if (dVal === 1) {
+                        this.maxJumpForceY = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceY}`);
+                    } else if (dVal === 2) {
+                        this.maxJumpForceZ = value;
+                        valueText.setText(`${txt}: ${this.maxJumpForceZ}`);
+                    }
+                });
+            }
+
+			createMultiCoin(n){
+				this.mSound.play();
+				const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
+				const x= this.cameras.main.centerX + randomX;
+				this.triggerLightning(x, this.cameras.main.centerY + this.baseYOffset);
+				for (let i = 1; i <= n; i++) {	
+					const y = (i-1)*this.coin_h;;
+					this.createNewCoin(x,y);
+				}
+			}
+			
+            createNewCoin(x,y) {
+                const randomX = Phaser.Math.Between(-5, 5);
+                const randomZOffset = Phaser.Math.FloatBetween(-0.01, 0.01);
+                this.currentYOffset = this.baseYOffset - 150*randomZOffset;
+                
+                const startY = this.cameras.main.centerY - 300;
+		
+                const targetY = this.cameras.main.centerY + this.currentYOffset-y;				
+				const targetX = x + randomX;
+    			
+				//this.plane.setAlpha(0);
+				//this.safeplane.setAlpha(0);
+				
+				const coin = new Coin(this, targetX, startY);
+                coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
+				
+				coin.yoffset = y;
+
+				coin.z += 1+randomZOffset;
+				//coin.curentScale = coin.curentScale/coin.z;
+				coin.curentScale = coin.curentScale;
+                coin.setScale(coin.curentScale);
+				coin.setDepth(3);
+				
+				//coin.setZ(3-z);
+				//coin.getScreenSize(this.cameras);
+				
+				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
+				coin.cshdw.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.x +=0.8;
+				coin.cshdw.setPosition(targetX - 5*this.scale, targetY + 20*this.scale);
+				coin.cshdw.setDepth(1.5);
+				coin.cshdw.setScale(2.8);
+				coin.cshdw.setAlpha(0.3);
+				
+				const circle = new Phaser.Geom.Circle(0, 0, 300);
+				coin.setInteractive({ hitArea: circle, hitAreaCallback: Phaser.Geom.Circle.Contains });
+			
+				coin.disableInteractive();
+				
+                this.appearTween = this.tweens.add({
+                    targets: coin,
+                    alpha: { from: 0, to: 1 },
+                    y: { from: startY, to: targetY },
+                    scaleX: coin.curentScale,
+                    scaleY: coin.curentScale,
+                    duration: 300,
+                    ease: 'Cubic.easeOut'
+                });
+				
+				this.appearTween = this.tweens.add({
+                    targets: coin.cshdw,
+                    alpha: { from: 0, to: 0.3 },
+					duration: 300
+                });
+			
+                
+                coin.on('pointerdown', p => {
+                    if (!coin.isJumping) {
+                        coin.isHolding = true;
+                        coin.holdStartTime = this.time.now;
+                        coin.px_0 = p.x;
+                        coin.py_0 = p.y;
+                    }
+                });
+
+                this.input.on('pointerup', p => {
+                    if (coin.isHolding && !coin.isJumping) {
+                        this.upSound.play();
+						coin.upStartTime = this.time.now;
+                        const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
+                        const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx)/this.maxDx;
+                        const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
+                        
+                        if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
+                            coin.velocityY = -Phaser.Math.Clamp(17*this.maxJumpForceY * holdY / holdDuration, 3, 23);
+                            coin.velocityZ = Phaser.Math.Clamp(0 + 0.07*this.maxJumpForceZ * holdY / holdDuration, 0.07, 0.1);
+                            coin.velocityX = -this.maxJumpForceX * holdX / 8;
+                            coin.isJumping = true;
+							coin.isAppogey = false;
+                            coin.isHolding = false;
+                            coin.currentSpin = 0.3;
+                        }
+                    }
+                });
+				
+				coins.add(coin);
+				//this.rSound.play();
+            }
+			get_c_len(){
+				let i = 0;
+				coins.getChildren().forEach(coin => {
+					if (!coin.isJumping){
+						i+=1;
+					}
+				});
+				return i;
+				console.log(i);
+			}
+			
+			get_up_coin(){
+				let max = -1;
+				let max_i = 0;
+				coins.getChildren().forEach(coin => {
+					if (!coin.isJumping) {
+						
+						if (coin.yoffset > max){
+							max = coin.yoffset;
+							max_i = coins.getChildren().indexOf(coin);
+						}
+					}
+				});
+				
+				coins.getChildren()[max_i].setInteractive();
+			}
+
+            update(time, delta) {
+			
+                const cl = this.get_c_len();
+
+				const dt = delta / 16.66667; // Нормализация к 60 FPS
+                if (cl==0 && this.e_flag) {
+					this.time.delayedCall(500, () => {
+						this.is_n = Phaser.Math.Between(1,5)					
+						this.createMultiCoin(this.is_n);
+                    });    
+					this.e_flag = false;
+						
+				}
+                coins.getChildren().forEach(coin => {
+                    if (!coin.isJumping) {
+						this.get_up_coin();
+                        if (coin.rot_amp >= 0.01) {
+                            coin.rot_amp *= 1 / (1 + coin.rot_f);
+                            coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
+                            coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
+							coin.cshdw.setScale(2.5*Math.cos(coin.modelRotation.z), 2.5*Math.cos(coin.modelRotation.x));
+                        }
+                    } else {
+						if (cl>0){
+							this.e_flag = true;
+						}
+                        // Применяем dt для независимости от FPS
+                        coin.velocityY += this.gravity * dt;
+                        coin.z += coin.velocityZ * dt;
+                        coin.y += coin.velocityY * dt;
+						if (coin.cshdw){
+							coin.cshdw.y -= -coin.s_y_o +  this.perspective * (coin.z - 1) - coin.yoffset;
+							const dsh_y = Phaser.Math.Clamp((coin.cshdw.y-coin.y)/5, 3.3, 100)
+							coin.cshdw.setAlpha(1/dsh_y);
+                        }
+						coin.y -= -coin.y_o + this.perspective * (coin.z - 1);
+                        coin.y_o = this.perspective * (coin.z - 1);		
+						coin.s_y_o = this.perspective * (coin.z - 1) - coin.yoffset;						
+                        coin.curentScale = 2.5 / coin.z;
+                        coin.setScale(coin.curentScale);
+						if (coin.cshdw){
+							coin.cshdw.setScale(2.5/coin.z, 2.5*Math.sin(coin.modelRotation.x)/coin.z);
+						}
+						
+                        coin.x += coin.velocityX * dt;
+						if (coin.cshdw){
+							coin.cshdw.x = coin.x-5;	
+						}
+                        coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
+                        
+                        // Корректировка вращения с dt
+                        //coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
+                        coin.modelRotation.x += coin.currentSpin * dt;
+						if (coin.modelRotation.x > 2*Math.PI){
+							coin.modelRotation.x =- 2*Math.PI;
+						}
+                        coin.d_x = 0; 
+						coin.floor_f = false;
+						if (coin.z <= this.b1){
+							coin.d_x = 1;
+						}
+						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
+							coin.d_x = 2;
+						}	
+						if ((coin.z >= this.b2) && (coin.z < this.b3)) {
+							coin.d_x = 3;
+							coin.cshdw.setVisible(true);
+						}			
+						if (coin.z >= this.b3) {
+							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
+							coin.d_x = 4;
+							if (rd < this.target_r*this.scale){
+								coin.d_x = 5;
+							}
+						}			
+						
+						if (coin.y >= this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1)) {
+							coin.floor_f = true;
+						}
+						
+						if (coin.d_x == 2){
+							coin.setDepth(0.7);
+							coin.cshdw.setDepth(0.6);
+							coin.cshdw.setVisible(false);
+						}
+						
+						if (coin.d_x == 4){
+							coin.z = this.b3;
+							//console.log(coin.velocityZ);
+							if (coin.velocityZ < 0.04){
+								coin.velocityZ = -0.04;//this.bounceDamping;
+							} else {
+								coin.velocityZ = -0.04;
+							}
+							if (coin.y < 100){
+								coin.velocityZ = -0.004;//this.bounceDamping;
+							}
+							//console.log(coin.x, ' ', this.target_x + (this.target_r-20)*this.scale)
+							if (coin.x > this.target_x + (this.target_r-20)*this.scale){
+								coin.velocityX = -Math.abs(coin.velocityY/2);//this.bounceDamping;
+							}
+								
+						}
+						
+						if ((coin.d_x == 2) && (coin.y >= this.stnLevel)) {
+							if (coin.del_flag){
+								coin.cshdw.destroy();
+								this.time.delayedCall(100, () => {	
+									coin.destroy();		
+								});
+								coin.del_flag = false;				
+							}
+						}	
+
+						if (coin.d_x == 5) {
+							coin.setDepth(0.4);
+							coin.cshdw.destroy();							
+							if (coin.del_flag){
+								this.score += 1;
+								this.scoreText.setText(`Монет : ${this.score}`);								
+								this.time.delayedCall(700, () => {	
+									coin.destroy();		
+								});
+								coin.del_flag = false;				
+							}
+						}							
+
+						/*
+						if (coin.y < 20) {
+							if (coin.del_flag){
+								coin.cshdw.destroy();
+									if (coins.getChildren().length==1){
+										coin.emit_flag = true;
+									}									
+								this.time.delayedCall(100, () => {		
+									coin.destroy();		
+								});
+								coin.del_flag = false;
+							}
+						}							
+						*/
+						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
+								//console.log('out');
+								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
+								coin.velocityY *= -this.bounceDamping;
+                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 2;
+                                coin.velocityX = coin.velocityX / 3;
+                                
+                                if (Math.abs(coin.velocityY) > 1) {
+                                    this.bounceSound.play({
+                                        volume: Phaser.Math.Clamp(Math.abs(coin.velocityY)/25, 0.3, 1)
+                                    });
+                                }
+
+                                if (Math.abs(coin.velocityY) < 1) {
+                                    if ((Math.abs(coin.modelRotation.x) - 0.6 < 0.2) || 
+                                        (Math.abs(coin.modelRotation.x) - (2*Math.PI + 0.6) < 0.2)) {
+                                        coin.isJumping = false;
+                                        coin.velocityY = 0;
+                                        coin.velocityX = 0;
+										 coin.cshdw.setVisible(false);
+                                                this.tweens.add({
+                                                    targets: [coin, coin.cshdw],
+                                                    alpha: 0,
+                                                    duration: 300,
+                                                    ease: 'Cubic.easeOut',
+                                                    onComplete: () => {
+													
+														if(coin.del_flag){
+															this.time.delayedCall(200, () => {	
+																coin.destroy();
+																coin.cshdw.destroy();		
+															});	
+															coin.emit_flag = true;
+															coin.del_flag = false;
+														}
+                                                    }
+                                                });
+                                            
+                                       
+                                    } else {
+                                        coin.modelRotation.x -= 0.3;
+                                    }						
+							
+								}
+						}
+						
+						
+						
+                    }
+                });
+            }
+
+			triggerLightning(x, y) {
+				const points = [];
+				const segments = 15;
+				const maxDeviation = 70;
+    
+				points.push(new Phaser.Math.Vector2(x, 0));
+    
+				for (let i = 1; i < segments; i++) {
+					const progress = i / segments;
+					const yPos = y * progress;
+        
+					const deviation = maxDeviation * Math.sin(progress * Math.PI);
+					const xDev = Phaser.Math.Between(-deviation, deviation);
+        
+					points.push(new Phaser.Math.Vector2(x + xDev, yPos));
+				}
+    
+				points.push(new Phaser.Math.Vector2(x, y));
+    
+				const lightningCurve = new Phaser.Curves.Spline(points);
+    
+				const lightning = this.add.particles(0, 0, 'flares', {
+					frame: { frames: ['white', 'yellow', 'blue'], cycle: true },
+					blendMode: 'ADD',
+					lifespan: { min: 100, max: 300 },
+					quantity: 3,
+					scale: { start: 1.2, end: 0 },
+					alpha: { start: 0.6, end: 0.0 },
+					advance: 0,
+					emitZone: {
+					type: 'edge',
+					source: lightningCurve,
+					quantity: 64,
+					stepRate: 0
+					}
+				});
+				lightning.setDepth(2);
+				lightning.explode(64);
+    
+				this.time.delayedCall(30, () => {
+				    lightning.explode(32);
+				});
+				this.time.delayedCall(10, () => {
+					lightning.explode(16);
+				});
+			
+				this.cameras.main.shake(100, 0.01);
+    
+				this.time.delayedCall(200, () => {
+				    lightning.destroy();
+				//this.plane.setAlpha(1);
+				//this.safeplane.setAlpha(1);
+				});
+			}           	 
+	 
+        }
+		
+	
+		
+        const config = {
+            type: Phaser.WEBGL,
+            width: window.innerWidth,
+            height: window.innerHeight,
+            parent: 'game',
+            scene: MainScene,
+            cameras: {
+                default: {
+                    type: 'OrthographicCamera',
+                    zoom: 1,
+                    near: -1000,
+                    far: 1000,
+                    position: { x:0, y:0, z:100 }
+                }
+            },
+            scale: { 
+                mode: Phaser.Scale.RESIZE, 
+                autoCenter: Phaser.Scale.CENTER_BOTH 
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60, 
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true 
+            },
+			
+			callbacks: {
+				preBoot: function() {
+				lockScreen();
+				}
+			}
+        };
+
+        const game = new Phaser.Game(config);
+        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
