@@ -673,10 +673,12 @@
             },
             render: { 
                 antialiasGL: true 
-            }
+            },
 			
 			callbacks: {
-				preBoot: lockScreen
+				preBoot: function() {
+				lockScreen();
+				}
 			}
         };
 
