@@ -2,6 +2,7 @@
 <html>
 <head>
     <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+	<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">	
     <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
     <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
@@ -35,6 +36,13 @@
             tg.MainButton.show();
         }
 		let coins;
+		
+		function lockScreen() {
+			if ('screen' in window && window.screen.orientation && window.screen.orientation.lock) {
+			window.screen.orientation.lock('landscape')
+			.catch(error => console.log("Ошибка блокировки: ", error));
+			}
+		}
 			
 		class Coin extends Phaser.GameObjects.Mesh {
 			constructor(scene, x, y) {
@@ -279,7 +287,7 @@
             }
 
 			createMultiCoin(n){
-			
+				this.mSound.play();
 				const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
 				const x= this.cameras.main.centerX + randomX;
 				this.triggerLightning(x, this.cameras.main.centerY + this.baseYOffset);
@@ -666,6 +674,10 @@
             render: { 
                 antialiasGL: true 
             }
+			
+			callbacks: {
+				preBoot: lockScreen
+			}
         };
 
         const game = new Phaser.Game(config);
