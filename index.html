@@ -232,7 +232,7 @@
 				
 				//this.plane.width=1024;
 				//this.plane.height=528;
-				
+						
 				this.scaleX = this.cameras.main.width / this.bg.width;//-1;
 				this.scaleY = this.cameras.main.height / this.bg.height;
 				//const scale = Math.min(scaleX, scaleY);
@@ -701,7 +701,7 @@
 					lightning.explode(16);
 				});
 			
-				this.cameras.main.shake(100, 0.01);
+				this.cameras.main.shake(200, 0.02);
     
 				this.time.delayedCall(200, () => {
 				    lightning.destroy();
