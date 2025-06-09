@@ -36,7 +36,13 @@
             tg.MainButton.show();
         }
 		let coins;
-		
+		const pWidth = Math.round(screen.width * (window.devicePixelRatio || 1));
+		const pHeight = Math.round(screen.height * (window.devicePixelRatio || 1));
+            
+            // Получаем CSS-разрешение
+        const cssWidth = document.documentElement.clientWidth;
+        const cssHeight = document.documentElement.clientHeight;		
+
 		function lockScreen() {
 			if ('screen' in window && window.screen.orientation && window.screen.orientation.lock) {
 			window.screen.orientation.lock('landscape')
@@ -280,7 +286,7 @@
                 
                 // Счетчик
 				//this.scoreText = this.add.text(20, 30, 'Монет : 0', {
-				const txt =  Telegram.WebApp.viewportWidth+"x"+size.height;
+				const txt =  pWidth+"x"+pHeight;
                 this.scoreText = this.add.text(20, 30, txt, {
 					font: '28px Arial',
                     fill: '#ffffff',
@@ -705,8 +711,6 @@
 			}           	 
 	 
         }
-		
-	
 		
         const config = {
             type: Phaser.WEBGL,
