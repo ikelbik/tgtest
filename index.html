@@ -640,7 +640,7 @@
 								//console.log('out');
 								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
 								coin.velocityY *= -this.bounceDamping;
-                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 1.1;
+                                coin.velocityZ = 0 + (coin.velocityZ - 0) / 1.6;
                                 coin.velocityX = coin.velocityX / 3;
                                 
                                 if (Math.abs(coin.velocityY) > 1) {
