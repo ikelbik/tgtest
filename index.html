@@ -265,8 +265,8 @@
 					this.plane02.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- (2*this.bg01_height-this.bg02_height)*this.scaleX;					
 					
 					this.stnLevel = (this.cameras.main.height) - 528*this.scaleX;	
-					this.baseYOffset = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- this.bg01_height*this.scaleX;					
-				    //this.baseYOffset = 450*this.scaleX;
+					//this.baseYOffset = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- this.bg01_height*this.scaleX;					
+				    this.baseYOffset = 450*this.scaleX;
 					this.target_y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- (2*this.bg01_height-2*this.bg02_height)*this.scaleX;	
 				}
 				
@@ -523,7 +523,8 @@
                         coin.y_o = this.perspective * (coin.z - 1);		
 						coin.s_y_o = this.perspective * (coin.z - 1) - coin.yoffset;						
                         coin.curentScale = 2.5 / coin.z;
-                       // coin.setScale(coin.curentScale);
+						if (coin.z < (coin.z > this.b1))
+						coin.setScale(coin.curentScale);
 						coin.setScale(this.customDecreasing(coin.z));
 						if (coin.cshdw){
 							coin.cshdw.setScale(2.5/coin.z, 2.5*Math.sin(coin.modelRotation.x)/coin.z);
