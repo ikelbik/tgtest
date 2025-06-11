@@ -522,26 +522,32 @@
 						coin.floor_f = false;
 						if (coin.z <= this.b1){
 							coin.d_x = 1;
+this.scoreText.setText(`1`);								
 						}
 						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
 							coin.d_x = 2;
+this.scoreText.setText(`2`);															
 						}	
 						if ((coin.z >= this.b2) && (coin.z < this.b3)) {
 							coin.d_x = 3;
+this.scoreText.setText(`3`);						
 							coin.cshdw.setVisible(true);
 						}			
 						if (coin.z >= this.b3) {
 							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
-							coin.d_x = 4;
+							if (coin.d_x !=5) coin.d_x = 4;
+this.scoreText.setText(`4`);															
 							if (rd < this.target_r*this.scale){
 								coin.d_x = 5;
+this.scoreText.setText(`5`);								
+								
 							}
 						}			
 						
 						if (coin.y >= this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1)) {
 							coin.floor_f = true;
 						}
-						
+
 						if (coin.d_x == 2){
 							coin.setDepth(0.7);
 							coin.cshdw.setDepth(0.6);
@@ -581,7 +587,7 @@
 							coin.cshdw.destroy();							
 							if (coin.del_flag){
 								this.score += 1;
-								this.scoreText.setText(`Монет : ${this.score}`);								
+								//this.scoreText.setText(`Монет : ${this.score}`);								
 								this.time.delayedCall(700, () => {	
 									coin.destroy();		
 								});
