@@ -522,12 +522,15 @@
 						coin.floor_f = false;
 						if (coin.z <= this.b1){
 							coin.d_x = 1;
+							
 						}
 						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
-							coin.d_x = 2;							
+							coin.d_x = 2;
+this.scoreText.setText(`2 `+coin.z);															
 						}	
 						if ((coin.z >= this.b2) && (coin.z < this.b3)) {
 							coin.d_x = 3;
+this.scoreText.setText(`3 `+coin.z);						
 							coin.cshdw.setVisible(true);
 						}			
 						if (coin.z >= this.b3) {
@@ -535,22 +538,22 @@
 							if (coin.d_x <5) {
 							console.log('!!!'+coin.d_x);
 								coin.d_x = 4;
+this.scoreText.setText(`4 `+coin.z);
 							}													
 							if (rd < this.target_r*this.scale){
-								coin.d_x = 5;								
+								coin.d_x = 5;
+this.scoreText.setText(`5 `+coin.z);								
+								
 							}
 						}			
 						
-						if (coin.y > 3000){
-							if (coin) {
-								coin.destroy();	
-							}
-						}
+						console.log(coin.d_x);
 						
 						if (coin.y >= this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1)) {
 							coin.floor_f = true;
 						}
 
+						
 						if (coin.d_x == 4 && coin.del_flag){
 							coin.z = this.b3;
 							//console.log(coin.velocityZ);
@@ -566,6 +569,7 @@
 							if (coin.x > this.target_x + (this.target_r-20)*this.scale){
 								coin.velocityX = -Math.abs(coin.velocityY/2);//this.bounceDamping;
 							}
+								
 						}
 						
 						if ((coin.d_x == 2) && (coin.y >= this.stnLevel) && coin.del_flag) {
@@ -577,6 +581,7 @@
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
+
 						}	
 
 						if (coin.d_x == 5) {
@@ -584,13 +589,19 @@
 							coin.cshdw.destroy();							
 							if (coin.del_flag){
 								this.score += 1;
-								this.scoreText.setText(`Монет : ${this.score}`);								
+								//this.scoreText.setText(`Монет : ${this.score}`);								
 								this.time.delayedCall(700, () => {	
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
 							}
-						}							
+						}			
+
+						if (coin.y > 3000){
+							if (coin) {
+								coin.destroy();	
+							}
+						}						
 
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								//console.log('out');
