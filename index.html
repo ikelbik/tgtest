@@ -576,7 +576,6 @@ this.scoreText.setText(`5 `+coin.z);
 								coin.setDepth(0.7);
 								coin.cshdw.setDepth(0.6);
 								coin.cshdw.setVisible(false);
-								coin.cshdw.destroy();
 								this.time.delayedCall(100, () => {	
 									coin.destroy();		
 								});
@@ -586,12 +585,14 @@ this.scoreText.setText(`5 `+coin.z);
 
 						if (coin.d_x == 5) {
 							coin.setDepth(0.4);
-							coin.cshdw.destroy();							
+							coin.cshdw.setVisible(false);							
 							if (coin.del_flag){
 								this.score += 1;
 								//this.scoreText.setText(`Монет : ${this.score}`);								
-								this.time.delayedCall(400, () => {	
-									coin.destroy();		
+								this.time.delayedCall(1000, () => {	
+									if (coin){
+										coin.destroy();
+									}										
 								});
 								coin.del_flag = false;				
 							}
@@ -601,7 +602,13 @@ this.scoreText.setText(`5 `+coin.z);
 							if (coin) {
 								coin.destroy();	
 							}
-						}						
+						}	
+
+						if (coin.y > 3000 || (coin.y >= this.stnLevel && coin.d_x == 5)) {
+							if (coin) {
+								coin.destroy();	
+							}
+						}							
 
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								//console.log('out');
