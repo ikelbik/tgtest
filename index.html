@@ -535,8 +535,10 @@ this.scoreText.setText(`3 `+coin.z);
 						}			
 						if (coin.z >= this.b3) {
 							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
-							if (coin.d_x !=5) coin.d_x = 4;
-this.scoreText.setText(`4 `+coin.z);															
+							if (coin.d_x !=5) {
+								coin.d_x = 4;
+this.scoreText.setText(`4 `+coin.z);
+							}													
 							if (rd < this.target_r*this.scale){
 								coin.d_x = 5;
 this.scoreText.setText(`5 `+coin.z);								
