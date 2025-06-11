@@ -522,24 +522,24 @@
 						coin.floor_f = false;
 						if (coin.z <= this.b1){
 							coin.d_x = 1;
-this.scoreText.setText(`1`);								
+this.scoreText.setText(`1 `+coin.z);								
 						}
 						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
 							coin.d_x = 2;
-this.scoreText.setText(`2`);															
+this.scoreText.setText(`2 `+coin.z);															
 						}	
 						if ((coin.z >= this.b2) && (coin.z < this.b3)) {
 							coin.d_x = 3;
-this.scoreText.setText(`3`);						
+this.scoreText.setText(`3 `+coin.z);						
 							coin.cshdw.setVisible(true);
 						}			
 						if (coin.z >= this.b3) {
 							const rd = Math.sqrt(Math.pow((this.target_x - coin.x),2) + Math.pow((this.target_y - coin.y),2));
 							if (coin.d_x !=5) coin.d_x = 4;
-this.scoreText.setText(`4`);															
+this.scoreText.setText(`4 `+coin.z);															
 							if (rd < this.target_r*this.scale){
 								coin.d_x = 5;
-this.scoreText.setText(`5`);								
+this.scoreText.setText(`5 `+coin.z);								
 								
 							}
 						}			
@@ -548,13 +548,8 @@ this.scoreText.setText(`5`);
 							coin.floor_f = true;
 						}
 
-						if (coin.d_x == 2){
-							coin.setDepth(0.7);
-							coin.cshdw.setDepth(0.6);
-							coin.cshdw.setVisible(false);
-						}
 						
-						if (coin.d_x == 4){
+						if (coin.d_x == 4 && coin.del_flag){
 							coin.z = this.b3;
 							//console.log(coin.velocityZ);
 							if (coin.velocityZ < 0.04){
@@ -572,14 +567,16 @@ this.scoreText.setText(`5`);
 								
 						}
 						
-						if ((coin.d_x == 2) && (coin.y >= this.stnLevel)) {
-							if (coin.del_flag){
+						if ((coin.d_x == 2) && (coin.y >= this.stnLevel) && coin.del_flag) {
+								coin.setDepth(0.7);
+								coin.cshdw.setDepth(0.6);
+								coin.cshdw.setVisible(false);
 								coin.cshdw.destroy();
 								this.time.delayedCall(100, () => {	
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
-							}
+
 						}	
 
 						if (coin.d_x == 5) {
@@ -595,20 +592,6 @@ this.scoreText.setText(`5`);
 							}
 						}							
 
-						/*
-						if (coin.y < 20) {
-							if (coin.del_flag){
-								coin.cshdw.destroy();
-									if (coins.getChildren().length==1){
-										coin.emit_flag = true;
-									}									
-								this.time.delayedCall(100, () => {		
-									coin.destroy();		
-								});
-								coin.del_flag = false;
-							}
-						}							
-						*/
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								//console.log('out');
 								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
