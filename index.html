@@ -590,7 +590,7 @@ this.scoreText.setText(`5 `+coin.z);
 							if (coin.del_flag){
 								this.score += 1;
 								//this.scoreText.setText(`Монет : ${this.score}`);								
-								this.time.delayedCall(700, () => {	
+								this.time.delayedCall(400, () => {	
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
