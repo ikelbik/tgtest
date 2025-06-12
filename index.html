@@ -610,7 +610,7 @@
 							}
 						}							
 
-						if (coin.z > 1.2 && !coin.floor_f) coin.setDepth(2.5);
+						if (coin.z > 1.2 && coin.d_x == 1) coin.setDepth(2.5);
 						
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								//console.log('out');
