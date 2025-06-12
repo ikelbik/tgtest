@@ -243,14 +243,17 @@
 				const camera_wh = this.cameras.main.width / this.cameras.main.height
 				const bg_wh = this.bg.width / this.bg.height
 				
-				if (camera_wh > bg_wh) {
+				//if (camera_wh > bg_wh) {
+				if (true){
 					this.bg.setScale(this.scaleY).setScrollFactor(0);
 					this.scale = this.scaleY;
 					this.plane01.setScale(this.scale);
 					this.plane01.y = (this.bg.height - this.bg01_height)*this.scaleY;
 					
 					this.plane02.setScale(this.scale);
-					this.plane02.y = (this.bg.height - 2*this.bg01_height-this.bg02_height)*this.scaleY;					
+					this.plane02.y = (this.bg.height - 2*this.bg01_height-this.bg02_height)*this.scaleY;	
+					
+					console.log('1 ' + this.cameras.main.height - this.bg01_height);
 					
 					this.stnLevel = (this.bg.height - 2*this.bg01_height)*this.scaleY;
 					this.baseYOffset = 450*this.scaleY;
@@ -261,6 +264,8 @@
 					this.plane01.setScale(this.scale);
 					//this.plane01.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- this.bg01_height*this.scaleX;
 					this.plane01.y = (this.cameras.main.height - this.bg01_height)*this.scaleX;
+					
+					console.log(this.cameras.main.height - this.bg01_height);
 					
 					this.plane02.setScale(this.scale);
 					//this.plane02.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- (2*this.bg01_height-this.bg02_height)*this.scaleX;					
