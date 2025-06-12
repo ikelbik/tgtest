@@ -494,6 +494,7 @@
 							const dsh_y = Phaser.Math.Clamp((coin.cshdw.y-coin.y)/5, 3.3, 100)
 							coin.cshdw.setAlpha(1/dsh_y);
                         }
+						
 						coin.y -= -coin.y_o + this.perspective * (coin.z - 1);
                         coin.y_o = this.perspective * (coin.z - 1);		
 						coin.s_y_o = this.perspective * (coin.z - 1) - coin.yoffset;						
@@ -521,9 +522,9 @@
 						}
                         //coin.d_x = 10; 
 						coin.floor_f = false;
+						
 						if (coin.z <= this.b1){
 							coin.d_x = 1;
-							
 						}
 						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
 							coin.d_x = 2;
@@ -551,7 +552,6 @@
 							coin.floor_f = true;
 						}
 
-						
 						if (coin.d_x == 4 && coin.del_flag){
 							coin.z = this.b3;
 							//console.log(coin.velocityZ);
@@ -579,7 +579,6 @@
 									coin.destroy();		
 								});
 								coin.del_flag = false;				
-
 						}	
 
 						//console.log(coin.del_flag);
@@ -611,6 +610,8 @@
 							}
 						}							
 
+						if (coin.z > 1.2 && !coin.floor_f) coin.setDepth(2.5);
+						
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								//console.log('out');
 								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
