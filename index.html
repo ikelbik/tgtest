@@ -213,74 +213,48 @@
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
 
 				this.plane01 = this.add.plane(
-					this.cameras.main.centerX ,
-					this.cameras.main.height-264, 
+					this.cameras.main.centerX,
+					this.cameras.main.height, 
 					'bg01'
 				).panZ(0);	
 
 				this.plane02 = this.add.plane(
-					this.cameras.main.centerX ,
-					this.cameras.main.height-364, 
+					this.cameras.main.centerX,
+					this.cameras.main.height, 
 					'bg02'
 				).panZ(0);				
 				
-				//this.cshdw.setAlpha(0.7);				
-				//this.plane.setZ(0);
 				this.plane01.setDepth(1);
 				this.plane01.z=1;
 				
 				this.plane02.setDepth(0.5);
 				this.plane02.z=0.5;				
-				
-				//this.plane.width=1024;
-				//this.plane.height=528;
-						
+
 				this.scaleX = this.cameras.main.width / this.bg.width;//-1;
 				this.scaleY = this.cameras.main.height / this.bg.height;
-				//const scale = Math.min(scaleX, scaleY);
 				this.scale = 1;
 				
 				const camera_wh = this.cameras.main.width / this.cameras.main.height
 				const bg_wh = this.bg.width / this.bg.height
 				
-				//if (camera_wh > bg_wh) {
-				if (true){
-					this.bg.setScale(this.scaleY).setScrollFactor(0);
-					this.scale = this.scaleY;
-					this.plane01.setScale(this.scale);
-					this.plane01.y = (this.bg.height - this.bg01_height)*this.scaleY;
-					
-					this.plane02.setScale(this.scale);
-					this.plane02.y = (this.bg.height - 2*this.bg01_height-this.bg02_height)*this.scaleY;	
-					
-					console.log('1 ' + this.cameras.main.height - this.bg01_height);
-					
-					this.stnLevel = (this.bg.height - 2*this.bg01_height)*this.scaleY;
-					this.baseYOffset = 450*this.scaleY;
-					this.target_y = (this.bg.height - 2*this.bg01_height-2*this.bg02_height)*this.scaleY;
-				} else{
-					this.bg.setScale(this.scaleX).setScrollFactor(0);
-					this.scale = this.scaleX;
-					this.plane01.setScale(this.scale);
-					//this.plane01.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- this.bg01_height*this.scaleX;
-					this.plane01.y = (this.cameras.main.height - this.bg01_height)*this.scaleX;
-					
-					console.log(this.cameras.main.height - this.bg01_height);
-					
-					this.plane02.setScale(this.scale);
-					//this.plane02.y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- (2*this.bg01_height-this.bg02_height)*this.scaleX;					
-					this.plane02.y = (this.cameras.main.height - 2*this.bg01_height-this.bg02_height)*this.scaleY;					
-					
-					//this.stnLevel = (this.cameras.main.height) - 528*this.scaleX;	
-					this.stnLevel = (this.cameras.main.height - 2*this.bg01_height)*this.scaleY;;
-					//this.baseYOffset = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- this.bg01_height*this.scaleX;					
-				    this.baseYOffset = 450*this.scaleX;
-					//this.target_y = (this.cameras.main.height) - 0.5*(this.cameras.main.height - this.bg.height*this.scaleX)- (2*this.bg01_height-2*this.bg02_height)*this.scaleX;	
-					this.target_y = (this.cameras.main.height - 2*this.bg01_height-2*this.bg02_height)*this.scaleY;
+				if (camera_wh > bg_wh) {
+					this.scale = this.scaleY;								
+				} else {
+					this.scale = this.scaleY;								
 				}
+
+				this.bg.setScale(this.scale).setScrollFactor(0);
+				this.plane01.setScale(this.scale);
+				this.plane01.y = (this.bg.height - this.bg01_height)*this.scale;
+					
+				this.plane02.setScale(this.scale);
+				this.plane02.y = (this.bg.height - 2*this.bg01_height-this.bg02_height)*this.scale;	
+					
+				this.stnLevel = (this.bg.height - 2*this.bg01_height)*this.scale;
+				this.baseYOffset = 450*this.scale;
+				this.target_y = (this.bg.height - 2*this.bg01_height-2*this.bg02_height)*this.scale;
 				
 				this.target_x = this.cameras.main.centerX;
-				//this.target_y = this.cameras.main.centerY - 220*this.scale;
 				this.perspective *= this.scale;
 				this.zfactor *= this.scale;
 				this.coin_h *= this.scale;
@@ -288,10 +262,6 @@
 				this.b1 = (this.zfactor/this.perspective + 1)*0.57;
 				this.b2 = (this.zfactor/this.perspective + 1)*0.85;
 				this.b3 = (this.zfactor/this.perspective + 1)*1;				
-				//console.log(this.b1, ' ', this.b2, ' ', this.b3);
-				
-				//console.log(this.baseYOffset, ' ', this.scaleX, ' ', this.scaleY);
-				//this.bg.setScale(scale).setScrollFactor(0);
 				
 				this.uiLayer = this.add.layer();
     
@@ -302,7 +272,6 @@
                 this.createSlider(60,2, 'Сила вперед');
                 
                 // Счетчик
-				//this.scoreText = this.add.text(20, 30, 'Монет : 0', {
 				const txt =  pWidth+"x"+pHeight+";";
                 this.scoreText = this.add.text(20, 30, txt, {
 					font: '28px Arial',
@@ -482,12 +451,9 @@
 
 			
 			customDecreasing(x, alpha = 1) {
-				// Ограничиваем x интервалом [1, 7]
 				x = Math.max(1, Math.min(x, 6));
-    
 				// Вычисляем значение функции
 				const t = (x - 1) / 4.6; // Нормализация интервала: [0, 1] при x∈[1,7]
-				console.log(2.5 - 2.1 * Math.pow(t, alpha));
 				return 2.5 - 2.1 * Math.pow(t, alpha);
 			}
 			
@@ -673,7 +639,7 @@
                                                     onComplete: () => {
 													
 														if(coin.del_flag){
-															this.time.delayedCall(200, () => {	
+															this.time.delayedCall(500, () => {	
 																coin.destroy();
 																coin.cshdw.destroy();		
 															});	
