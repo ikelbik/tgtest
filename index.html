@@ -244,10 +244,10 @@
 					'bg02'
 				).panZ(0);				
 				
-				this.plane01.setDepth(1);
+				this.plane01.setDepth(100);
 				this.plane01.z=1;
 				
-				this.plane02.setDepth(0.5);
+				this.plane02.setDepth(50);
 				this.plane02.z=0.5;				
 
 				this.scaleX = this.cameras.main.width / this.bg.width;//-1;
@@ -403,7 +403,7 @@
 					if (this.coin_dx > w){
 						this.coin_dx = -w;
 						this.hh += this.mcoin_height/3*this.scale;
-						this.dpt = 0.4 + Phaser.Math.FloatBetween(-0.08, 0.08);
+						this.dpt = 30 + Phaser.Math.FloatBetween(-10, 10);
 					}
                 }
 			}
@@ -430,7 +430,7 @@
 				//coin.curentScale = coin.curentScale/coin.z;
 				coin.curentScale = coin.curentScale;
                 coin.setScale(coin.curentScale);
-				coin.setDepth(3);
+				coin.setDepth(200);
 				
 				//coin.setZ(3-z);
 				//coin.getScreenSize(this.cameras);
@@ -438,7 +438,7 @@
 				//const screenSize = this.getMeshScreenSize(coin, this.cameras);
 				coin.cshdw.addVerticesFromObj('coin',0.1).panZ(7).modelRotation.x +=0.8;
 				coin.cshdw.setPosition(targetX - 5*this.scale, targetY + 20*this.scale);
-				coin.cshdw.setDepth(1.5);
+				coin.cshdw.setDepth(150);
 				coin.cshdw.setScale(2.8);
 				coin.cshdw.setAlpha(0.3);
 				
@@ -662,7 +662,7 @@
 						}
 						
 						if ((coin.d_x == 2) && (coin.y >= this.stnLevel) && coin.del_flag) {
-								coin.setDepth(0.7);
+								coin.setDepth(70);
 								this.time.delayedCall(200, () => {	
 									coin.destroy();		
 								});
@@ -673,7 +673,7 @@
 						
 						if (coin.d_x == 5) {
 							this.SetPile(2000, 450*this.scale, 550*this.scale,1600,1610);
-							coin.setDepth(0.45);
+							coin.setDepth(45);
 							coin.cshdw.setVisible(false);							
 							if (coin.del_flag){
 								this.score += 1;
@@ -699,7 +699,7 @@
 							}
 						}							
 
-						if (coin.z > 1.2 && coin.d_x == 1) coin.setDepth(2.5);
+						//if (coin.z > 1.2 && coin.d_x == 1) coin.setDepth(2.5);
 						
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
 								this.SetPile(2000, 450*this.scale, 550*this.scale,1105,1108);
@@ -787,7 +787,7 @@
 					stepRate: 0
 					}
 				});
-				lightning.setDepth(2);
+				lightning.setDepth(200);
 				lightning.explode(64);
     
 				this.time.delayedCall(30, () => {
