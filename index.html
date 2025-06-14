@@ -89,6 +89,21 @@
 			}
 		}
 			
+		function normalPDF(x, mu, sigma) {
+			const coefficient = 1 / (sigma * Math.sqrt(2 * Math.PI));
+			const exponent = -((x - mu) ** 2) / (2 * sigma ** 2);
+			return coefficient * Math.exp(exponent);
+		}
+		
+		class mCoin extends Phaser.GameObjects.Sprite {
+            constructor(scene, x, y, texture) {
+                super(scene, x, y, texture);
+                scene.add.existing(this);
+          
+                this.setAngle(Phaser.Math.Between(-7, 7));
+            }
+        }
+		
 		class Coin extends Phaser.GameObjects.Mesh {
 			constructor(scene, x, y) {
 				super(scene, x, y, 'texture');
@@ -167,7 +182,9 @@
 				this.coin_h = 30;	
 				this.e_flag = true;	
 				this.bg01_height = 405;
-				this.bg02_height = 341;
+				this.bg02_height = 491;
+				this.pileX = 0;
+				this.pileY = 0;
             }
         
             preload() {
@@ -178,6 +195,7 @@
                 this.load.image('bg02', 'assets/bg02.png');				
                 this.load.obj('coin', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
+				this.load.image('coin_t', 'assets/coin_c.png');
 				this.load.image('cshdw', 'assets/shd_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
@@ -252,9 +270,11 @@
 					
 				this.stnLevel = (this.bg.height - 2*this.bg01_height)*this.scale;
 				this.baseYOffset = 450*this.scale;
-				this.target_y = (this.bg.height - 2*this.bg01_height-2*this.bg02_height)*this.scale;
+				this.target_y = (this.bg.height - 2*this.bg01_height-2*this.bg02_height - 300)*this.scale;
 				
 				this.target_x = this.cameras.main.centerX;
+				this.pileX = this.target_x;
+				this.pileY = (this.bg.height - 2*this.bg01_height-0.7*this.bg02_height)*this.scale;
 				this.perspective *= this.scale;
 				this.zfactor *= this.scale;
 				this.coin_h *= this.scale;
@@ -286,6 +306,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
+				this.SetPile(2500, 180, 250);
                 //this.createNewCoin();
 				//this.createNewCoin(2);
 				//this.createNewCoin(3);
@@ -321,7 +342,7 @@
                     }
                 });
             }
-
+			
 			createMultiCoin(n){
 				this.mSound.play();
 				const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
@@ -331,6 +352,56 @@
 					const y = (i-1)*this.coin_h;;
 					this.createNewCoin(x,y);
 				}
+			}
+			
+			sc(x, y, h ,w){
+				return 1 - 0.2*(Math.pow(x/w,4) + Math.pow(y/h,4));
+			}
+			ang(x, y, h ,w){
+				return 180*2/(5*h*w)*x*y;
+			}
+			tnt(x, y, h ,w){
+				const r = 255 - 150*(Math.pow(y/h, 2) + Math.pow(x/w, 3));
+				if (r < 50) {
+					return 50;
+				} else if (r > 255) {
+					return 255;
+				} else {
+					return r;
+				}
+			}
+			
+			
+			SetPile(n, h, w){
+				this.coin_dy = 0;
+				this.coin_dx = -w;
+				this.hh = 0;			
+				this.dpt = 0.4;
+				for (let i = 0; i < n; i++) {
+					this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
+					this.x = Phaser.Math.Between(this.coin_dx - 5, this.coin_dx + 0);
+					this.coin_dy = Phaser.Math.Between( - 7,  + 7);
+                    const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy, 'coin_t');
+					mcoin.setDepth(this.dpt);
+					const ds_y = Phaser.Math.FloatBetween( Math.abs(1.0*this.hh / h), Math.abs(1.0*this.hh / h));					
+					const ds_x = Phaser.Math.FloatBetween( Math.abs(1.4*this.coin_dx / w), Math.abs(1.6*this.coin_dx / w));
+					const ss = this.sc(this.coin_dx, this.hh, h, w);
+					mcoin.setScale(ss, ss*(1.3 - ds_x/2- ds_y/2)); 
+					mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
+					//mcoin.setScale(1, 1 - ds_x/2 - ds_y/2);
+					const dt = Phaser.Math.Between(0, 20)
+					//const tint = Phaser.Display.Color.GetColor(305 - this.hh/1 + dt, 305 - this.hh/1+ dt, 305 - this.hh/1+ dt);
+					const tint0 = this.tnt(this.coin_dx, this.hh, h, w);
+
+					const tint = Phaser.Display.Color.GetColor(tint0 - dt, tint0 - dt, tint0 - dt);
+					mcoin.setTint(tint);
+                    this.coin_dx += ss*mcoin.width/2;
+					if (this.coin_dx > w){
+						this.coin_dx = -w;
+						this.hh += 5;
+						this.dpt = 0.4 + Phaser.Math.FloatBetween(-0.08, 0.08);
+					}
+                }
 			}
 			
             createNewCoin(x,y) {
