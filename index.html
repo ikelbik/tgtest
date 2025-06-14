@@ -288,8 +288,8 @@
                 this.debugValue1 = 50;
                 this.debugValue2 = 50;
     
-                this.createSlider(0,1, 'Сила вверх');
-                this.createSlider(60,2, 'Сила вперед');
+                //this.createSlider(0,1, 'Сила вверх');
+                //this.createSlider(60,2, 'Сила вперед');
                 
                 // Счетчик
 				const txt =  pWidth+"x"+pHeight+";";
@@ -306,7 +306,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
-				this.SetPile(2500, 180, 250);
+				this.SetPile(2500, 500*this.scale, 550*this.scale);
                 //this.createNewCoin();
 				//this.createNewCoin(2);
 				//this.createNewCoin(3);
@@ -361,7 +361,7 @@
 				return 180*2/(5*h*w)*x*y;
 			}
 			tnt(x, y, h ,w){
-				const r = 255 - 150*(Math.pow(y/h, 2) + Math.pow(x/w, 3));
+				const r = 255 - 180*(Math.pow(y/h, 2) + Math.pow(x/w, 3));
 				if (r < 50) {
 					return 50;
 				} else if (r > 255) {
@@ -386,7 +386,9 @@
 					const ds_y = Phaser.Math.FloatBetween( Math.abs(1.0*this.hh / h), Math.abs(1.0*this.hh / h));					
 					const ds_x = Phaser.Math.FloatBetween( Math.abs(1.4*this.coin_dx / w), Math.abs(1.6*this.coin_dx / w));
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
-					mcoin.setScale(ss, ss*(1.3 - ds_x/2- ds_y/2)); 
+					let sc_xy = 1.3 - ds_x/2- ds_y/2;
+					if (sc_xy <0.1) sc_xy = 0.1;
+					mcoin.setScale(ss, ss*sc_xy); 
 					mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
 					//mcoin.setScale(1, 1 - ds_x/2 - ds_y/2);
 					const dt = Phaser.Math.Between(0, 20)
@@ -398,7 +400,7 @@
                     this.coin_dx += ss*mcoin.width/2;
 					if (this.coin_dx > w){
 						this.coin_dx = -w;
-						this.hh += mcoin.height/2*this.scale;
+						this.hh += mcoin.height/3*this.scale;
 						this.dpt = 0.4 + Phaser.Math.FloatBetween(-0.08, 0.08);
 					}
                 }
