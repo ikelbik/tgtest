@@ -260,7 +260,7 @@
 				} else {
 					this.scale = this.scaleY;								
 				}
-
+				
 				this.bg.setScale(this.scale).setScrollFactor(0);
 				this.plane01.setScale(this.scale);
 				this.plane01.y = (this.bg.height - this.bg01_height)*this.scale;
@@ -365,7 +365,7 @@
 				if (r < 50) {
 					return 50;
 				} else if (r > 255) {
-					return 255;
+					return 255;6
 				} else {
 					return r;
 				}
@@ -385,7 +385,7 @@
 					mcoin.setDepth(this.dpt);
 					const ds_y = Phaser.Math.FloatBetween( Math.abs(1.0*this.hh / h), Math.abs(1.0*this.hh / h));					
 					const ds_x = Phaser.Math.FloatBetween( Math.abs(1.4*this.coin_dx / w), Math.abs(1.6*this.coin_dx / w));
-					const ss = this.sc(this.coin_dx, this.hh, h, w);
+					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
 					mcoin.setScale(ss, ss*(1.3 - ds_x/2- ds_y/2)); 
 					mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
 					//mcoin.setScale(1, 1 - ds_x/2 - ds_y/2);
@@ -398,7 +398,7 @@
                     this.coin_dx += ss*mcoin.width/2;
 					if (this.coin_dx > w){
 						this.coin_dx = -w;
-						this.hh += 5;
+						this.hh += mcoin.height/2*this.scale;
 						this.dpt = 0.4 + Phaser.Math.FloatBetween(-0.08, 0.08);
 					}
                 }
