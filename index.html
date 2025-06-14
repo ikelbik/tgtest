@@ -379,7 +379,7 @@
 				this.hh = 0;			
 				this.dpt = 0.4;
 				if (b==0) b = n;
-				for (let i = a; i < n; i++) {
+				for (let i = a; i < b; i++) {
 					this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
 					this.x = Phaser.Math.Between(this.coin_dx - 5, this.coin_dx + 0);
 					this.coin_dy = Phaser.Math.Between( - 7,  + 7);
@@ -672,7 +672,7 @@
 						//console.log(coin.del_flag);
 						
 						if (coin.d_x == 5) {
-							this.SetPile(2000, 450*this.scale, 550*this.scale,1000,1010);
+							this.SetPile(2000, 450*this.scale, 550*this.scale,1200,1210);
 							coin.setDepth(0.45);
 							coin.cshdw.setVisible(false);							
 							if (coin.del_flag){
