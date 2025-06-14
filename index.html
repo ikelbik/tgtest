@@ -137,15 +137,15 @@
 				this.c_width=0;
 				this.c_height=0;
 				this.d_x = 0;		
-				this.yoffset = 0;				
-				
+				this.yoffset = 0;	
 			}
+
+			
 			adjustBrightness(factor) {
 				const value = Math.floor(255 * factor);
 				const tint = Phaser.Display.Color.GetColor(value, value, value);
 				this.setTint(tint);
 			}		
-
 }
         class MainScene extends Phaser.Scene {
             constructor() {
@@ -306,7 +306,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
-				this.SetPile(2000, 450*this.scale, 550*this.scale);
+				this.SetPile(2000, 450*this.scale, 550*this.scale,0,0);
 
                 //this.createNewCoin();
 				//this.createNewCoin(2);
@@ -363,22 +363,23 @@
 			}
 			tnt(x, y, h ,w){
 				const r = 255 - 150*(Math.pow(y/h, 2) + Math.pow(x/w, 3));
-				if (r < 30) {
-					return 30;
+				if (r < 20) {
+					return 20;
 				} else if (r > 255) {
-					return 255;6
+					return 255;
 				} else {
 					return r;
 				}
 			}
 			
 			
-			SetPile(n, h, w){
+			SetPile(n, h, w, a, b){
 				this.coin_dy = 0;
 				this.coin_dx = -w;
 				this.hh = 0;			
 				this.dpt = 0.4;
-				for (let i = 0; i < n; i++) {
+				if (b==0) b = n;
+				for (let i = a; i < n; i++) {
 					this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
 					this.x = Phaser.Math.Between(this.coin_dx - 5, this.coin_dx + 0);
 					this.coin_dy = Phaser.Math.Between( - 7,  + 7);
@@ -392,11 +393,11 @@
 					mcoin.setScale(ss, ss*sc_xy); 
 					mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
 					//mcoin.setScale(1, 1 - ds_x/2 - ds_y/2);
-					const dt = Phaser.Math.Between(0, 20)
+					const dt = Phaser.Math.Between(0, 10)
 					//const tint = Phaser.Display.Color.GetColor(305 - this.hh/1 + dt, 305 - this.hh/1+ dt, 305 - this.hh/1+ dt);
 					const tint0 = this.tnt(this.coin_dx, this.hh, h, w);
 
-					const tint = Phaser.Display.Color.GetColor(tint0 - dt, tint0 - dt, tint0 - dt);
+					const tint = Phaser.Display.Color.GetColor(tint0 - dt+10*this.coin_dx/w, tint0 - dt, tint0 - dt+10*this.coin_dx/w);
 					mcoin.setTint(tint);
                     this.coin_dx += ss*mcoin.width/2;
 					if (this.coin_dx > w){
@@ -530,6 +531,7 @@
 				const t = (x - 1) / 4.8; // Нормализация интервала: [0, 1] при x∈[1,7]
 				return 2.5 - 2.1 * Math.pow(t, alpha);
 			}
+					
 			
             update(time, delta) {
 			
@@ -597,11 +599,17 @@
                         //coin.d_x = 10; 
 						coin.floor_f = false;
 						
+						//if (coin.z > this.b1 && coin.z < 1.05*this.b1){
+						//	coin.setBlendMode(Phaser.BlendModes.ADD)
+						//}	
 						if (coin.z <= this.b1){
 							coin.d_x = 1;
+							//coin.setBlendMode(Phaser.BlendModes.ADD)
+							//coin.setAlpha(1);
 						}
 						if ((coin.z > this.b1) && (coin.z <= this.b2)) {
 							coin.d_x = 2;
+							//coin.setBlendMode(Phaser.BlendModes.LIGHTEN)
 //this.scoreText.setText(`2 `+coin.z);															
 						}	
 						if ((coin.z >= this.b2) && (coin.z < this.b3) && (coin.y < this.stnLevel-85) ) {
@@ -664,6 +672,7 @@
 						//console.log(coin.del_flag);
 						
 						if (coin.d_x == 5) {
+							this.SetPile(2000, 450*this.scale, 550*this.scale,1000,1010);
 							coin.setDepth(0.45);
 							coin.cshdw.setVisible(false);							
 							if (coin.del_flag){
