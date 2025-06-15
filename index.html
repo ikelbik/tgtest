@@ -294,7 +294,8 @@
                 //this.createSlider(60,2, 'Сила вперед');
                 
                 // Счетчик
-				const txt =  pWidth+"x"+pHeight+";";
+				//const txt =  pWidth+"x"+pHeight+";";
+				const txt = "Монет : 0";
                 this.scoreText = this.add.text(20, 30, txt, {
 					font: '28px Arial',
                     fill: '#ffffff',
@@ -308,7 +309,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
-				this.SetPile(2000, 450*this.scale, 550*this.scale,0,2000);
+				this.SetPile(2000, 450*this.scale, 550*this.scale,0,1);
 
                 //this.createNewCoin();
 				//this.createNewCoin(2);
@@ -364,7 +365,8 @@
 				return 180*2/(5*h*w)*x*y;
 			}
 			tnt(x, y, h ,w){
-				const r = 255 - 150*(Math.pow(2*y/h, 2) + Math.pow(x/w, 3));
+				const r = 255 - 220*(Math.pow(1.1*y/h, 2));// + Math.pow(x/w, 3));
+				//console.log(y, ' ', r);
 				if (r < 20) {
 					return 20;
 				} else if (r > 255) {
@@ -380,7 +382,9 @@
 				this.hh = 0;			
 				this.dpt = 0.4;
 				if (b==0) b = n;
-				for (let i = 0; i < b; i++) {
+				a += 450;
+				b += 450;
+				for (let i = 0; i <= b; i++) {
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
 					if (i>=a) {
 						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
@@ -394,15 +398,17 @@
 						if (sc_xy <0.1) sc_xy = 0.1;
 						mcoin.setScale(ss, ss*sc_xy); 
 						mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
-						const dt = Phaser.Math.Between(0, 10)
-						const tint0 = this.tnt(this.coin_dx, this.hh-80, h, w);
-						const tint = Phaser.Display.Color.GetColor(tint0 - dt+10*this.coin_dx/w, tint0 - dt, tint0 - dt+10*this.coin_dx/w);
+						const dt_r = Phaser.Math.Between(0, 0);
+						const dt_g = Phaser.Math.Between(0, 10);
+						const dt_b = Phaser.Math.Between(0, 20);			
+						const tint0 = this.tnt(this.coin_dx, this.hh-30, h, w);
+						const tint = Phaser.Display.Color.GetColor(tint0 - dt_r, tint0 - dt_g, tint0 - dt_b);
 						mcoin.setTint(tint);
                     }
 					this.coin_dx += ss*this.mcoin_width/2;
 					if (this.coin_dx > w){
 						this.coin_dx = -w;
-						this.hh += this.mcoin_height/3*this.scale;
+						this.hh += this.mcoin_height/3*ss;
 						this.dpt = 30 + Phaser.Math.FloatBetween(-10, 10);
 					}
                 }
@@ -672,11 +678,11 @@
 						//console.log(coin.del_flag);
 						
 						if (coin.d_x == 5) {
-							this.SetPile(2000, 450*this.scale, 550*this.scale,1600,1610);
 							coin.setDepth(45);
 							coin.cshdw.setVisible(false);							
 							if (coin.del_flag){
 								this.score += 1;
+								this.SetPile(2000, 450*this.scale, 550*this.scale,1+this.score,1+this.score);
 								this.scoreText.setText(`Монет : ${this.score}`);								
 								this.time.delayedCall(1000, () => {	
 									if (coin){
@@ -702,7 +708,8 @@
 						//if (coin.z > 1.2 && coin.d_x == 1) coin.setDepth(2.5);
 						
 						if ((coin.floor_f) && (coin.d_x != 2) && coin.del_flag){ 
-								this.SetPile(2000, 450*this.scale, 550*this.scale,1105,1108);
+								this.score += 1;
+								this.SetPile(2000, 450*this.scale, 550*this.scale,1+this.score,1+this.score);						
 								//console.log('out');
 								coin.y = this.cameras.main.centerY + this.currentYOffset - this.perspective * (coin.z - 1);
 								coin.velocityY *= -this.bounceDamping;
