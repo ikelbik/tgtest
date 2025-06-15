@@ -309,7 +309,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
-				this.SetPile(2000, 450*this.scale, 550*this.scale,0,1);
+				this.SetPile(2000, 450*this.scale, 550*this.scale,0,2000);
 
                 //this.createNewCoin();
 				//this.createNewCoin(2);
@@ -388,8 +388,8 @@
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
 					if (i>=a) {
 						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
-						this.x = Phaser.Math.Between(this.coin_dx - 5, this.coin_dx + 0);
-						this.coin_dy = Phaser.Math.Between( - 7,  + 7);
+						this.x = Phaser.Math.Between(this.coin_dx - this.mcoin_height/2*ss, this.coin_dx + this.mcoin_height/2*ss);
+						this.coin_dy = Phaser.Math.Between( - this.mcoin_height/1*ss,  + this.mcoin_height/1*ss);
 						const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy, 'coin_t');
 						mcoin.setDepth(this.dpt);
 						const ds_y = Phaser.Math.FloatBetween( Math.abs(1.0*this.hh / h), Math.abs(1.0*this.hh / h));					
