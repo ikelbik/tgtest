@@ -364,7 +364,7 @@
 				return 180*2/(5*h*w)*x*y;
 			}
 			tnt(x, y, h ,w){
-				const r = 255 - 150*(Math.pow(y/h, 2) + Math.pow(x/w, 3));
+				const r = 255 - 150*(Math.pow(2*y/h, 2) + Math.pow(x/w, 3));
 				if (r < 20) {
 					return 20;
 				} else if (r > 255) {
@@ -380,9 +380,9 @@
 				this.hh = 0;			
 				this.dpt = 0.4;
 				if (b==0) b = n;
-				for (let i = 0; i < n; i++) {
+				for (let i = 0; i < b; i++) {
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
-					if (i>=a && i <b) {
+					if (i>=a) {
 						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
 						this.x = Phaser.Math.Between(this.coin_dx - 5, this.coin_dx + 0);
 						this.coin_dy = Phaser.Math.Between( - 7,  + 7);
@@ -395,7 +395,7 @@
 						mcoin.setScale(ss, ss*sc_xy); 
 						mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
 						const dt = Phaser.Math.Between(0, 10)
-						const tint0 = this.tnt(this.coin_dx, this.hh, h, w);
+						const tint0 = this.tnt(this.coin_dx, this.hh-80, h, w);
 						const tint = Phaser.Display.Color.GetColor(tint0 - dt+10*this.coin_dx/w, tint0 - dt, tint0 - dt+10*this.coin_dx/w);
 						mcoin.setTint(tint);
                     }
