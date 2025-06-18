@@ -282,7 +282,7 @@
 				
 				this.target_x = this.cameras.main.centerX;
 				this.pileX = this.target_x;
-				this.pileY = (this.bg.height - 2*this.bg01_height-0.45*this.bg02_height)*this.scale;
+				this.pileY = (this.bg.height - 2*this.bg01_height-0.4*this.bg02_height)*this.scale;
 				this.perspective *= this.scale;
 				this.zfactor *= this.scale;
 				this.coin_h *= this.scale;
@@ -411,7 +411,7 @@
 				const p_Y = this.pileY - this.pile_high*220*this.scale;
 				this.dpt = 0.4;
 				let i = 0;
-				while (this.hh > (1.0-this.pile_high)*h) {
+				while (this.hh > (1.1-this.pile_high)*h) {
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
 						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.6));					
 						this.x = Phaser.Math.Between(this.coin_dx - this.mcoin_width/2*ss, this.coin_dx + this.mcoin_width/2*ss);
@@ -419,9 +419,10 @@
 						const c_x = this.pileX + this.x;
 						const c_y = p_Y - this.bx - this.coin_dy;
 						const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
-						if (rd < 1*(this.target_r+this.mcoin_width)*this.scale){		
+						if (rd < (this.target_r+this.mcoin_width - 80*(1-this.pile_high))*this.scale){		
+							//console.log(rd, ' ' ,(this.target_r+this.mcoin_width - 200)*this.scale)
 							pile.getChildren()[i].x = this.pileX + this.x;
-							pile.getChildren()[i].y =  c_y + 10;
+							pile.getChildren()[i].y =  c_y;
 							pile.getChildren()[i].setDepth(this.dpt);
 							pile.getChildren()[i].setVisible(true);
 							const ds_y = Phaser.Math.FloatBetween( Math.abs(0.7*this.hh / h), Math.abs(0.7*this.hh / h));					
@@ -441,7 +442,7 @@
 					this.coin_dx += ss*this.mcoin_width/2;
 					if (this.coin_dx > ww){
 						this.coin_dx = -ww;
-						this.hh -= this.mcoin_height/3*ss;
+						this.hh -= this.mcoin_height/3.3*ss;
 						this.dpt = 20 + Phaser.Math.FloatBetween(-15, 15);
 					}
 					i++;
@@ -553,7 +554,7 @@
                 coin.on('pointerdown', p => {
 					this.UpPile();
 					this.SetPile(this.pileY, 350*this.scale, 400*this.scale);			
-					console.log(this.pile_high)					
+					//console.log(this.pile_high)					
                     if (!coin.isJumping) {
                         coin.isHolding = true;
                         coin.holdStartTime = this.time.now;
