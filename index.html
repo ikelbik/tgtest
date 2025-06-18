@@ -192,6 +192,8 @@
 				this.mcoin_height = 41;
 				this.pile_len = 0;
 				this.pile_high = 0;
+				this.pile_i = 0;
+				this.pile_k = 0;
             }
         
             preload() {
@@ -282,7 +284,7 @@
 				
 				this.target_x = this.cameras.main.centerX;
 				this.pileX = this.target_x;
-				this.pileY = (this.bg.height - 2*this.bg01_height-0.4*this.bg02_height)*this.scale;
+				this.pileY = (this.bg.height - 2*this.bg01_height-0.8*this.bg02_height)*this.scale;
 				this.perspective *= this.scale;
 				this.zfactor *= this.scale;
 				this.coin_h *= this.scale;
@@ -316,12 +318,9 @@
 				
 				this.createMultiCoin(this.is_n);
 				
-				this.InitPile(3500);
+				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 3000);
 				//this.SetPile(this.pileY, 350*this.scale, 400*this.scale);
 
-                //this.createNewCoin();
-				//this.createNewCoin(2);
-				//this.createNewCoin(3);
             }
 			
             createSlider(yOffset, dVal, txt) {
@@ -385,7 +384,7 @@
 				}
 			}
 			
-			InitPile(n){
+			InitPile0(n){
 			    let k = 0;
 				for (let i = 0; i < n; i++){
 					const mcoin = new mCoin(this,0, 0, 'coin_t');
@@ -397,13 +396,13 @@
 			}
 			
 			UpPile(){
-				this.pile_high += 0.05;
+				this.pile_high += 0.01;
 				if (this.pile_high>1) {
 					this.pile_high = 1;
 				}
 			}
 			
-			SetPile(y, h, w){
+			SetPile0(y, h, w){
 				this.coin_dy = 0;
 				const ww = (this.pile_high)*w;
 				this.coin_dx = -ww;
@@ -419,10 +418,14 @@
 						const c_x = this.pileX + this.x;
 						const c_y = p_Y - this.bx - this.coin_dy;
 						const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
-						if (rd < (this.target_r+this.mcoin_width - 80*(1-this.pile_high))*this.scale){		
+						if (rd < (this.target_r+this.mcoin_width - 0*(1-this.pile_high))*this.scale){		
 							//console.log(rd, ' ' ,(this.target_r+this.mcoin_width - 200)*this.scale)
-							pile.getChildren()[i].x = this.pileX + this.x;
-							pile.getChildren()[i].y =  c_y;
+							if (i > this.pile_i){
+								pile.getChildren()[i].x = this.pileX + this.x;
+								pile.getChildren()[i].y =  c_y;
+							} else {
+								pile.getChildren()[i].y -= 10;//this.pile_high*220*this.scale;
+							}
 							pile.getChildren()[i].setDepth(this.dpt);
 							pile.getChildren()[i].setVisible(true);
 							const ds_y = Phaser.Math.FloatBetween( Math.abs(0.7*this.hh / h), Math.abs(0.7*this.hh / h));					
@@ -447,9 +450,26 @@
 					}
 					i++;
                 }
+				this.pile_i = i;
 			}			
 			
-			SetPile0(n, h, w, a, b){
+			SetPile(){
+			if (this.pile_high < 1) {
+				for (const mcoin of pile.getChildren()) {
+					const c_x = mcoin.x;
+					const c_y = mcoin.y - (0.01*220)*this.scale;	
+					mcoin.y = c_y;
+					const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
+					if (rd < (this.target_r+this.mcoin_width - 80*(1-this.pile_high))*this.scale){
+						//mcoin.y = c_y;
+						mcoin.setVisible(true);
+					}
+					
+				}
+			}
+			}
+			
+			InitPile(n, h, w, a, b){
 				this.coin_dy = 0;
 				this.coin_dx = -w + a%(2*w);
 				this.hh = 0;			
@@ -461,14 +481,15 @@
 				for (let i = 0; i <= b; i++) {
 					const ss = this.scale*this.sc(this.coin_dx, this.hh, h, w);
 					if (i>=a) {
-						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.5));					
+						this.bx = (this.hh)*(normalPDF(this.coin_dx/(w), 0,0.6));					
 						this.x = Phaser.Math.Between(this.coin_dx - this.mcoin_width/2*ss, this.coin_dx + this.mcoin_width/2*ss);
 						this.coin_dy = Phaser.Math.Between( - this.mcoin_height/2*ss,  + this.mcoin_height/2*ss);
 						const c_x = this.pileX + this.x;
 						const c_y = this.pileY - this.bx - this.coin_dy;
 						const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
 						if (rd < (this.target_r+this.mcoin_width)*this.scale){						
-							const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy, 'coin_t');
+							const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy + 0.5*this.bg02_height*this.scale, 'coin_t');
+							mcoin.setVisible(false);
 							mcoin.setDepth(this.dpt);
 							const ds_y = Phaser.Math.FloatBetween( Math.abs(0.7*this.hh / h), Math.abs(0.7*this.hh / h));					
 							const ds_x = Phaser.Math.FloatBetween( Math.abs(1.4*this.coin_dx / w), Math.abs(1.4*this.coin_dx / w));
@@ -476,12 +497,13 @@
 							if (sc_xy <0.1) sc_xy = 0.1;
 							mcoin.setScale(ss, ss*sc_xy); 
 							mcoin.setAngle(this.ang(this.coin_dx, this.hh, h, w));
-							const dt_r = Phaser.Math.Between(0, 20);
+							const dt_r = Phaser.Math.Between(10, 20);
 							const dt_g = Phaser.Math.Between(0, 10);
 							const dt_b = Phaser.Math.Between(0, 0);			
 							const tint0 = this.tnt(this.coin_dx, this.hh-30, h, w);
 							const tint = Phaser.Display.Color.GetColor(tint0 - dt_r, tint0 - dt_g, tint0 - dt_b);
 							mcoin.setTint(tint);
+							pile.add(mcoin);
 							k++;
 						}
                     }
@@ -491,7 +513,9 @@
 						this.hh += this.mcoin_height/3*ss;
 						this.dpt = 20 + Phaser.Math.FloatBetween(-15, 15);
 					}
+					
                 }
+				this.pile_k = k;
 				console.log(k);
 			}
 			
