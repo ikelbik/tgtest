@@ -318,7 +318,7 @@
 				
 				this.createMultiCoin(this.is_n);
 				
-				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 3000);
+				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 2000);
 				//this.SetPile(this.pileY, 350*this.scale, 400*this.scale);
 
             }
@@ -454,11 +454,16 @@
 			}			
 			
 			SetPile(){
+			let k = 0;
+			const p = Phaser.Math.Between(3, 7);
 			if (this.pile_high < 1) {
 				for (const mcoin of pile.getChildren()) {
-					const c_x = mcoin.x;
-					const c_y = mcoin.y - (0.01*220)*this.scale;	
+					k++;
+					const c_x = mcoin.x;// + Phaser.Math.Between(-this.mcoin_width/10*mcoin.scale, +this.mcoin_width/10*mcoin.scale);
+					const c_y = mcoin.y - (0.01*220)*this.scale;// + Phaser.Math.Between(-this.mcoin_width/10*mcoin.scale, +this.mcoin_width/100*mcoin.scale);;	
 					mcoin.y = c_y;
+					mcoin.x = c_x;
+					if (k%p==0) mcoin.setDepth(20 + Phaser.Math.FloatBetween(-15, 15));
 					const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
 					if (rd < (this.target_r+this.mcoin_width - 80*(1-this.pile_high))*this.scale){
 						//mcoin.y = c_y;
