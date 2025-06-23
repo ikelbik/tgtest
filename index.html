@@ -434,7 +434,7 @@
 						const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
 						if (rd < (this.target_r+this.mcoin_width)*this.scale){		
 							const c_im_p = Phaser.Math.Between(0,3);
-							const c_im_t = 'coin_t0' + c_im_p;
+							const c_im_t = 'coin_t' + c_im_p;
 							//console.log(c_im_t);
 							const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy + 0.0*this.bg02_height*this.scale, c_im_t);
 							//mcoin.setVisible(false);
