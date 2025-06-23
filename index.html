@@ -195,6 +195,7 @@
 				this.pile_i = 0;
 				this.pile_k = 0;
 				this.resolution_coeff = 1;
+				this.max_i = 0;
             }
         
             preload() {
@@ -318,6 +319,7 @@
 				this.is_n = Phaser.Math.Between(1,5)
 				
 				this.createMultiCoin(this.is_n);
+				this.get_up_coin();
 				
 				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 2000);
 				//this.SetPile(this.pileY, 350*this.scale, 400*this.scale);
@@ -540,7 +542,7 @@
 
                 this.input.on('pointerup', p => {
                     if (coin.isHolding && !coin.isJumping) {
-                        this.upSound.play();
+						this.upSound.play();
 						coin.upStartTime = this.time.now;
                         const holdDuration = Phaser.Math.Clamp(this.time.now - coin.holdStartTime, 0, this.maxHoldTime);
                         const holdX = Phaser.Math.Clamp(coin.px_0 - p.x, -this.maxDx, this.maxDx)/this.maxDx;
@@ -553,6 +555,7 @@
 							coin.ZforSpin = coin.velocityZ;
 							//console.log(coin.velocityY);
                             coin.isJumping = true;
+							this.get_up_coin();
 							coin.cshdw.setVisible(true); 
 							coin.isAppogey = false;
                             coin.isHolding = false;
@@ -580,18 +583,18 @@
 			
 			get_up_coin(){
 				let max = -1;
-				let max_i = 0;
+				this.max_i = 0;
 				coins.getChildren().forEach(coin => {
 					if (!coin.isJumping) {
 						
 						if (coin.yoffset > max){
 							max = coin.yoffset;
-							max_i = coins.getChildren().indexOf(coin);
+							this.max_i = coins.getChildren().indexOf(coin);
 						}
 					}
 				});
 				
-				coins.getChildren()[max_i].setInteractive();
+				coins.getChildren()[this.max_i].setInteractive();
 			}
 
 			
@@ -612,6 +615,7 @@
 					this.time.delayedCall(500, () => {
 						this.is_n = Phaser.Math.Between(1,5)					
 						this.createMultiCoin(this.is_n);
+						this.get_up_coin()
                     });    
 					this.e_flag = false;		
 				}
@@ -620,12 +624,13 @@
 								
                 coins.getChildren().forEach(coin => {
                     if (!coin.isJumping) {
-						this.get_up_coin();
+						//this.get_up_coin();
                         if (coin.rot_amp >= 0.01) {
                             coin.rot_amp *= 1 / (1 + coin.rot_f);
-                            //coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
-                            //coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
-							//coin.cshdw.setScale(2.5*Math.cos(coin.modelRotation.z), 2.5*Math.cos(coin.modelRotation.x));
+							//coin.modelRotation.y = Phaser.Math.FloatBetween(0.0,0.1);
+                            coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
+                            coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
+							coin.cshdw.setScale(2.5*Math.cos(coin.modelRotation.z), 2.5*Math.cos(coin.modelRotation.x));
                         }
                     } else {
 						if (cl[0]>0){
@@ -723,7 +728,7 @@
                                 });
                             } 
 							//console.log(coin.x, ' ', this.target_x + (this.target_r-20)*this.scale)
-							if (coin.x > this.target_x + (this.target_r-100)*this.scale){
+							if (coin.x > this.target_x + (this.target_r-150)*this.scale){
 								coin.velocityX = -Math.abs(coin.velocityY/1);//this.bounceDamping;
 								//console.log('11');
 							}
