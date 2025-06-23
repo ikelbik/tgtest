@@ -630,7 +630,7 @@
 							//coin.modelRotation.y = Phaser.Math.FloatBetween(0.0,0.1);
                             coin.modelRotation.x = 0.6 - coin.rot_amp * Math.sin(this.time.now * coin.rot_f);
                             coin.modelRotation.z = coin.rot_amp * Math.sin(this.time.now * coin.rot_f + Math.PI/2);
-							coin.cshdw.setScale(2.5*Math.cos(coin.modelRotation.z), 2.5*Math.cos(coin.modelRotation.x));
+							coin.cshdw.setScale(1.1*coin.curentScale*Math.cos(coin.modelRotation.z), 1.1*coin.curentScale*Math.cos(coin.modelRotation.x));
                         }
                     } else {
 						if (cl[0]>0){
