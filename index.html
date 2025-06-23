@@ -205,7 +205,10 @@
                 this.load.image('bg02', 'assets/bg02.png');				
                 this.load.obj('coin', 'assets/fantom.obj');
                 this.load.image('texture', 'assets/coin_txt.png');
-				this.load.image('coin_t', 'assets/coin_c.png');
+				this.load.image('coin_t0', 'assets/coin_c00.png');
+				this.load.image('coin_t1', 'assets/coin_c01.png');
+				this.load.image('coin_t2', 'assets/coin_c02.png');
+				this.load.image('coin_t3', 'assets/coin_c03.png');				
 				this.load.image('cshdw', 'assets/shd_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
@@ -429,9 +432,12 @@
 						const c_x = this.pileX + this.x;
 						const c_y = this.pileY - this.bx - this.coin_dy;
 						const rd = Math.sqrt(Math.pow((this.target_x - c_x),2) + Math.pow((this.target_y - c_y),2));
-						if (rd < (this.target_r+this.mcoin_width)*this.scale){						
-							const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy + 0.5*this.bg02_height*this.scale, 'coin_t');
-							mcoin.setVisible(false);
+						if (rd < (this.target_r+this.mcoin_width)*this.scale){		
+							const c_im_p = Phaser.Math.Between(0,3);
+							const c_im_t = 'coin_t0' + c_im_p;
+							//console.log(c_im_t);
+							const mcoin = new mCoin(this,this.pileX + this.x, this.pileY - this.bx - this.coin_dy + 0.0*this.bg02_height*this.scale, c_im_t);
+							//mcoin.setVisible(false);
 							mcoin.setDepth(this.dpt);
 							const ds_y = Phaser.Math.FloatBetween( Math.abs(0.7*this.hh / h), Math.abs(0.7*this.hh / h));					
 							const ds_x = Phaser.Math.FloatBetween( Math.abs(1.4*this.coin_dx / w), Math.abs(1.4*this.coin_dx / w));
@@ -543,7 +549,7 @@
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
                             coin.velocityY = -this.resolution_coeff*Phaser.Math.Clamp(17*this.maxJumpForceY * holdY / holdDuration, 4, 23);
                             coin.velocityZ = Phaser.Math.Clamp(0 + 0.07*this.maxJumpForceZ * holdY / holdDuration, 0.08, 0.1);
-                            coin.velocityX = -this.maxJumpForceX * holdX / 8;
+                            coin.velocityX = -this.maxJumpForceX * holdX / 3;
 							coin.ZforSpin = coin.velocityZ;
 							//console.log(coin.velocityY);
                             coin.isJumping = true;
@@ -718,7 +724,7 @@
                             } 
 							//console.log(coin.x, ' ', this.target_x + (this.target_r-20)*this.scale)
 							if (coin.x > this.target_x + (this.target_r-100)*this.scale){
-								coin.velocityX = -Math.abs(coin.velocityY/2);//this.bounceDamping;
+								coin.velocityX = -Math.abs(coin.velocityY/1);//this.bounceDamping;
 								//console.log('11');
 							}
 								
