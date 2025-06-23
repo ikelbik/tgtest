@@ -946,7 +946,11 @@
                 }
             },
             scale: { 
-                mode: Phaser.Scale.RESIZE, 
+			mode: Phaser.Scale.FIT, // Автоматическое масштабирование
+			parent: 'game-container',
+			width: 1024, // Логическая ширина
+			height: 1920, // Логическая высота
+			resolution: window.devicePixelRatio, 
                 autoCenter: Phaser.Scale.CENTER_BOTH 
             },
             input: { 
