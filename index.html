@@ -138,7 +138,7 @@ function unloadScreen() {
 		window.addEventListener('DOMContentLoaded', () => {
 			if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
 				Telegram.WebApp.ready();
-				Telegram.WebApp.expand();
+				elegram.WebApp.expand();
     
 				// Получаем текущий размер
 				updateViewportSize();
@@ -973,7 +973,7 @@ function unloadScreen() {
         mode: Phaser.Scale.FIT,
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1024, // Логическое разрешение игры
-        height: 2120,
+        height: 1920,
         resolution: Math.max(window.devicePixelRatio || 1, 1),
 	
     },
