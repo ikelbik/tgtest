@@ -151,6 +151,10 @@
 			}		
 }
         class MainScene extends Phaser.Scene {
+			resize() {
+				this.scale.setGameSize(window.innerWidth, window.innerHeight);
+			}	
+			
             constructor() {
                 super({ key: 'MainScene' });
                 this.score = 0;
@@ -884,47 +888,42 @@
         }
 		
         const config = {
-            type: Phaser.WEBGL,
-            width: window.innerWidth,
-            height: window.innerHeight,
-            parent: 'game',
-            scene: MainScene,
-            cameras: {
-                default: {
-                    type: 'OrthographicCamera',
-                    zoom: 1,
-                    near: -1000,
-                    far: 1000,
-                    position: { x:0, y:0, z:100 }
-                }
-            },
-            scale: { 
-			mode: Phaser.Scale.FIT, // Автоматическое масштабирование
-			parent: 'game-container',
-			width: 1024, // Логическая ширина
-			height: 1920, // Логическая высота
-		//	width: 600, // Логическая ширина
-		//	height: 800, // Логическая высота			
-			resolution: window.devicePixelRatio, 
-                autoCenter: Phaser.Scale.CENTER_BOTH 
-            },
-            input: { 
-                activePointers: 2 
-            },
-            fps: { 
-                target: 60, 
-                smoothStep: true 
-            },
-            render: { 
-                antialiasGL: true 
-            },
-			
-			callbacks: {
-				preBoot: function() {
-				lockScreen();
-				}
-			}
-        };
+    type: Phaser.WEBGL,
+    parent: 'game', // Родительский контейнер canvas
+    scene: MainScene,
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        width: 1024, // Логическое разрешение игры
+        height: 1920,
+        resolution: window.devicePixelRatio,
+        // parent: 'game-container' // Убрано (дублирует основной parent)
+    },
+    cameras: {
+        default: {
+            zoom: 1,
+            near: -1000,
+            far: 1000,
+            position: { x:0, y:0, z:100 }
+        }
+    },
+    input: { 
+        activePointers: 2 
+    },
+    fps: { 
+        target: 60,
+        smoothStep: true 
+    },
+    render: { 
+        antialiasGL: true,
+        pixelArt: false // Добавьте true если используете пиксель-арт
+    },
+    callbacks: {
+        preBoot: () => {
+            lockScreen(); // Убедитесь что функция определена
+        }
+    }
+};
 
         const game = new Phaser.Game(config);
         window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
