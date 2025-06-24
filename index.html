@@ -72,7 +72,6 @@ function preloadScreen() {
 	lockScreen();
 }
 
-// Функция скрытия прелоадера
 function unloadScreen() {
     const preloader = document.getElementById('preloader');
     if (preloader) {
@@ -92,6 +91,11 @@ function unloadScreen() {
         if (tg) {
             tg.expand();
             tg.MainButton.show();
+			setTimeout(() => {
+				if (game && game.scale) {
+					game.scale.refresh();
+				}
+			}, 300);			
         }
 		let coins;
 		let pile;
@@ -99,15 +103,10 @@ function unloadScreen() {
 		const pWidth = Math.round(screen.width * (window.devicePixelRatio || 1));
 		const pHeight = Math.round(screen.height * (window.devicePixelRatio || 1));
             
-            // Получаем CSS-разрешение
+        // Получаем CSS-разрешение
         const cssWidth = document.documentElement.clientWidth;
         const cssHeight = document.documentElement.clientHeight;		
 
-Telegram.WebApp.ready();
-Telegram.WebApp.expand(); // Раскрыть на весь экран
-
-	
-		
 		function lockScreen() {
 			if ('screen' in window && window.screen.orientation && window.screen.orientation.lock) {
 			window.screen.orientation.lock('landscape')
@@ -998,9 +997,11 @@ Telegram.WebApp.expand(); // Раскрыть на весь экран
         }
     }
 };
-
-        const game = new Phaser.Game(config);
-        window.addEventListener('resize', () => game.scale.resize(window.innerWidth, window.innerHeight));
+       // const game = new Phaser.Game(config);
+		setTimeout(() => {
+			const game = new Phaser.Game(config);
+		}, 300);
+        window.addEventListener('resize', () => game.resize());
         document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
