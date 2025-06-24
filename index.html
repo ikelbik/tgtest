@@ -29,6 +29,11 @@
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
+	
+		document.documentElement.style.height = '100%';
+		document.body.style.height = '100%';
+		document.body.style.margin = '0';
+	
         const isTelegram = /Telegram/.test(navigator.userAgent);
         const tg = window.Telegram?.WebApp;
         if (tg) {
@@ -45,6 +50,23 @@
         const cssWidth = document.documentElement.clientWidth;
         const cssHeight = document.documentElement.clientHeight;		
 
+		Telegram.WebApp.ready();
+		Telegram.WebApp.expand(); // Раскрыть на весь экран
+
+		window.addEventListener('load', () => {
+			const game = new Phaser.Game(config);
+		});		
+		
+		callbacks: {
+			preBoot: () => {
+			lockScreen();
+			document.body.style.backgroundColor = "#000"; // Фон на время загрузки
+			},
+			postBoot: (game) => {
+			// Убрать прелоадер после инициализации
+			}
+		}		
+		
 		function lockScreen() {
 			if ('screen' in window && window.screen.orientation && window.screen.orientation.lock) {
 			window.screen.orientation.lock('landscape')
@@ -896,7 +918,7 @@
         autoCenter: Phaser.Scale.CENTER_BOTH,
         width: 1024, // Логическое разрешение игры
         height: 1920,
-        resolution: window.devicePixelRatio,
+        resolution: Math.max(window.devicePixelRatio || 1, 1) 
         // parent: 'game-container' // Убрано (дублирует основной parent)
     },
     cameras: {
