@@ -22,13 +22,17 @@
             z-index: 1000;
             text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
         }
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}		
     </style>
 </head>
 <body>
     <div id="game"></div>
 	
 <div id="preloader" style="
-    position: fixed;
+   position: fixed;
     top: 0;
     left: 0;
     width: 100%;
@@ -37,9 +41,20 @@
     display: flex;
     justify-content: center;
     align-items: center;
+    flex-direction: column;
     z-index: 9999;
+    transition: opacity 0.5s;
 ">
-    <div class="spinner"></div>
+    <div style="
+        border: 5px solid #f3f3f3;
+        border-top: 5px solid #3498db;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        animation: spin 1s linear infinite;
+        margin-bottom: 20px;
+    "></div>
+    <p style="color: white; font-family: Arial;">Loading...</p>
 </div>	
 
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
@@ -51,14 +66,25 @@
 	
 function preloadScreen() {
     const preloader = document.getElementById('preloader');
-    if (preloader) preloader.style.display = 'block';
+    if (preloader) {
+        preloader.style.display = 'flex';
+    }
 	lockScreen();
 }
 
 // Функция скрытия прелоадера
 function unloadScreen() {
     const preloader = document.getElementById('preloader');
-    if (preloader) preloader.style.display = 'none';
+    if (preloader) {
+        // Плавное исчезновение прелоадера
+        preloader.style.transition = 'opacity 0.5s ease-out';
+        preloader.style.opacity = '0';
+        
+        // Полное скрытие после анимации
+        setTimeout(() => {
+            preloader.style.display = 'none';
+        }, 500);
+    }
 }	
 	
         const isTelegram = /Telegram/.test(navigator.userAgent);
@@ -240,6 +266,13 @@ Telegram.WebApp.expand(); // Раскрыть на весь экран
             }
         
             preload() {
+
+				this.load.on('complete', () => {
+					// Скрываем прелоадер после загрузки ВСЕХ ресурсов
+					unloadScreen();
+				});
+        			
+			
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 //this.load.image('bg', 'https://vifaniya.ru/ggc/assets/bg1.jpg');
                 this.load.image('bg', 'assets/bg00.jpg');
