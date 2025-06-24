@@ -138,7 +138,7 @@ function unloadScreen() {
 		window.addEventListener('DOMContentLoaded', () => {
 			if (typeof Telegram !== 'undefined' && Telegram.WebApp) {
 				Telegram.WebApp.ready();
-				elegram.WebApp.expand();
+				Telegram.WebApp.expand();
     
 				// Получаем текущий размер
 				updateViewportSize();
@@ -631,8 +631,8 @@ function unloadScreen() {
                         const holdY = Phaser.Math.Clamp(coin.py_0 - p.y, 0, this.maxDy)/this.maxDy;
                         
                         if ((holdDuration >= this.minHoldTime)&&(holdY > this.minholdY)) {
-                            coin.velocityY = -this.resolution_coeff*Phaser.Math.Clamp(17*this.maxJumpForceY * holdY / holdDuration, 4, 23);
-                            coin.velocityZ = Phaser.Math.Clamp(0 + 0.07*this.maxJumpForceZ * holdY / holdDuration, 0.08, 0.1);
+                            coin.velocityY = -0.9*this.resolution_coeff*Phaser.Math.Clamp(17*this.maxJumpForceY * holdY / holdDuration, 4, 23);
+                            coin.velocityZ = 0.9*Phaser.Math.Clamp(0 + 0.07*this.maxJumpForceZ * holdY / holdDuration, 0.08, 0.15);
                             coin.velocityX = -this.maxJumpForceX * holdX / 3;
 							coin.ZforSpin = coin.velocityZ;
 							//console.log(coin.velocityY);
@@ -641,7 +641,7 @@ function unloadScreen() {
 							coin.cshdw.setVisible(true); 
 							coin.isAppogey = false;
                             coin.isHolding = false;
-							if (coin.velocityZ == 0.08 && coin.velocityY > -7){
+							if (coin.velocityZ <= 0.9*0.08 && coin.velocityY > -7){
 								coin.currentSpin = -0.05 
 							} else coin.currentSpin = 0.2;
                         }
@@ -692,7 +692,7 @@ function unloadScreen() {
 			
                 const cl = this.get_c_len();
 								
-				const dt = 1.1*delta / 16.66667; // Нормализация к 60 FPS
+				const dt = 1.5*delta / 16.66667; // Нормализация к 60 FPS
                 if (cl[0]==0 && this.e_flag) {
 					this.time.delayedCall(500, () => {
 						this.is_n = Phaser.Math.Between(1,5)					
