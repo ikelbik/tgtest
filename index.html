@@ -724,7 +724,7 @@ function unloadScreen() {
                         coin.y += coin.velocityY * dt;
 						if (coin.cshdw){
 							coin.cshdw.y -= -coin.s_y_o +  this.perspective * (coin.z - 1) - coin.yoffset;
-							const dsh_y = Phaser.Math.Clamp(0.7*(coin.cshdw.y-coin.y)/5, 3.3, 100)
+							const dsh_y = Phaser.Math.Clamp(0.7*(coin.cshdw.y-coin.y)/15, 3.3, 100)
 							coin.cshdw.setAlpha(1/dsh_y);
                         }
 						
