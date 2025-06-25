@@ -67,6 +67,9 @@ html, body, #game-container {
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
 	
+		const tgc_btn = window.Telegram.WebApp;
+		tgc_btn.MainButton.hide();
+	
 		document.documentElement.style.height = '100%';
 		document.body.style.height = '100%';
 		document.body.style.margin = '0';
