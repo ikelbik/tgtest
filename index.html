@@ -108,3 +108,306 @@
     .btn:disabled {
       opacity: 0.6;
       cursor: not-allowed;
+    }
+    .error {
+      color: #ff6b6b;
+      font-size: 14px;
+      margin-top: 8px;
+      display: none;
+    }
+    .tx-status {
+      text-align: center;
+      padding: 16px;
+      border-radius: 12px;
+      margin-top: 20px;
+      display: none;
+      background: rgba(26, 54, 93, 0.5);
+    }
+    .tx-success {
+      color: #4ade80;
+    }
+    .tx-failure {
+      color: #ff6b6b;
+    }
+    .wallet-warning {
+      background: rgba(255, 180, 0, 0.15);
+      color: #ffcc00;
+      padding: 12px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+    .debug-info {
+      font-size: 12px;
+      color: #aaa;
+      margin-top: 10px;
+      word-break: break-all;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>TON Wallet Manager</h1>
+    
+    <div id="walletWarning" class="wallet-warning">
+      ⚠️ Кошелек определяется как недоступный. Попробуйте запросить баланс
+    </div>
+    
+    <div class="balance-card">
+      <div class="balance-label">Ваш баланс</div>
+      <div class="balance-amount" id="balance">0 TON</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="recipient">Адрес получателя</label>
+      <input 
+        type="text" 
+        id="recipient" 
+        placeholder="EQDrjaMAd1uyVtVb1hECV3a6F5KcZLjQY5k0i7OZ7qQI-Bhq" 
+        autocomplete="off"
+      >
+      <div class="error" id="recipient-error">Неверный формат адреса</div>
+    </div>
+    
+    <div class="form-group">
+      <label for="amount">Сумма (TON)</label>
+      <input 
+        type="number" 
+        id="amount" 
+        placeholder="0.1" 
+        step="0.01"
+        min="0.01"
+        autocomplete="off"
+      >
+      <div class="error" id="amount-error">Минимальная сумма: 0.01 TON</div>
+    </div>
+    
+    <button class="btn btn-primary" id="sendBtn">Отправить платеж</button>
+    <button class="btn btn-secondary" id="balanceBtn">Запросить баланс</button>
+    
+    <div class="tx-status" id="txStatus">
+      <div class="tx-message">Транзакция выполняется...</div>
+    </div>
+    
+    <div class="debug-info" id="debugInfo">
+      Статус кошелька: проверка...
+    </div>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    
+    // Инициализация WebApp
+    tg.expand();
+    tg.enableClosingConfirmation();
+    tg.MainButton.hide();
+    
+    // Элементы DOM
+    const balanceEl = document.getElementById('balance');
+    const recipientEl = document.getElementById('recipient');
+    const amountEl = document.getElementById('amount');
+    const sendBtn = document.getElementById('sendBtn');
+    const balanceBtn = document.getElementById('balanceBtn');
+    const recipientError = document.getElementById('recipient-error');
+    const amountError = document.getElementById('amount-error');
+    const txStatus = document.getElementById('txStatus');
+    const walletWarning = document.getElementById('walletWarning');
+    const debugInfo = document.getElementById('debugInfo');
+    
+    // Состояние приложения
+    let userBalance = 0;
+    let walletAddress = '';
+    let walletAvailable = false;
+    
+    // Проверка адреса TON
+    function isValidTonAddress(address) {
+      const regex = /^(?:[a-km-zA-HJ-NP-Z1-9]{48}|E[Qf][0-9a-zA-Z]{48}|UQ[0-9a-zA-Z]{48})$/;
+      return regex.test(address);
+    }
+    
+    // Показать ошибку
+    function showError(element, message) {
+      element.textContent = message;
+      element.style.display = 'block';
+      return false;
+    }
+    
+    // Скрыть ошибку
+    function hideError(element) {
+      element.style.display = 'none';
+      return true;
+    }
+    
+    // Обновить баланс
+    function updateBalance(balanceData) {
+      if (balanceData && balanceData.TON) {
+        userBalance = parseFloat(balanceData.TON);
+        balanceEl.textContent = `${userBalance.toFixed(2)} TON`;
+      }
+    }
+    
+    // Запросить баланс
+    function requestBalance() {
+      // Показываем статус
+      txStatus.className = 'tx-status';
+      txStatus.innerHTML = '<div class="tx-message">Запрос баланса...</div>';
+      txStatus.style.display = 'block';
+      
+      // Формируем нулевой инвойс
+      tg.openInvoice({
+        title: "Запрос баланса",
+        description: "Получение информации о вашем балансе",
+        currency: "TON",
+        prices: [{ label: "Запрос баланса", amount: 0 }],
+        payload: JSON.stringify({ type: "balance_request" })
+      });
+    }
+    
+    // Отправить платеж
+    function sendPayment() {
+      // Сброс ошибок
+      let valid = true;
+      hideError(recipientError);
+      hideError(amountError);
+      
+      // Валидация адреса
+      const recipient = recipientEl.value.trim();
+      if (!recipient || !isValidTonAddress(recipient)) {
+        showError(recipientError, "Неверный формат TON-адреса");
+        valid = false;
+      }
+      
+      // Валидация суммы
+      const amount = parseFloat(amountEl.value);
+      if (isNaN(amount) || amount < 0.01) {
+        showError(amountError, "Минимальная сумма: 0.01 TON");
+        valid = false;
+      }
+      
+      if (amount > userBalance) {
+        showError(amountError, "Недостаточно средств");
+        valid = false;
+      }
+      
+      if (!valid) return;
+      
+      // Показываем статус
+      txStatus.className = 'tx-status';
+      txStatus.innerHTML = '<div class="tx-message">Отправка платежа...</div>';
+      txStatus.style.display = 'block';
+      
+      try {
+        // Пытаемся открыть кошелек
+        tg.openWallet({
+          asset: "TON",
+          amount: amount.toString(),
+          to: recipient,
+          memo: "Платеж из WebApp"
+        });
+      } catch (e) {
+        // Если не получилось - пробуем через инвойс
+        txStatus.innerHTML = '<div class="tx-message">Используем альтернативный метод...</div>';
+        
+        tg.openInvoice({
+          title: "Отправка платежа",
+          description: `Перевод ${amount} TON`,
+          currency: "TON",
+          prices: [{ label: "Перевод", amount: amount * 1000000000 }], // в нанотонах
+          payload: JSON.stringify({ 
+            type: "payment",
+            to: recipient
+          })
+        });
+      }
+    }
+    
+    // Проверка доступности кошелька
+    function checkWalletAvailability() {
+      // Стандартная проверка
+      walletAvailable = tg.isWalletAvailable;
+      
+      // Дополнительные проверки
+      const platform = tg.platform;
+      const version = tg.version;
+      
+      // Обновляем информацию для отладки
+      debugInfo.innerHTML = `
+        Статус кошелька: ${walletAvailable ? 'Доступен' : 'Недоступен'}<br>
+        Платформа: ${platform}<br>
+        Версия Telegram: ${version}<br>
+        Кошелек: ${tg.isWalletAvailable ? '✅ Доступен' : '❌ Недоступен'}
+      `;
+      
+      // Настраиваем интерфейс в зависимости от доступности
+      if (walletAvailable) {
+        walletWarning.style.display = 'none';
+        sendBtn.textContent = "Отправить платеж";
+        sendBtn.disabled = false;
+      } else {
+        walletWarning.style.display = 'block';
+        sendBtn.textContent = "Отправить (через инвойс)";
+      }
+    }
+    
+    // Обработчики событий Telegram
+    tg.onEvent("invoiceClosed", (event) => {
+      if (event.status === "paid") {
+        // Получаем данные о балансе
+        const balance = event.credentials?.balance;
+        if (balance) {
+          updateBalance(balance);
+          txStatus.className = 'tx-status tx-success';
+          txStatus.innerHTML = '<div>Баланс успешно обновлен!</div>';
+        }
+        
+        // Сохраняем адрес кошелька
+        if (event.credentials?.wallet_address) {
+          walletAddress = event.credentials.wallet_address;
+        }
+        
+        // Если это был платеж
+        if (event.payload && JSON.parse(event.payload).type === "payment") {
+          txStatus.className = 'tx-status tx-success';
+          txStatus.innerHTML = '<div>Платеж успешно отправлен!</div>';
+          requestBalance();
+        }
+      } else {
+        txStatus.className = 'tx-status tx-failure';
+        txStatus.innerHTML = '<div>Операция отменена</div>';
+      }
+    });
+    
+    tg.onEvent("walletClosed", (event) => {
+      if (event.status === "sent") {
+        // Обновляем баланс
+        requestBalance();
+        txStatus.className = 'tx-status tx-success';
+        txStatus.innerHTML = '<div>Платеж успешно отправлен!</div>';
+        
+        // Очищаем форму
+        recipientEl.value = '';
+        amountEl.value = '';
+      } else {
+        txStatus.className = 'tx-status tx-failure';
+        txStatus.innerHTML = '<div>Отправка отменена</div>';
+      }
+    });
+    
+    // Инициализация
+    document.addEventListener('DOMContentLoaded', () => {
+      // Проверяем доступность кошелька
+      checkWalletAvailability();
+      
+      // Запрашиваем баланс при запуске
+      requestBalance();
+      
+      // Назначаем обработчики кнопок
+      balanceBtn.addEventListener('click', requestBalance);
+      sendBtn.addEventListener('click', sendPayment);
+      
+      // Обновляем статус при изменении размера окна (для десктоп-версий)
+      tg.onEvent('viewportChanged', checkWalletAvailability);
+    });
+  </script>
+</body>
+</html>
