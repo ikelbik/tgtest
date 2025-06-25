@@ -911,7 +911,7 @@ function unloadScreen() {
 			triggerLightning(x, y) {
 				const points = [];
 				const segments = 15;
-				const maxDeviation = 70;
+				const maxDeviation = 170;
     
 				points.push(new Phaser.Math.Vector2(x, 0));
     
@@ -934,7 +934,7 @@ function unloadScreen() {
 					blendMode: 'ADD',
 					lifespan: { min: 100, max: 300 },
 					quantity: 3,
-					scale: { start: 1.2, end: 0 },
+					scale: { start: 1.9, end: 0 },
 					alpha: { start: 0.6, end: 0.0 },
 					advance: 0,
 					emitZone: {
