@@ -441,7 +441,7 @@ function unloadScreen() {
 			
 			createMultiCoin(n){
 				this.mSound.play();
-				const randomX = Phaser.Math.Between(-this.cameras.main.width/5.5, this.cameras.main.width/5.5);
+				const randomX = Phaser.Math.Between(-this.cameras.main.width/3.5, this.cameras.main.width/3.5);
 				const x= this.cameras.main.centerX + randomX;
 				this.triggerLightning(x, this.cameras.main.centerY + this.baseYOffset);
 				for (let i = 1; i <= n; i++) {	
@@ -553,8 +553,8 @@ function unloadScreen() {
 			
 				
             createNewCoin(x,y) {
-                const randomX = Phaser.Math.Between(-5, 5);
-                const randomZOffset = Phaser.Math.FloatBetween(-0.01, 0.01);
+                const randomX = Phaser.Math.Between(-50*this.scale, 50*this.scale);
+                const randomZOffset = Phaser.Math.FloatBetween(-0.02, 0.02);
                 this.currentYOffset = this.baseYOffset - 150*randomZOffset;
                 
                 const startY = this.cameras.main.centerY - 300;
@@ -573,7 +573,6 @@ function unloadScreen() {
 
 				coin.z += 1+randomZOffset;
 				//coin.curentScale = coin.curentScale/coin.z;
-				coin.curentScale = coin.curentScale;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(200);
 				
@@ -638,6 +637,7 @@ function unloadScreen() {
 							//console.log(coin.velocityY);
                             coin.isJumping = true;
 							this.get_up_coin();
+							coin.modelRotation.y -= coin.velocityX/17;
 							coin.cshdw.setVisible(true); 
 							coin.isAppogey = false;
                             coin.isHolding = false;
