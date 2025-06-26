@@ -74,7 +74,8 @@ html, body, #game-container {
 		document.body.style.margin = '0';
 	
 function preloadScreen() {
-    const preloader = document.getElementById('preloader');
+    tgc_btn.MainButton.hide();
+	const preloader = document.getElementById('preloader');
     if (preloader) {
         preloader.style.display = 'flex';
     }
@@ -1013,7 +1014,8 @@ function unloadScreen() {
 };
        // const game = new Phaser.Game(config);
 
-if (navigator.userAgent.toLowerCase().includes('android')) {
+/*
+	   if (navigator.userAgent.toLowerCase().includes('android')) {
   document.body.style.height = `${window.innerHeight}px`;
   setTimeout(() => {
     document.body.style.height = `${window.innerHeight}px`;
@@ -1025,6 +1027,7 @@ if (navigator.userAgent.toLowerCase().includes('android')) {
 		}, 300);
         window.addEventListener('resize', () => game.resize());
         document.addEventListener('contextmenu', e => e.preventDefault());
+*/		
     </script>
 </body>
 </html>
