@@ -740,9 +740,10 @@ function unloadScreen() {
                         coin.curentScale = 2.5 / coin.z;
 						if (coin.z < (coin.z > this.b1))
 						coin.setScale(coin.curentScale);
-						coin.setScale(this.customDecreasing(coin.z));
+						//coin.setScale(this.customDecreasing(coin.z));
 						if (coin.cshdw){
-							coin.cshdw.setScale(this.customDecreasing(coin.z), 2.5*Math.sin(coin.modelRotation.x)/coin.z);
+							//coin.cshdw.setScale(this.customDecreasing(coin.z), 2.5*Math.sin(coin.modelRotation.x)/coin.z);
+							coin.cshdw.setScale(2.8 / coin.z, 2.5*Math.sin(coin.modelRotation.x)/coin.z);
 						}
 						
 						//console.log(coin.z, ' ', this.customDecreasing(coin.z));
