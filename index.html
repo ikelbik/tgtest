@@ -754,7 +754,7 @@ function unloadScreen() {
 							coin.cshdw.x = coin.x-5;	
 						}
                         coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
-						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.1){
+						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.05){
 							coin.setBlendMode(Phaser.BlendModes.ADD);
                         }
                         // Корректировка вращения с dt
