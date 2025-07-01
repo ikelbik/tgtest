@@ -753,7 +753,7 @@ function unloadScreen() {
 							coin.cshdw.x = coin.x-5;	
 						}
                         //coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
-						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.1){
+						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.2 || Math.abs(coin.modelRotation.x - 3*Math.PI/2) < 0.2){
 							coin.setTint(0xFFFFFF); // Белый оттенок
 							coin.setBlendMode(Phaser.BlendModes.ADD); // Режим смешивания
 							coin.setAlpha(1.5)						
