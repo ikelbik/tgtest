@@ -216,7 +216,7 @@ function unloadScreen() {
 				this.d_x = 0;		
 				this.yoffset = 0;	
 				this.ZforSpin;
-			}
+				}
 
 			
 			adjustBrightness(factor) {
@@ -574,7 +574,6 @@ function unloadScreen() {
 				const coin = new Coin(this, targetX, startY);		
                 coin.addVerticesFromObj('coin', 0.1).panZ(7).modelRotation.x += 0.6;
 				
-				
 				coin.yoffset = y;
 
 				coin.z += 0.9+randomZOffset;
@@ -754,9 +753,15 @@ function unloadScreen() {
 							coin.cshdw.x = coin.x-5;	
 						}
                         coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
-						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.05){
-							coin.setBlendMode(Phaser.BlendModes.ADD);
-                        }
+						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.1){
+							coin.setTint(0xFFFFFF); // Белый оттенок
+							coin.setBlendMode(Phaser.BlendModes.ADD); // Режим смешивания
+							coin.setAlpha(1.5)						
+                        } else {
+							coin.setTint(0xFFFFFF); // Белый оттенок
+							coin.setBlendMode(Phaser.BlendModes.NORMAL); // Режим смешивания
+							coin.setAlpha(1)						
+						}
                         // Корректировка вращения с dt
                         //coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
                         coin.modelRotation.x += coin.currentSpin*(coin.ZforSpin/0.1) * dt;
