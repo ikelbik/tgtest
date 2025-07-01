@@ -577,7 +577,7 @@ function unloadScreen() {
 				
 				coin.yoffset = y;
 
-				coin.z += 1+randomZOffset;
+				coin.z += 0.9+randomZOffset;
 				//coin.curentScale = coin.curentScale/coin.z;
                 coin.setScale(coin.curentScale);
 				coin.setDepth(200);
@@ -727,6 +727,7 @@ function unloadScreen() {
                         // Применяем dt для независимости от FPS
                         coin.velocityY += this.gravity * dt;
                         coin.z += coin.velocityZ * dt;
+						//console.log(coin.z);
                         coin.y += coin.velocityY * dt;
 						if (coin.cshdw){
 							coin.cshdw.y -= -coin.s_y_o +  this.perspective * (coin.z - 1) - coin.yoffset;
@@ -753,7 +754,9 @@ function unloadScreen() {
 							coin.cshdw.x = coin.x-5;	
 						}
                         coin.adjustBrightness(Math.pow(coin.curentScale/ 2.5, 0.25));
-                        
+						if (Math.abs(coin.modelRotation.x - Math.PI/2) < 0.1){
+							coin.setBlendMode(Phaser.BlendModes.ADD);
+                        }
                         // Корректировка вращения с dt
                         //coin.currentSpin = Phaser.Math.Clamp(coin.currentSpin * (1 - 0.02 * dt), 0, 10);
                         coin.modelRotation.x += coin.currentSpin*(coin.ZforSpin/0.1) * dt;
