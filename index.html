@@ -1,66 +1,255 @@
 <!DOCTYPE html>
-<html>
+<html lang="ru">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Space MiniApp</title>
+    <title>TON Space Demo</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/sdk@latest/dist/tonconnect-sdk.min.js"></script>
     <style>
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
-            text-align: center;
-            padding: 20px;
-            background-color: #f0f8ff;
-            max-width: 400px;
-            margin: 0 auto;
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         }
-        button {
-            background: #0088cc;
+        
+        body {
+            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #1a2a6c);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .container {
+            max-width: 100%;
+            width: 100%;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .card {
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+        }
+        
+        h1 {
+            font-size: 28px;
+            margin-bottom: 5px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .subtitle {
+            font-size: 16px;
+            opacity: 0.9;
+            margin-bottom: 25px;
+        }
+        
+        .state-content {
+            min-height: 200px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        .loader {
+            display: inline-block;
+            width: 50px;
+            height: 50px;
+            border: 5px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s ease-in-out infinite;
+            margin: 20px auto;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        .status-icon {
+            font-size: 64px;
+            margin: 20px 0;
+        }
+        
+        .wallet-info {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            padding: 15px;
+            margin: 20px 0;
+            text-align: left;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .info-row:last-child {
+            border-bottom: none;
+        }
+        
+        .button {
+            background: linear-gradient(to right, #0077ff, #00ccff);
             color: white;
             border: none;
-            padding: 12px 24px;
-            border-radius: 8px;
-            font-size: 16px;
-            margin: 10px;
+            padding: 16px 24px;
+            border-radius: 12px;
+            font-size: 18px;
+            font-weight: 600;
+            margin: 10px 0;
             cursor: pointer;
-            width: 90%;
+            width: 100%;
+            box-shadow: 0 4px 15px rgba(0, 119, 255, 0.4);
+            transition: all 0.3s ease;
         }
+        
+        .button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(0, 119, 255, 0.6);
+        }
+        
+        .button:active {
+            transform: translateY(0);
+        }
+        
+        .button-disabled {
+            background: linear-gradient(to right, #555, #777);
+            cursor: not-allowed;
+            opacity: 0.7;
+        }
+        
+        .button-secondary {
+            background: transparent;
+            border: 2px solid #00ccff;
+        }
+        
+        .error-details {
+            background: rgba(255, 50, 50, 0.2);
+            border-radius: 10px;
+            padding: 15px;
+            margin: 15px 0;
+            font-size: 14px;
+            text-align: left;
+            max-height: 150px;
+            overflow-y: auto;
+        }
+        
         .hidden {
             display: none;
         }
-        #wallet-info {
-            background: white;
-            padding: 15px;
-            border-radius: 12px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        
+        .steps {
+            text-align: left;
             margin: 20px 0;
-            word-break: break-all;
+            padding-left: 20px;
+        }
+        
+        .steps li {
+            margin-bottom: 10px;
+            line-height: 1.5;
+        }
+        
+        footer {
+            margin-top: auto;
+            padding: 20px;
+            font-size: 14px;
+            opacity: 0.7;
+        }
+        
+        @media (max-width: 480px) {
+            .card {
+                padding: 15px;
+            }
+            
+            h1 {
+                font-size: 24px;
+            }
+            
+            .button {
+                padding: 14px 20px;
+                font-size: 16px;
+            }
         }
     </style>
 </head>
 <body>
-    <h1>TON Space Demo</h1>
-    
-    <div id="init-state">
-        <p>Подключение к TON Space...</p>
-    </div>
-    
-    <div id="connected-state" class="hidden">
-        <div id="wallet-info">
-            <p>✅ Кошелек подключен</p>
-            <p><strong>Адрес:</strong> <span id="wallet-address"></span></p>
-            <p><strong>Баланс:</strong> <span id="wallet-balance">...</span></p>
+    <div class="container">
+        <div class="card">
+            <h1>TON Space Demo</h1>
+            <div class="subtitle">Подключение к кошельку Telegram</div>
+            
+            <!-- Состояние инициализации -->
+            <div id="init-state" class="state-content">
+                <div class="loader"></div>
+                <p>Подключение к TON Space...</p>
+            </div>
+            
+            <!-- Состояние подключено -->
+            <div id="connected-state" class="state-content hidden">
+                <div class="status-icon">✅</div>
+                <p>Кошелек успешно подключен!</p>
+                
+                <div class="wallet-info">
+                    <div class="info-row">
+                        <span>Статус:</span>
+                        <span id="wallet-status">Подключен</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Адрес:</span>
+                        <span id="wallet-address">Загрузка...</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Баланс:</span>
+                        <span id="wallet-balance">Загрузка...</span>
+                    </div>
+                    <div class="info-row">
+                        <span>Сеть:</span>
+                        <span id="wallet-network">Тестовая</span>
+                    </div>
+                </div>
+                
+                <button id="send-trx" class="button">Отправить 0.001 TON</button>
+                <button id="disconnect" class="button button-secondary">Отключить кошелек</button>
+            </div>
+            
+            <!-- Состояние ошибки -->
+            <div id="error-state" class="state-content hidden">
+                <div class="status-icon">❌</div>
+                <p>Ошибка подключения</p>
+                
+                <div class="error-details">
+                    <p id="error-message">Причина неизвестна</p>
+                </div>
+                
+                <button id="retry-connect" class="button">Повторить попытку</button>
+                
+                <div class="steps">
+                    <p>Попробуйте:</p>
+                    <ol>
+                        <li>Обновите Telegram до последней версии</li>
+                        <li>Откройте @wallet и активируйте кошелёк</li>
+                        <li>Проверьте интернет-соединение</li>
+                        <li>Перезапустите приложение</li>
+                    </ol>
+                </div>
+            </div>
         </div>
-        
-        <button id="send-trx">Отправить 0.001 TON</button>
-        <button id="disconnect">Отключить кошелек</button>
     </div>
     
-    <div id="error-state" class="hidden">
-        <p>❌ Ошибка подключения</p>
-        <button id="retry-connect">Повторить попытку</button>
-    </div>
+    <footer>
+        TON Space Demo App • Для работы требуется TON кошелек
+    </footer>
 
     <script src="app.js"></script>
 </body>
