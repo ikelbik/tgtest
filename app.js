@@ -11,6 +11,10 @@ const sendTrxBtn = document.getElementById('send-trx');
 const disconnectBtn = document.getElementById('disconnect');
 const retryBtn = document.getElementById('retry-connect');
 
+// Глобальные переменные
+let connector = null;
+let currentNetwork = 'testnet'; // 'mainnet' для продакшена
+
 // Проверка окружения Telegram
 if (!window.Telegram || !window.Telegram.WebApp) {
     showError("Приложение запущено вне Telegram");
@@ -20,10 +24,6 @@ if (!window.Telegram || !window.Telegram.WebApp) {
     Telegram.WebApp.expand();
     Telegram.WebApp.MainButton.hide();
 }
-
-// Глобальные переменные
-let connector;
-let currentNetwork = 'testnet'; // 'mainnet' для продакшена
 
 // Инициализация приложения
 async function initApp() {
@@ -53,26 +53,45 @@ async function initApp() {
     }
 }
 
-// Проверка поддержки TON Space
+// Проверка поддержки TON Space (исправленная)
 function isTonSpaceSupported() {
     try {
-        return window.ton && 
-               window.Telegram.WebApp.isVersionAtLeast('6.9') && 
-               typeof window.ton.isTonWallet === 'function' && 
-               window.ton.isTonWallet();
+        // Основная проверка для последних версий Telegram
+        if (window.Telegram.WebApp.isVersionAtLeast('7.2') && window.ton && window.ton.isTonWallet) {
+            return true;
+        }
+        
+        // Альтернативная проверка для версий 6.9+
+        if (window.Telegram.WebApp.isVersionAtLeast('6.9') && window.ton) {
+            return true;
+        }
+        
+        return false;
     } catch (e) {
+        console.error('TON Space check error:', e);
         return false;
     }
 }
 
-// Подключение кошелька
+// Подключение кошелька (исправленная)
 async function connectWallet() {
     try {
         showState('init');
         walletStatus.textContent = 'Подключение...';
         
-        // Если уже подключен
-        if (connector.connected) {
+        // Если коннектор не инициализирован
+        if (!connector) {
+            throw new Error('Коннектор не инициализирован');
+        }
+        
+        // Проверка, подключен ли уже кошелек
+        const isConnected = await new Promise((resolve) => {
+            setTimeout(() => {
+                resolve(connector.connected);
+            }, 100);
+        });
+        
+        if (isConnected) {
             handleWalletStatusChange(connector.wallet);
             return;
         }
@@ -92,11 +111,6 @@ async function connectWallet() {
             });
         }
         
-        // Проверка успешного подключения
-        if (!connector.connected) {
-            throw new Error('Не удалось подключиться к кошельку');
-        }
-        
     } catch (error) {
         console.error('Connection error:', error);
         showError(`Ошибка подключения: ${error.message}`);
@@ -105,13 +119,17 @@ async function connectWallet() {
 
 // Обработчик изменения статуса кошелька
 function handleWalletStatusChange(wallet) {
-    if (wallet) {
-        showConnected(wallet);
-        updateWalletInfo(wallet);
-    } else {
-        walletStatus.textContent = 'Отключен';
-        showState('init');
-        connectWallet();
+    try {
+        if (wallet) {
+            showConnected(wallet);
+            updateWalletInfo(wallet);
+        } else {
+            walletStatus.textContent = 'Отключен';
+            showState('init');
+            connectWallet();
+        }
+    } catch (e) {
+        showError(`Status error: ${e.message}`);
     }
 }
 
@@ -139,10 +157,14 @@ async function updateWalletInfo(wallet) {
 // Получение баланса кошелька
 async function fetchWalletBalance(address) {
     try {
-        const response = await fetch(
-            `https://toncenter.com/api/v2/getAddressBalance?address=${address}`, 
-            { headers: { 'Accept': 'application/json' } }
-        );
+        // Используем разные API для testnet/mainnet
+        const apiUrl = currentNetwork === 'testnet' 
+            ? `https://testnet.tonapi.io/v1/account/getInfo?account=${address}`
+            : `https://tonapi.io/v1/account/getInfo?account=${address}`;
+        
+        const response = await fetch(apiUrl, {
+            headers: { 'Accept': 'application/json' }
+        });
         
         const data = await response.json();
         
@@ -151,7 +173,8 @@ async function fetchWalletBalance(address) {
         }
         
         // Конвертация из нанотоннов
-        const balanceTon = (parseInt(data.result) / 1000000000).toFixed(3);
+        const balanceNano = data.balance || 0;
+        const balanceTon = (parseInt(balanceNano) / 1000000000).toFixed(3);
         return balanceTon;
     } catch (error) {
         throw new Error(`Не удалось получить баланс: ${error.message}`);
@@ -169,8 +192,10 @@ async function sendTestTransaction() {
             validUntil: Math.floor(Date.now() / 1000) + 600, // 10 мин
             messages: [
                 {
-                    // Тестовый адрес (замените на свой)
-                    address: "EQDrjaMAd1uyVtVb1hECV3a23Kk7N9VepA5l5Ld4R__zqI2z",
+                    // Тестовый адрес для testnet
+                    address: currentNetwork === 'testnet' 
+                        ? "EQDrjaMAd1uyVtVb1hECV3a23Kk7N9VepA5l5Ld4R__zqI2z"
+                        : "EQAkAJmZk7B2dRZZ1sNnN7rQe6Jj7G2tUqyTZ7L3qS1vXW0", // mainnet
                     amount: "1000000" // 0.001 TON (в нанотонах)
                 }
             ]
@@ -221,7 +246,10 @@ function showError(message) {
 function setupEventListeners() {
     sendTrxBtn.addEventListener('click', sendTestTransaction);
     disconnectBtn.addEventListener('click', disconnectWallet);
-    retryBtn.addEventListener('click', () => connectWallet());
+    retryBtn.addEventListener('click', () => {
+        showState('init');
+        connectWallet();
+    });
 }
 
 // Запуск приложения
