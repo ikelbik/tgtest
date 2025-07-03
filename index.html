@@ -204,10 +204,76 @@
     </div>
 
     <script>
-        // Инициализация Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Проверяем доступность Telegram WebApp
+        let tg = null;
+        
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.ready();
+            tg.expand();
+        } else {
+            // Создаем заглушку для тестирования вне Telegram
+            tg = {
+                ready: () => {},
+                expand: () => {},
+                colorScheme: 'light',
+                themeParams: {},
+                initData: '',
+                initDataUnsafe: {},
+                version: '6.0',
+                platform: 'unknown',
+                isExpanded: false,
+                viewportHeight: window.innerHeight,
+                viewportStableHeight: window.innerHeight,
+                headerColor: '#ffffff',
+                backgroundColor: '#ffffff',
+                isClosingConfirmationEnabled: false,
+                BackButton: {
+                    isVisible: false,
+                    onClick: () => {},
+                    show: () => {},
+                    hide: () => {}
+                },
+                MainButton: {
+                    text: 'CONTINUE',
+                    color: '#2481cc',
+                    textColor: '#ffffff',
+                    isVisible: false,
+                    isProgressVisible: false,
+                    isActive: true,
+                    onClick: () => {},
+                    show: () => {},
+                    hide: () => {},
+                    enable: () => {},
+                    disable: () => {},
+                    showProgress: () => {},
+                    hideProgress: () => {},
+                    setText: () => {},
+                    setParams: () => {}
+                },
+                HapticFeedback: {
+                    impactOccurred: () => {},
+                    notificationOccurred: () => {},
+                    selectionChanged: () => {}
+                },
+                showPopup: () => {},
+                showAlert: () => {},
+                showConfirm: () => {},
+                showScanQrPopup: () => {},
+                closeScanQrPopup: () => {},
+                readTextFromClipboard: () => Promise.resolve(''),
+                requestWriteAccess: () => Promise.resolve(false),
+                requestContact: () => Promise.resolve(false),
+                close: () => {},
+                sendData: () => {},
+                switchInlineQuery: () => {},
+                openLink: () => {},
+                openTelegramLink: () => {},
+                openInvoice: () => {}
+            };
+            
+            console.log('Telegram WebApp API недоступен, используется заглушка');
+        }
 
         // Элементы DOM
         const connectBtn = document.getElementById('connect-btn');
@@ -247,6 +313,9 @@
         async function getTonRate() {
             try {
                 const response = await fetch('https://tonapi.io/v2/rates?tokens=ton&currencies=usd');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
                 const data = await response.json();
                 return data.rates.TON.prices.USD || 2.5;
             } catch (error) {
@@ -286,17 +355,19 @@
         async function initTonConnect() {
             try {
                 console.log('Инициализация TON Connect...');
+                console.log('Telegram WebApp доступен:', !!window.Telegram?.WebApp);
                 
                 // Проверяем доступность TonConnect
                 if (typeof TonConnectUI === 'undefined') {
                     console.error('TonConnectUI не найден');
                     showStatus('TON Connect библиотека не загружена', 'error');
+                    initFallbackMode();
                     return;
                 }
 
                 // Создаем простой манифест
                 const manifest = {
-                    "url": window.location.origin || "https://ton-wallet-app.com",
+                    "url": window.location.origin || "https://ton-wallet-demo.app",
                     "name": "TON Wallet Balance",
                     "iconUrl": "data:image/svg+xml;base64," + btoa(`
                         <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
@@ -317,7 +388,7 @@
                     manifestUrl: manifestUrl,
                     buttonRootId: null,
                     uiPreferences: {
-                        theme: tg.colorScheme || 'LIGHT'
+                        theme: (tg && tg.colorScheme) || 'LIGHT'
                     }
                 });
 
@@ -356,6 +427,10 @@
         // Упрощенный режим без TON Connect
         function initFallbackMode() {
             console.log('Инициализация упрощенного режима');
+            
+            // Убираем обработчики событий если они есть
+            connectBtn.removeEventListener('click', connectWallet);
+            
             connectBtn.addEventListener('click', () => {
                 if (wallet) {
                     // Простое отключение
@@ -369,6 +444,8 @@
                     showDemoWallet();
                 }
             });
+            
+            showStatus('Демо режим активирован', 'success');
         }
 
         // Демонстрационный кошелек
@@ -519,25 +596,30 @@
         }
 
         // Обработчики событий
-        connectBtn.addEventListener('click', () => {
-            if (wallet) {
-                disconnectWallet();
-            } else {
-                connectWallet();
-            }
-        });
+        function setupEventHandlers() {
+            connectBtn.addEventListener('click', () => {
+                if (wallet) {
+                    disconnectWallet();
+                } else {
+                    connectWallet();
+                }
+            });
 
-        refreshBtn.addEventListener('click', updateBalance);
+            refreshBtn.addEventListener('click', updateBalance);
+        }
 
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', async () => {
             console.log('DOM загружен, инициализация...');
+            console.log('Telegram WebApp статус:', !!window.Telegram?.WebApp);
             
-            // Настройка темы Telegram
-            if (tg.colorScheme === 'dark') {
+            // Настройка темы
+            if (tg && tg.colorScheme === 'dark') {
                 document.body.style.setProperty('--tg-theme-bg-color', '#1c1c1e');
                 document.body.style.setProperty('--tg-theme-text-color', '#ffffff');
                 document.body.style.setProperty('--tg-theme-secondary-bg-color', '#2c2c2e');
+                document.body.style.setProperty('--tg-theme-section-separator-color', '#3a3a3c');
+                document.body.style.setProperty('--tg-theme-hint-color', '#8e8e93');
             }
             
             // Получаем курс TON
@@ -545,8 +627,11 @@
                 tonRate = await getTonRate();
                 console.log('Курс TON получен:', tonRate);
             } catch (error) {
-                console.log('Используем базовый курс TON');
+                console.log('Используем базовый курс TON:', tonRate);
             }
+            
+            // Настраиваем обработчики событий
+            setupEventHandlers();
             
             // Даем время на загрузку библиотек
             setTimeout(() => {
