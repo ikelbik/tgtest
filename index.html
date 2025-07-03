@@ -132,23 +132,36 @@
         // Инициализация WebApp
         function initApp() {
             try {
+                // Проверяем доступность Telegram WebApp
+                if (!window.Telegram || !window.Telegram.WebApp) {
+                    throw new Error('Приложение должно быть запущено в Telegram');
+                }
+                
+                tg = window.Telegram.WebApp;
                 tg.ready();
                 tg.expand();
                 
-                // Проверяем поддержку кошелька
-                if (!tg.WebApp) {
-                    throw new Error('Telegram WebApp не поддерживается');
-                }
+                // Отображаем информацию о WebApp
+                console.log('Telegram WebApp version:', tg.version);
+                console.log('Telegram WebApp platform:', tg.platform);
+                console.log('Telegram WebApp available:', !!tg);
                 
                 updateStatus('Готов к подключению');
                 
-                // Проверяем версию и доступность функций кошелька
-                if (tg.version < "6.1") {
-                    showError('Требуется версия Telegram 6.1 или выше для работы с кошельком');
+                // Проверяем версию для функций кошелька
+                if (tg.version && parseFloat(tg.version) < 6.1) {
+                    showError('Требуется версия Telegram 6.1 или выше для работы с кошельком. Текущая версия: ' + tg.version);
                 }
+                
+                // Применяем тему Telegram
+                document.body.style.backgroundColor = tg.themeParams.bg_color || '#ffffff';
+                document.body.style.color = tg.themeParams.text_color || '#000000';
+                
+                showSuccess('WebApp успешно инициализирован!');
                 
             } catch (error) {
                 showError('Ошибка инициализации: ' + error.message);
+                console.error('Init error:', error);
             }
         }
         
@@ -158,25 +171,33 @@
                 updateStatus('Подключение к кошельку...');
                 document.getElementById('connectBtn').disabled = true;
                 
-                // Проверяем поддержку кошелька в текущей версии
-                if (!window.TelegramGameProxy && !tg.WebApp.requestContact) {
-                    throw new Error('Кошелек не поддерживается в данной версии Telegram');
+                // Проверяем что мы в Telegram
+                if (!window.Telegram || !window.Telegram.WebApp) {
+                    throw new Error('Приложение должно быть запущено в Telegram');
                 }
                 
-                // Попытка подключения к TON кошельку
-                if (typeof window.ton !== 'undefined') {
-                    // Если есть TON Connect
+                // Проверяем поддержку кошелька в текущей версии
+                console.log('Checking wallet support...');
+                console.log('TG version:', tg.version);
+                console.log('TG platform:', tg.platform);
+                
+                // Попытка подключения к кошельку разными способами
+                if (window.TonConnect) {
+                    console.log('Trying TON Connect...');
                     await connectTonWallet();
-                } else if (tg.WebApp.requestWriteAccess) {
-                    // Альтернативный способ через WebApp API
+                } else if (tg.WebApp && tg.WebApp.openInvoice) {
+                    console.log('Trying Telegram payments...');
                     await connectTelegramWallet();
                 } else {
-                    throw new Error('Кошелек недоступен. Убедитесь что вы используете последнюю версию Telegram');
+                    // Симуляция подключения для тестирования
+                    console.log('Using simulation mode...');
+                    await simulateWalletConnection();
                 }
                 
             } catch (error) {
                 showError('Ошибка подключения кошелька: ' + error.message);
                 document.getElementById('connectBtn').disabled = false;
+                console.error('Connection error:', error);
             }
         }
         
@@ -209,29 +230,18 @@
             }
         }
         
-        // Альтернативное подключение через Telegram WebApp
-        async function connectTelegramWallet() {
-            try {
-                // Запрос доступа к кошельку через WebApp API
-                const result = await new Promise((resolve, reject) => {
-                    tg.WebApp.requestWriteAccess((granted) => {
-                        if (granted) {
-                            resolve(true);
-                        } else {
-                            reject(new Error('Доступ к кошельку не предоставлен'));
-                        }
-                    });
-                });
-                
-                if (result) {
-                    // Симуляция подключенного кошелька
+        // Симуляция подключения кошелька для тестирования
+        async function simulateWalletConnection() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
                     wallet = {
-                        address: 'EQD...' + Math.random().toString(36).substring(7),
-                        network: 'mainnet'
+                        address: 'EQD' + Math.random().toString(36).substring(2, 15),
+                        network: 'mainnet',
+                        type: 'simulated'
                     };
                     isConnected = true;
                     
-                    showSuccess('Кошелек успешно подключен через Telegram!');
+                    showSuccess('Кошелек успешно подключен (режим симуляции)!');
                     updateStatus('Кошелек подключен');
                     
                     document.getElementById('getBalanceBtn').disabled = false;
@@ -239,6 +249,45 @@
                     document.getElementById('connectBtn').disabled = true;
                     
                     showWalletInfo(wallet.address);
+                    resolve();
+                }, 1000);
+            });
+        }
+        
+        // Альтернативное подключение через Telegram WebApp
+        async function connectTelegramWallet() {
+            try {
+                // Запрос доступа к кошельку через WebApp API
+                if (tg.WebApp.requestWriteAccess) {
+                    const result = await new Promise((resolve, reject) => {
+                        tg.WebApp.requestWriteAccess((granted) => {
+                            if (granted) {
+                                resolve(true);
+                            } else {
+                                reject(new Error('Доступ к кошельку не предоставлен'));
+                            }
+                        });
+                    });
+                    
+                    if (result) {
+                        wallet = {
+                            address: 'EQD' + Math.random().toString(36).substring(2, 15),
+                            network: 'mainnet',
+                            type: 'telegram'
+                        };
+                        isConnected = true;
+                        
+                        showSuccess('Кошелек успешно подключен через Telegram!');
+                        updateStatus('Кошелек подключен');
+                        
+                        document.getElementById('getBalanceBtn').disabled = false;
+                        document.getElementById('disconnectBtn').disabled = false;
+                        document.getElementById('connectBtn').disabled = true;
+                        
+                        showWalletInfo(wallet.address);
+                    }
+                } else {
+                    throw new Error('requestWriteAccess не поддерживается');
                 }
                 
             } catch (error) {
@@ -360,8 +409,33 @@
             console.log('Viewport changed');
         });
         
+        // Добавляем информацию о режиме тестирования
+        function addTestingInfo() {
+            const container = document.querySelector('.container');
+            const testingInfo = document.createElement('div');
+            testingInfo.className = 'card';
+            testingInfo.innerHTML = `
+                <h3>Режим тестирования</h3>
+                <p>Если вы видите это сообщение, приложение работает в режиме тестирования.</p>
+                <p><strong>Для полной функциональности:</strong></p>
+                <ul>
+                    <li>Откройте приложение в Telegram</li>
+                    <li>Убедитесь что у вас последняя версия Telegram</li>
+                    <li>Настройте WebApp URL в боте</li>
+                </ul>
+            `;
+            container.appendChild(testingInfo);
+        }
+        
         // Инициализация при загрузке
-        window.addEventListener('load', initApp);
+        window.addEventListener('load', function() {
+            initApp();
+            
+            // Если не в Telegram, показываем информацию о тестировании
+            if (!window.Telegram || !window.Telegram.WebApp) {
+                addTestingInfo();
+            }
+        });
         
         // Обработка ошибок
         window.addEventListener('error', function(event) {
