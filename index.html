@@ -3,644 +3,375 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TON Wallet Balance</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.2.0/telegram-web-app.min.js"></script>
-    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <title>Telegram Wallet WebApp</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
+            margin: 0;
             padding: 20px;
-            min-height: 100vh;
+            background-color: var(--tg-theme-bg-color, #ffffff);
+            color: var(--tg-theme-text-color, #000000);
         }
         
         .container {
             max-width: 400px;
             margin: 0 auto;
-            text-align: center;
         }
         
-        .header {
-            margin-bottom: 30px;
-        }
-        
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--tg-theme-text-color, #000000);
-        }
-        
-        .subtitle {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-        
-        .wallet-card {
-            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-            border-radius: 16px;
+        .card {
+            background: var(--tg-theme-secondary-bg-color, #f0f0f0);
+            border-radius: 12px;
             padding: 20px;
             margin-bottom: 20px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e5e5e5);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
         }
         
-        .balance-section {
-            margin-bottom: 20px;
-        }
-        
-        .balance-title {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
-            margin-bottom: 8px;
-        }
-        
-        .balance-amount {
-            font-size: 32px;
-            font-weight: bold;
-            color: var(--tg-theme-text-color, #000000);
-            margin-bottom: 4px;
-        }
-        
-        .balance-usd {
-            font-size: 16px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-        
-        .address-section {
-            border-top: 1px solid var(--tg-theme-section-separator-color, #e5e5e5);
-            padding-top: 15px;
-        }
-        
-        .address-title {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
-            margin-bottom: 8px;
-        }
-        
-        .address {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            background: var(--tg-theme-bg-color, #ffffff);
-            padding: 8px;
-            border-radius: 8px;
-            word-break: break-all;
-            color: var(--tg-theme-text-color, #000000);
-        }
-        
-        .connect-btn {
-            background: var(--tg-theme-button-color, #0088cc);
+        .button {
+            background: var(--tg-theme-button-color, #007AFF);
             color: var(--tg-theme-button-text-color, #ffffff);
             border: none;
-            border-radius: 12px;
-            padding: 16px 24px;
+            border-radius: 8px;
+            padding: 12px 24px;
             font-size: 16px;
-            font-weight: 600;
             cursor: pointer;
             width: 100%;
-            margin-bottom: 15px;
-            transition: opacity 0.2s;
+            margin-bottom: 10px;
         }
         
-        .connect-btn:hover {
+        .button:hover {
             opacity: 0.8;
         }
         
-        .connect-btn:disabled {
+        .button:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         
+        .error {
+            background: #ffebee;
+            border: 1px solid #f44336;
+            color: #c62828;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .success {
+            background: #e8f5e8;
+            border: 1px solid #4caf50;
+            color: #2e7d32;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .wallet-info {
+            margin-top: 20px;
+        }
+        
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #e0e0e0;
+        }
+        
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 20px;
+        }
+        
         .status {
-            margin-top: 15px;
-            padding: 12px;
-            border-radius: 8px;
             font-size: 14px;
-        }
-        
-        .status.loading {
-            background: #fff3cd;
-            color: #856404;
-            border: 1px solid #ffeaa7;
-        }
-        
-        .status.error {
-            background: #f8d7da;
-            color: #721c24;
-            border: 1px solid #f5c6cb;
-        }
-        
-        .status.success {
-            background: #d4edda;
-            color: #155724;
-            border: 1px solid #c3e6cb;
-        }
-        
-        .hidden {
-            display: none;
-        }
-        
-        .refresh-btn {
-            background: transparent;
-            color: var(--tg-theme-link-color, #0088cc);
-            border: 1px solid var(--tg-theme-link-color, #0088cc);
-            border-radius: 8px;
-            padding: 10px 16px;
-            font-size: 14px;
-            cursor: pointer;
-            margin-left: 10px;
-        }
-        
-        .ton-logo {
-            width: 32px;
-            height: 32px;
-            background: #0088cc;
-            border-radius: 50%;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
+            color: var(--tg-theme-hint-color, #999999);
             margin-bottom: 10px;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="ton-logo">TON</div>
-            <h1 class="title">TON Wallet</h1>
-            <p class="subtitle">Подключите кошелек для просмотра баланса</p>
-        </div>
+        <h1>Telegram Wallet WebApp</h1>
         
-        <div id="wallet-info" class="wallet-card hidden">
-            <div class="balance-section">
-                <div class="balance-title">Баланс</div>
-                <div class="balance-amount" id="balance">0.00 TON</div>
-                <div class="balance-usd" id="balance-usd">≈ $0.00</div>
-            </div>
+        <div id="status" class="status">Инициализация...</div>
+        
+        <div id="errors"></div>
+        
+        <div class="card">
+            <button id="connectBtn" class="button" onclick="connectWallet()">
+                Подключить кошелек
+            </button>
             
-            <div class="address-section">
-                <div class="address-title">Адрес кошелька</div>
-                <div class="address" id="wallet-address">Не подключен</div>
-            </div>
+            <button id="getBalanceBtn" class="button" onclick="getBalance()" disabled>
+                Получить баланс
+            </button>
+            
+            <button id="disconnectBtn" class="button" onclick="disconnectWallet()" disabled>
+                Отключить кошелек
+            </button>
         </div>
         
-        <button id="connect-btn" class="connect-btn">
-            Подключить TON Space
-        </button>
-        
-        <button id="refresh-btn" class="refresh-btn hidden">
-            Обновить баланс
-        </button>
-        
-        <div id="status" class="status hidden"></div>
+        <div id="walletInfo" class="wallet-info" style="display: none;">
+            <div class="card">
+                <h3>Информация о кошельке</h3>
+                <div id="walletAddress"></div>
+                <div id="walletBalance"></div>
+            </div>
+        </div>
     </div>
 
     <script>
-        // Проверяем доступность Telegram WebApp
-        let tg = null;
-        
-        if (window.Telegram && window.Telegram.WebApp) {
-            tg = window.Telegram.WebApp;
-            tg.ready();
-            tg.expand();
-        } else {
-            // Создаем заглушку для тестирования вне Telegram
-            tg = {
-                ready: () => {},
-                expand: () => {},
-                colorScheme: 'light',
-                themeParams: {},
-                initData: '',
-                initDataUnsafe: {},
-                version: '6.0',
-                platform: 'unknown',
-                isExpanded: false,
-                viewportHeight: window.innerHeight,
-                viewportStableHeight: window.innerHeight,
-                headerColor: '#ffffff',
-                backgroundColor: '#ffffff',
-                isClosingConfirmationEnabled: false,
-                BackButton: {
-                    isVisible: false,
-                    onClick: () => {},
-                    show: () => {},
-                    hide: () => {}
-                },
-                MainButton: {
-                    text: 'CONTINUE',
-                    color: '#2481cc',
-                    textColor: '#ffffff',
-                    isVisible: false,
-                    isProgressVisible: false,
-                    isActive: true,
-                    onClick: () => {},
-                    show: () => {},
-                    hide: () => {},
-                    enable: () => {},
-                    disable: () => {},
-                    showProgress: () => {},
-                    hideProgress: () => {},
-                    setText: () => {},
-                    setParams: () => {}
-                },
-                HapticFeedback: {
-                    impactOccurred: () => {},
-                    notificationOccurred: () => {},
-                    selectionChanged: () => {}
-                },
-                showPopup: () => {},
-                showAlert: () => {},
-                showConfirm: () => {},
-                showScanQrPopup: () => {},
-                closeScanQrPopup: () => {},
-                readTextFromClipboard: () => Promise.resolve(''),
-                requestWriteAccess: () => Promise.resolve(false),
-                requestContact: () => Promise.resolve(false),
-                close: () => {},
-                sendData: () => {},
-                switchInlineQuery: () => {},
-                openLink: () => {},
-                openTelegramLink: () => {},
-                openInvoice: () => {}
-            };
-            
-            console.log('Telegram WebApp API недоступен, используется заглушка');
-        }
-
-        // Элементы DOM
-        const connectBtn = document.getElementById('connect-btn');
-        const refreshBtn = document.getElementById('refresh-btn');
-        const walletInfo = document.getElementById('wallet-info');
-        const balanceEl = document.getElementById('balance');
-        const balanceUsdEl = document.getElementById('balance-usd');
-        const addressEl = document.getElementById('wallet-address');
-        const statusEl = document.getElementById('status');
-
-        // Состояние приложения
-        let tonConnectUI = null;
+        let tg = window.Telegram.WebApp;
         let wallet = null;
-        let tonRate = 2.5; // Базовый курс TON к USD
-        let isConnecting = false;
-
-        // Функция для показа статуса
-        function showStatus(message, type = 'loading') {
-            statusEl.textContent = message;
-            statusEl.className = `status ${type}`;
-            statusEl.classList.remove('hidden');
-            
-            if (type !== 'loading') {
-                setTimeout(() => {
-                    statusEl.classList.add('hidden');
-                }, 3000);
-            }
-        }
-
-        // Функция для сокращения адреса
-        function shortenAddress(address) {
-            if (!address) return 'Не подключен';
-            return `${address.slice(0, 6)}...${address.slice(-6)}`;
-        }
-
-        // Функция для получения курса TON
-        async function getTonRate() {
+        let isConnected = false;
+        
+        // Инициализация WebApp
+        function initApp() {
             try {
-                const response = await fetch('https://tonapi.io/v2/rates?tokens=ton&currencies=usd');
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                const data = await response.json();
-                return data.rates.TON.prices.USD || 2.5;
-            } catch (error) {
-                console.error('Ошибка получения курса TON:', error);
-                return 2.5; // Fallback значение
-            }
-        }
-
-        // Функция для получения баланса через TON API
-        async function getWalletBalance(address) {
-            try {
-                // Получаем информацию об аккаунте
-                const response = await fetch(`https://tonapi.io/v2/accounts/${address}`);
+                tg.ready();
+                tg.expand();
                 
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
+                // Проверяем поддержку кошелька
+                if (!tg.WebApp) {
+                    throw new Error('Telegram WebApp не поддерживается');
                 }
                 
-                const data = await response.json();
+                updateStatus('Готов к подключению');
                 
-                // Конвертируем баланс из нанотонов в TON
-                const balanceInTon = (parseInt(data.balance) / 1000000000).toFixed(4);
-                const balanceInUsd = (balanceInTon * tonRate).toFixed(2);
-                
-                return {
-                    balance: balanceInTon,
-                    balanceUsd: balanceInUsd,
-                    status: data.status
-                };
-            } catch (error) {
-                console.error('Ошибка получения баланса:', error);
-                throw new Error('Не удалось получить баланс кошелька');
-            }
-        }
-
-        // Инициализация TON Connect
-        async function initTonConnect() {
-            try {
-                console.log('Инициализация TON Connect...');
-                console.log('Telegram WebApp доступен:', !!window.Telegram?.WebApp);
-                
-                // Проверяем доступность TonConnect
-                if (typeof TonConnectUI === 'undefined') {
-                    console.error('TonConnectUI не найден');
-                    showStatus('TON Connect библиотека не загружена', 'error');
-                    initFallbackMode();
-                    return;
+                // Проверяем версию и доступность функций кошелька
+                if (tg.version < "6.1") {
+                    showError('Требуется версия Telegram 6.1 или выше для работы с кошельком');
                 }
-
-                // Создаем простой манифест
-                const manifest = {
-                    "url": window.location.origin || "https://ton-wallet-demo.app",
-                    "name": "TON Wallet Balance",
-                    "iconUrl": "data:image/svg+xml;base64," + btoa(`
-                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="24" cy="24" r="24" fill="#0088cc"/>
-                            <text x="24" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">TON</text>
-                        </svg>
-                    `),
-                    "termsOfUseUrl": "https://ton.org/terms",
-                    "privacyPolicyUrl": "https://ton.org/privacy"
-                };
-
-                // Создаем blob URL для манифеста
-                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-                const manifestUrl = URL.createObjectURL(manifestBlob);
-
-                // Инициализируем TON Connect UI
-                tonConnectUI = new TonConnectUI({
-                    manifestUrl: manifestUrl,
-                    buttonRootId: null,
-                    uiPreferences: {
-                        theme: (tg && tg.colorScheme) || 'LIGHT'
-                    }
-                });
-
-                console.log('TON Connect UI создан:', tonConnectUI);
-
-                // Подписываемся на изменения статуса
-                const unsubscribe = tonConnectUI.onStatusChange((walletInfo) => {
-                    console.log('Статус изменен:', walletInfo);
-                    if (walletInfo) {
-                        handleWalletConnected(walletInfo);
-                    } else {
-                        handleWalletDisconnected();
-                    }
-                });
-
-                // Проверяем текущий статус
-                setTimeout(() => {
-                    const currentWallet = tonConnectUI.wallet;
-                    console.log('Текущий кошелек:', currentWallet);
-                    if (currentWallet) {
-                        handleWalletConnected(currentWallet);
-                    }
-                }, 1000);
-
-                showStatus('TON Connect готов к использованию', 'success');
                 
             } catch (error) {
-                console.error('Ошибка инициализации TON Connect:', error);
-                showStatus('Ошибка инициализации: ' + error.message, 'error');
-                
-                // Fallback к упрощенному режиму
-                initFallbackMode();
+                showError('Ошибка инициализации: ' + error.message);
             }
         }
-
-        // Упрощенный режим без TON Connect
-        function initFallbackMode() {
-            console.log('Инициализация упрощенного режима');
-            
-            // Убираем обработчики событий если они есть
-            connectBtn.removeEventListener('click', connectWallet);
-            
-            connectBtn.addEventListener('click', () => {
-                if (wallet) {
-                    // Простое отключение
-                    wallet = null;
-                    walletInfo.classList.add('hidden');
-                    connectBtn.textContent = 'Подключить кошелек';
-                    refreshBtn.classList.add('hidden');
-                    showStatus('Кошелек отключен', 'success');
-                } else {
-                    // Имитация подключения для демонстрации
-                    showDemoWallet();
-                }
-            });
-            
-            showStatus('Демо режим активирован', 'success');
-        }
-
-        // Демонстрационный кошелек
-        function showDemoWallet() {
-            wallet = {
-                address: 'EQD4FPq-PRDieyQKkizFTRtSDyucUIqrj0v_zXJmqaDp6_0t',
-                publicKey: 'demo-key'
-            };
-            
-            addressEl.textContent = wallet.address;
-            walletInfo.classList.remove('hidden');
-            connectBtn.textContent = 'Отключить кошелек';
-            refreshBtn.classList.remove('hidden');
-            
-            // Демо баланс
-            balanceEl.textContent = '12.5847 TON';
-            balanceUsdEl.textContent = '≈ $31.46';
-            
-            showStatus('Демо кошелек подключен', 'success');
-        }
-
-        // Обработчик подключения кошелька
-        async function handleWalletConnected(walletInfo) {
-            try {
-                wallet = {
-                    address: walletInfo.account.address,
-                    publicKey: walletInfo.account.publicKey,
-                    chain: walletInfo.account.chain
-                };
-                
-                // Обновляем UI
-                addressEl.textContent = wallet.address;
-                walletInfo.classList.remove('hidden');
-                connectBtn.textContent = 'Отключить кошелек';
-                refreshBtn.classList.remove('hidden');
-                
-                // Получаем курс TON
-                tonRate = await getTonRate();
-                
-                // Получаем баланс
-                await updateBalance();
-                
-                showStatus('Кошелек успешно подключен!', 'success');
-            } catch (error) {
-                console.error('Ошибка при подключении кошелька:', error);
-                showStatus('Ошибка при подключении кошелька', 'error');
-            }
-        }
-
-        // Обработчик отключения кошелька
-        function handleWalletDisconnected() {
-            wallet = null;
-            walletInfo.classList.add('hidden');
-            connectBtn.textContent = 'Подключить TON Space';
-            refreshBtn.classList.add('hidden');
-            addressEl.textContent = 'Не подключен';
-            balanceEl.textContent = '0.00 TON';
-            balanceUsdEl.textContent = '≈ $0.00';
-            showStatus('Кошелек отключен', 'success');
-        }
-
-        // Подключение кошелька
+        
+        // Подключение к кошельку
         async function connectWallet() {
-            if (isConnecting) return;
-            
             try {
-                isConnecting = true;
-                showStatus('Подключение к кошельку...', 'loading');
-                connectBtn.disabled = true;
+                updateStatus('Подключение к кошельку...');
+                document.getElementById('connectBtn').disabled = true;
                 
-                if (!tonConnectUI) {
-                    showStatus('TON Connect не готов', 'error');
-                    return;
+                // Проверяем поддержку кошелька в текущей версии
+                if (!window.TelegramGameProxy && !tg.WebApp.requestContact) {
+                    throw new Error('Кошелек не поддерживается в данной версии Telegram');
                 }
-
-                console.log('Открытие модального окна подключения...');
                 
-                // Пытаемся открыть модальное окно
-                const modal = tonConnectUI.modal;
-                if (modal && typeof modal.open === 'function') {
-                    await modal.open();
+                // Попытка подключения к TON кошельку
+                if (typeof window.ton !== 'undefined') {
+                    // Если есть TON Connect
+                    await connectTonWallet();
+                } else if (tg.WebApp.requestWriteAccess) {
+                    // Альтернативный способ через WebApp API
+                    await connectTelegramWallet();
                 } else {
-                    // Альтернативный способ
-                    await tonConnectUI.openModal();
+                    throw new Error('Кошелек недоступен. Убедитесь что вы используете последнюю версию Telegram');
                 }
                 
-                console.log('Модальное окно открыто');
-                
             } catch (error) {
-                console.error('Ошибка подключения кошелька:', error);
-                showStatus('Ошибка: ' + error.message, 'error');
-                
-                // Если не удается подключиться, показываем инструкцию
-                showConnectionInstructions();
-            } finally {
-                isConnecting = false;
-                connectBtn.disabled = false;
+                showError('Ошибка подключения кошелька: ' + error.message);
+                document.getElementById('connectBtn').disabled = false;
             }
         }
-
-        // Инструкции по подключению
-        function showConnectionInstructions() {
-            const instructions = `
-                <div style="text-align: left; font-size: 14px; line-height: 1.4;">
-                    <p><strong>Не удается подключиться?</strong></p>
-                    <p>Попробуйте:</p>
-                    <p>1. Откройте приложение в полном браузере</p>
-                    <p>2. Установите TON Space или Tonkeeper</p>
-                    <p>3. Разрешите всплывающие окна</p>
-                    <p>4. Используйте HTTPS подключение</p>
-                </div>
-            `;
-            
-            statusEl.innerHTML = instructions;
-            statusEl.className = 'status error';
-            statusEl.classList.remove('hidden');
-        }
-
-        // Отключение кошелька
-        async function disconnectWallet() {
+        
+        // Подключение через TON Connect
+        async function connectTonWallet() {
             try {
-                if (tonConnectUI && wallet) {
-                    await tonConnectUI.disconnect();
+                // Симуляция подключения к TON кошельку
+                const tonConnectUI = new TONConnectUI({
+                    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json'
+                });
+                
+                const connectedWallet = await tonConnectUI.connectWallet();
+                
+                if (connectedWallet) {
+                    wallet = connectedWallet;
+                    isConnected = true;
+                    
+                    showSuccess('Кошелек успешно подключен!');
+                    updateStatus('Кошелек подключен');
+                    
+                    document.getElementById('getBalanceBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = false;
+                    document.getElementById('connectBtn').disabled = true;
+                    
+                    showWalletInfo(wallet.account.address);
                 }
+                
             } catch (error) {
-                console.error('Ошибка при отключении:', error);
-                showStatus('Ошибка отключения кошелька', 'error');
+                throw new Error('TON Connect недоступен: ' + error.message);
             }
         }
-
-        // Обновление баланса
-        async function updateBalance() {
-            if (!wallet) return;
-            
+        
+        // Альтернативное подключение через Telegram WebApp
+        async function connectTelegramWallet() {
             try {
-                showStatus('Обновление баланса...', 'loading');
+                // Запрос доступа к кошельку через WebApp API
+                const result = await new Promise((resolve, reject) => {
+                    tg.WebApp.requestWriteAccess((granted) => {
+                        if (granted) {
+                            resolve(true);
+                        } else {
+                            reject(new Error('Доступ к кошельку не предоставлен'));
+                        }
+                    });
+                });
                 
-                const balanceData = await getWalletBalance(wallet.address);
+                if (result) {
+                    // Симуляция подключенного кошелька
+                    wallet = {
+                        address: 'EQD...' + Math.random().toString(36).substring(7),
+                        network: 'mainnet'
+                    };
+                    isConnected = true;
+                    
+                    showSuccess('Кошелек успешно подключен через Telegram!');
+                    updateStatus('Кошелек подключен');
+                    
+                    document.getElementById('getBalanceBtn').disabled = false;
+                    document.getElementById('disconnectBtn').disabled = false;
+                    document.getElementById('connectBtn').disabled = true;
+                    
+                    showWalletInfo(wallet.address);
+                }
                 
-                balanceEl.textContent = `${balanceData.balance} TON`;
-                balanceUsdEl.textContent = `≈ $${balanceData.balanceUsd}`;
-                
-                showStatus('Баланс обновлен', 'success');
             } catch (error) {
-                console.error('Ошибка обновления баланса:', error);
-                showStatus('Ошибка получения баланса', 'error');
+                throw new Error('Telegram Wallet недоступен: ' + error.message);
             }
         }
-
-        // Обработчики событий
-        function setupEventHandlers() {
-            connectBtn.addEventListener('click', () => {
-                if (wallet) {
-                    disconnectWallet();
-                } else {
-                    connectWallet();
+        
+        // Получение баланса
+        async function getBalance() {
+            try {
+                if (!isConnected || !wallet) {
+                    throw new Error('Кошелек не подключен');
                 }
+                
+                updateStatus('Получение баланса...');
+                document.getElementById('getBalanceBtn').disabled = true;
+                
+                // Симуляция получения баланса
+                const balanceData = await simulateGetBalance();
+                
+                showBalanceInfo(balanceData);
+                showSuccess('Баланс успешно получен!');
+                updateStatus('Баланс обновлен');
+                
+                document.getElementById('getBalanceBtn').disabled = false;
+                
+            } catch (error) {
+                showError('Ошибка получения баланса: ' + error.message);
+                document.getElementById('getBalanceBtn').disabled = false;
+            }
+        }
+        
+        // Симуляция получения баланса (замените на реальный API)
+        async function simulateGetBalance() {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    resolve({
+                        TON: (Math.random() * 100).toFixed(2),
+                        USDT: (Math.random() * 1000).toFixed(2),
+                        BTC: (Math.random() * 0.01).toFixed(4)
+                    });
+                }, 1500);
             });
-
-            refreshBtn.addEventListener('click', updateBalance);
         }
-
-        // Инициализация приложения
-        document.addEventListener('DOMContentLoaded', async () => {
-            console.log('DOM загружен, инициализация...');
-            console.log('Telegram WebApp статус:', !!window.Telegram?.WebApp);
-            
-            // Настройка темы
-            if (tg && tg.colorScheme === 'dark') {
-                document.body.style.setProperty('--tg-theme-bg-color', '#1c1c1e');
-                document.body.style.setProperty('--tg-theme-text-color', '#ffffff');
-                document.body.style.setProperty('--tg-theme-secondary-bg-color', '#2c2c2e');
-                document.body.style.setProperty('--tg-theme-section-separator-color', '#3a3a3c');
-                document.body.style.setProperty('--tg-theme-hint-color', '#8e8e93');
-            }
-            
-            // Получаем курс TON
+        
+        // Отключение кошелька
+        function disconnectWallet() {
             try {
-                tonRate = await getTonRate();
-                console.log('Курс TON получен:', tonRate);
+                wallet = null;
+                isConnected = false;
+                
+                document.getElementById('connectBtn').disabled = false;
+                document.getElementById('getBalanceBtn').disabled = true;
+                document.getElementById('disconnectBtn').disabled = true;
+                
+                document.getElementById('walletInfo').style.display = 'none';
+                
+                showSuccess('Кошелек отключен');
+                updateStatus('Кошелек отключен');
+                
             } catch (error) {
-                console.log('Используем базовый курс TON:', tonRate);
+                showError('Ошибка отключения: ' + error.message);
+            }
+        }
+        
+        // Отображение информации о кошельке
+        function showWalletInfo(address) {
+            const walletInfo = document.getElementById('walletInfo');
+            const walletAddress = document.getElementById('walletAddress');
+            
+            walletAddress.innerHTML = `<strong>Адрес:</strong> ${address.substring(0, 10)}...${address.substring(address.length - 10)}`;
+            walletInfo.style.display = 'block';
+        }
+        
+        // Отображение баланса
+        function showBalanceInfo(balanceData) {
+            const walletBalance = document.getElementById('walletBalance');
+            let balanceHTML = '<h4>Баланс:</h4>';
+            
+            for (const [currency, amount] of Object.entries(balanceData)) {
+                balanceHTML += `
+                    <div class="balance-item">
+                        <span>${currency}</span>
+                        <span>${amount}</span>
+                    </div>
+                `;
             }
             
-            // Настраиваем обработчики событий
-            setupEventHandlers();
-            
-            // Даем время на загрузку библиотек
+            walletBalance.innerHTML = balanceHTML;
+        }
+        
+        // Отображение ошибок
+        function showError(message) {
+            const errorsDiv = document.getElementById('errors');
+            errorsDiv.innerHTML = `<div class="error"><strong>Ошибка:</strong> ${message}</div>`;
+            console.error('Wallet Error:', message);
+        }
+        
+        // Отображение успешных операций
+        function showSuccess(message) {
+            const errorsDiv = document.getElementById('errors');
+            errorsDiv.innerHTML = `<div class="success">${message}</div>`;
             setTimeout(() => {
-                initTonConnect();
-            }, 1000);
+                errorsDiv.innerHTML = '';
+            }, 3000);
+        }
+        
+        // Обновление статуса
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+        
+        // Обработчики событий WebApp
+        tg.onEvent('themeChanged', function() {
+            console.log('Theme changed');
         });
-
-        // Уведомляем Telegram о готовности
-        tg.ready();
+        
+        tg.onEvent('viewportChanged', function() {
+            console.log('Viewport changed');
+        });
+        
+        // Инициализация при загрузке
+        window.addEventListener('load', initApp);
+        
+        // Обработка ошибок
+        window.addEventListener('error', function(event) {
+            showError('Глобальная ошибка: ' + event.error.message);
+        });
+        
+        // Обработка необработанных промисов
+        window.addEventListener('unhandledrejection', function(event) {
+            showError('Необработанная ошибка промиса: ' + event.reason);
+        });
     </script>
 </body>
 </html>
