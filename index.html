@@ -145,17 +145,17 @@
                 // Отображаем подробную информацию о WebApp
                 console.log('Telegram WebApp version:', tg.version);
                 console.log('Telegram WebApp platform:', tg.platform);
-                console.log('Telegram WebApp available methods:', Object.keys(tg.WebApp || {}));
+                console.log('Telegram WebApp available methods:', Object.keys(tg));
                 console.log('Telegram WebApp initData:', tg.initData);
                 console.log('Telegram WebApp initDataUnsafe:', tg.initDataUnsafe);
                 
                 // Проверяем доступные методы кошелька
                 const walletMethods = [];
-                if (tg.WebApp.requestWriteAccess) walletMethods.push('requestWriteAccess');
-                if (tg.WebApp.openInvoice) walletMethods.push('openInvoice');
-                if (tg.WebApp.showPopup) walletMethods.push('showPopup');
-                if (tg.WebApp.requestContact) walletMethods.push('requestContact');
-                if (tg.WebApp.requestLocation) walletMethods.push('requestLocation');
+                if (tg.requestWriteAccess) walletMethods.push('requestWriteAccess');
+                if (tg.openInvoice) walletMethods.push('openInvoice');
+                if (tg.showPopup) walletMethods.push('showPopup');
+                if (tg.requestContact) walletMethods.push('requestContact');
+                if (tg.requestLocation) walletMethods.push('requestLocation');
                 
                 console.log('Available wallet methods:', walletMethods);
                 
@@ -195,16 +195,16 @@
                 console.log('Checking wallet support...');
                 console.log('TG version:', tg.version);
                 console.log('TG platform:', tg.platform);
-                console.log('TG WebApp methods:', Object.keys(tg.WebApp || {}));
+                console.log('TG WebApp methods:', Object.keys(tg));
                 
                 // Попытка подключения к TON кошельку (приоритет)
                 if (typeof window.TonConnectUI !== 'undefined') {
                     console.log('Trying TON Connect...');
                     await connectTonWallet();
-                } else if (tg.WebApp.requestWriteAccess) {
+                } else if (tg.requestWriteAccess) {
                     console.log('Trying requestWriteAccess...');
                     await connectTelegramWallet();
-                } else if (tg.WebApp.showPopup) {
+                } else if (tg.showPopup) {
                     console.log('Trying showPopup method...');
                     await connectWithPopup();
                 } else {
@@ -299,7 +299,7 @@
                 console.log('Attempting Telegram wallet connection...');
                 
                 // Проверяем доступность requestWriteAccess
-                if (!tg.WebApp.requestWriteAccess) {
+                if (!tg.requestWriteAccess) {
                     throw new Error('requestWriteAccess не поддерживается в данной версии');
                 }
                 
@@ -307,7 +307,7 @@
                 
                 // Запрос доступа к кошельку
                 const accessGranted = await new Promise((resolve) => {
-                    tg.WebApp.requestWriteAccess((granted) => {
+                    tg.requestWriteAccess((granted) => {
                         console.log('Write access granted:', granted);
                         resolve(granted);
                     });
@@ -315,8 +315,8 @@
                 
                 if (accessGranted) {
                     // Пытаемся получить данные пользователя
-                    if (tg.WebApp.initDataUnsafe && tg.WebApp.initDataUnsafe.user) {
-                        const user = tg.WebApp.initDataUnsafe.user;
+                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
+                        const user = tg.initDataUnsafe.user;
                         console.log('User data:', user);
                         
                         wallet = {
@@ -354,7 +354,7 @@
                 console.log('Attempting connection via popup...');
                 
                 const result = await new Promise((resolve) => {
-                    tg.WebApp.showPopup({
+                    tg.showPopup({
                         title: 'Подключение кошелька',
                         message: 'Подключить криптокошелек к приложению?',
                         buttons: [
