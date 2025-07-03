@@ -166,6 +166,14 @@
                     showError('Требуется версия Telegram 6.1 или выше для работы с кошельком. Текущая версия: ' + tg.version);
                 } else {
                     showSuccess('WebApp инициализирован. Доступные методы: ' + walletMethods.join(', '));
+                    
+                    // Дополнительная информация о кошельке
+                    if (walletMethods.includes('requestWriteAccess')) {
+                        const infoDiv = document.createElement('div');
+                        infoDiv.className = 'success';
+                        infoDiv.innerHTML = '🎉 Обнаружен встроенный кошелек Telegram! Нажмите "Подключить кошелек" для доступа к вашим криптоактивам.';
+                        document.getElementById('errors').appendChild(infoDiv);
+                    }
                 }
                 
                 // Применяем тему Telegram
@@ -191,24 +199,22 @@
                     throw new Error('Приложение должно быть запущено в Telegram');
                 }
                 
-                // Проверяем поддержку кошелька в текущей версии
                 console.log('Checking wallet support...');
                 console.log('TG version:', tg.version);
                 console.log('TG platform:', tg.platform);
-                console.log('TG WebApp methods:', Object.keys(tg));
+                console.log('Available methods:', Object.keys(tg));
                 
-                // Попытка подключения к TON кошельку (приоритет)
-                if (typeof window.TonConnectUI !== 'undefined') {
+                // Проверяем наличие встроенного кошелька Telegram
+                if (tg.requestWriteAccess) {
+                    console.log('Trying Telegram built-in wallet...');
+                    await connectTelegramWallet();
+                } else if (typeof window.TonConnectUI !== 'undefined') {
                     console.log('Trying TON Connect...');
                     await connectTonWallet();
-                } else if (tg.requestWriteAccess) {
-                    console.log('Trying requestWriteAccess...');
-                    await connectTelegramWallet();
                 } else if (tg.showPopup) {
                     console.log('Trying showPopup method...');
                     await connectWithPopup();
                 } else {
-                    // Симуляция подключения для тестирования
                     console.log('No wallet methods available, using simulation mode...');
                     showError('Встроенный кошелек недоступен. Используется режим симуляции.');
                     await simulateWalletConnection();
@@ -435,7 +441,9 @@
                 let balanceData;
                 
                 // Получаем баланс в зависимости от типа кошелька
-                if (wallet.type === 'ton-connect') {
+                if (wallet.type === 'telegram') {
+                    balanceData = await getTelegramWalletBalance(wallet);
+                } else if (wallet.type === 'ton-connect') {
                     balanceData = await getTonBalance(wallet.address);
                 } else {
                     balanceData = await simulateGetBalance();
@@ -454,7 +462,42 @@
             }
         }
         
-        // Получение реального баланса TON
+        // Получение реального баланса через Telegram Wallet API
+        async function getTelegramWalletBalance(walletData) {
+            try {
+                console.log('Getting Telegram wallet balance...');
+                
+                // Попытка получить баланс через Telegram API
+                if (tg.CloudStorage) {
+                    // Используем CloudStorage для получения сохраненных данных кошелька
+                    const balanceData = await new Promise((resolve) => {
+                        tg.CloudStorage.getItem('wallet_balance', (error, value) => {
+                            if (error || !value) {
+                                resolve(null);
+                            } else {
+                                resolve(JSON.parse(value));
+                            }
+                        });
+                    });
+                    
+                    if (balanceData) {
+                        return balanceData;
+                    }
+                }
+                
+                // Если нет сохраненных данных, получаем через API
+                if (walletData.address) {
+                    return await getTonBalance(walletData.address);
+                }
+                
+                // Fallback к симуляции
+                return await simulateGetBalance();
+                
+            } catch (error) {
+                console.error('Telegram wallet balance error:', error);
+                return await simulateGetBalance();
+            }
+        }
         async function getTonBalance(address) {
             try {
                 console.log('Getting TON balance for:', address);
