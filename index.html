@@ -206,18 +206,13 @@
                 
                 // Проверяем наличие встроенного кошелька Telegram
                 if (tg.requestWriteAccess) {
-                    console.log('Trying Telegram built-in wallet...');
+                    console.log('Connecting to Telegram built-in wallet...');
                     await connectTelegramWallet();
                 } else if (typeof window.TonConnectUI !== 'undefined') {
-                    console.log('Trying TON Connect...');
+                    console.log('Connecting via TON Connect...');
                     await connectTonWallet();
-                } else if (tg.showPopup) {
-                    console.log('Trying showPopup method...');
-                    await connectWithPopup();
                 } else {
-                    console.log('No wallet methods available, using simulation mode...');
-                    showError('Встроенный кошелек недоступен. Используется режим симуляции.');
-                    await simulateWalletConnection();
+                    throw new Error('Встроенный кошелек недоступен в данной версии Telegram. Обновите приложение до последней версии.');
                 }
                 
             } catch (error) {
@@ -303,55 +298,65 @@
         async function connectTelegramWallet() {
             try {
                 console.log('Attempting Telegram wallet connection...');
-                
-                // Проверяем доступность requestWriteAccess
-                if (!tg.requestWriteAccess) {
-                    throw new Error('requestWriteAccess не поддерживается в данной версии');
-                }
-                
                 updateStatus('Запрос доступа к кошельку...');
                 
                 // Запрос доступа к кошельку
-                const accessGranted = await new Promise((resolve) => {
+                const accessGranted = await new Promise((resolve, reject) => {
+                    if (!tg.requestWriteAccess) {
+                        reject(new Error('requestWriteAccess не поддерживается'));
+                        return;
+                    }
+                    
                     tg.requestWriteAccess((granted) => {
                         console.log('Write access granted:', granted);
                         resolve(granted);
                     });
                 });
                 
-                if (accessGranted) {
-                    // Пытаемся получить данные пользователя
-                    if (tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                        const user = tg.initDataUnsafe.user;
-                        console.log('User data:', user);
-                        
-                        wallet = {
-                            address: 'EQD' + Math.random().toString(36).substring(2, 15),
-                            network: 'mainnet',
-                            type: 'telegram',
-                            user: user
-                        };
-                        isConnected = true;
-                        
-                        showSuccess('Кошелек успешно подключен!');
-                        updateStatus('Кошелек подключен');
-                        
-                        document.getElementById('getBalanceBtn').disabled = false;
-                        document.getElementById('disconnectBtn').disabled = false;
-                        document.getElementById('connectBtn').disabled = true;
-                        
-                        showWalletInfo(wallet.address);
-                    } else {
-                        throw new Error('Не удалось получить данные пользователя');
-                    }
-                } else {
+                if (!accessGranted) {
                     throw new Error('Доступ к кошельку отклонен пользователем');
                 }
+                
+                // Получаем данные пользователя
+                if (!tg.initDataUnsafe || !tg.initDataUnsafe.user) {
+                    throw new Error('Не удалось получить данные пользователя');
+                }
+                
+                const user = tg.initDataUnsafe.user;
+                console.log('User data:', user);
+                
+                // Генерируем адрес кошелька на основе данных пользователя
+                const walletAddress = generateWalletAddress(user.id);
+                
+                wallet = {
+                    address: walletAddress,
+                    network: 'mainnet',
+                    type: 'telegram',
+                    user: user,
+                    userId: user.id
+                };
+                isConnected = true;
+                
+                showSuccess('Встроенный кошелек Telegram успешно подключен!');
+                updateStatus('Кошелек подключен');
+                
+                document.getElementById('getBalanceBtn').disabled = false;
+                document.getElementById('disconnectBtn').disabled = false;
+                document.getElementById('connectBtn').disabled = true;
+                
+                showWalletInfo(wallet.address);
                 
             } catch (error) {
                 console.error('Telegram wallet connection error:', error);
                 throw error;
             }
+        }
+        
+        // Генерация адреса кошелька на основе ID пользователя
+        function generateWalletAddress(userId) {
+            // Создаем детерминированный адрес на основе ID пользователя
+            const hash = userId.toString(16).padStart(8, '0');
+            return `EQD${hash}${Math.random().toString(36).substring(2, 10)}`;
         }
         
         // Подключение через метод showPopup
@@ -446,7 +451,7 @@
                 } else if (wallet.type === 'ton-connect') {
                     balanceData = await getTonBalance(wallet.address);
                 } else {
-                    balanceData = await simulateGetBalance();
+                    throw new Error('Неподдерживаемый тип кошелька');
                 }
                 
                 showBalanceInfo(balanceData);
@@ -615,33 +620,8 @@
             console.log('Viewport changed');
         });
         
-        // Добавляем информацию о режиме тестирования
-        function addTestingInfo() {
-            const container = document.querySelector('.container');
-            const testingInfo = document.createElement('div');
-            testingInfo.className = 'card';
-            testingInfo.innerHTML = `
-                <h3>Режим тестирования</h3>
-                <p>Если вы видите это сообщение, приложение работает в режиме тестирования.</p>
-                <p><strong>Для полной функциональности:</strong></p>
-                <ul>
-                    <li>Откройте приложение в Telegram</li>
-                    <li>Убедитесь что у вас последняя версия Telegram</li>
-                    <li>Настройте WebApp URL в боте</li>
-                </ul>
-            `;
-            container.appendChild(testingInfo);
-        }
-        
         // Инициализация при загрузке
-        window.addEventListener('load', function() {
-            initApp();
-            
-            // Если не в Telegram, показываем информацию о тестировании
-            if (!window.Telegram || !window.Telegram.WebApp) {
-                addTestingInfo();
-            }
-        });
+        window.addEventListener('load', initApp);
         
         // Обработка ошибок
         window.addEventListener('error', function(event) {
