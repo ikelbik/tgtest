@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>TON Wallet Balance</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/telegram-web-app/6.2.0/telegram-web-app.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/ton-connect-ui/2.0.6/ton-connect-ui.min.js"></script>
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <style>
         * {
             margin: 0;
@@ -221,7 +221,8 @@
         // Состояние приложения
         let tonConnectUI = null;
         let wallet = null;
-        let tonRate = 0; // Курс TON к USD, будет получен с API
+        let tonRate = 2.5; // Базовый курс TON к USD
+        let isConnecting = false;
 
         // Функция для показа статуса
         function showStatus(message, type = 'loading') {
@@ -284,28 +285,47 @@
         // Инициализация TON Connect
         async function initTonConnect() {
             try {
-                // Конфигурация TON Connect
-                const manifestUrl = 'data:application/json,' + encodeURIComponent(JSON.stringify({
-                    "url": window.location.origin,
+                console.log('Инициализация TON Connect...');
+                
+                // Проверяем доступность TonConnect
+                if (typeof TonConnectUI === 'undefined') {
+                    console.error('TonConnectUI не найден');
+                    showStatus('TON Connect библиотека не загружена', 'error');
+                    return;
+                }
+
+                // Создаем простой манифест
+                const manifest = {
+                    "url": window.location.origin || "https://ton-wallet-app.com",
                     "name": "TON Wallet Balance",
                     "iconUrl": "data:image/svg+xml;base64," + btoa(`
-                        <svg width="32" height="32" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-                            <circle cx="16" cy="16" r="16" fill="#0088cc"/>
-                            <text x="16" y="20" text-anchor="middle" fill="white" font-family="Arial" font-size="12" font-weight="bold">TON</text>
+                        <svg width="48" height="48" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <circle cx="24" cy="24" r="24" fill="#0088cc"/>
+                            <text x="24" y="30" text-anchor="middle" fill="white" font-family="Arial" font-size="16" font-weight="bold">TON</text>
                         </svg>
                     `),
                     "termsOfUseUrl": "https://ton.org/terms",
                     "privacyPolicyUrl": "https://ton.org/privacy"
-                }));
+                };
+
+                // Создаем blob URL для манифеста
+                const manifestBlob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+                const manifestUrl = URL.createObjectURL(manifestBlob);
 
                 // Инициализируем TON Connect UI
-                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                tonConnectUI = new TonConnectUI({
                     manifestUrl: manifestUrl,
-                    buttonRootId: null // Используем свою кнопку
+                    buttonRootId: null,
+                    uiPreferences: {
+                        theme: tg.colorScheme || 'LIGHT'
+                    }
                 });
 
-                // Подписываемся на изменения статуса кошелька
-                tonConnectUI.onStatusChange((walletInfo) => {
+                console.log('TON Connect UI создан:', tonConnectUI);
+
+                // Подписываемся на изменения статуса
+                const unsubscribe = tonConnectUI.onStatusChange((walletInfo) => {
+                    console.log('Статус изменен:', walletInfo);
                     if (walletInfo) {
                         handleWalletConnected(walletInfo);
                     } else {
@@ -313,17 +333,61 @@
                     }
                 });
 
-                // Проверяем, есть ли уже подключенный кошелек
-                const currentWallet = tonConnectUI.wallet;
-                if (currentWallet) {
-                    handleWalletConnected(currentWallet);
-                }
+                // Проверяем текущий статус
+                setTimeout(() => {
+                    const currentWallet = tonConnectUI.wallet;
+                    console.log('Текущий кошелек:', currentWallet);
+                    if (currentWallet) {
+                        handleWalletConnected(currentWallet);
+                    }
+                }, 1000);
 
-                console.log('TON Connect успешно инициализирован');
+                showStatus('TON Connect готов к использованию', 'success');
+                
             } catch (error) {
                 console.error('Ошибка инициализации TON Connect:', error);
-                showStatus('Ошибка инициализации TON Connect', 'error');
+                showStatus('Ошибка инициализации: ' + error.message, 'error');
+                
+                // Fallback к упрощенному режиму
+                initFallbackMode();
             }
+        }
+
+        // Упрощенный режим без TON Connect
+        function initFallbackMode() {
+            console.log('Инициализация упрощенного режима');
+            connectBtn.addEventListener('click', () => {
+                if (wallet) {
+                    // Простое отключение
+                    wallet = null;
+                    walletInfo.classList.add('hidden');
+                    connectBtn.textContent = 'Подключить кошелек';
+                    refreshBtn.classList.add('hidden');
+                    showStatus('Кошелек отключен', 'success');
+                } else {
+                    // Имитация подключения для демонстрации
+                    showDemoWallet();
+                }
+            });
+        }
+
+        // Демонстрационный кошелек
+        function showDemoWallet() {
+            wallet = {
+                address: 'EQD4FPq-PRDieyQKkizFTRtSDyucUIqrj0v_zXJmqaDp6_0t',
+                publicKey: 'demo-key'
+            };
+            
+            addressEl.textContent = wallet.address;
+            walletInfo.classList.remove('hidden');
+            connectBtn.textContent = 'Отключить кошелек';
+            refreshBtn.classList.remove('hidden');
+            
+            // Демо баланс
+            balanceEl.textContent = '12.5847 TON';
+            balanceUsdEl.textContent = '≈ $31.46';
+            
+            showStatus('Демо кошелек подключен', 'success');
         }
 
         // Обработчик подключения кошелька
@@ -368,24 +432,59 @@
 
         // Подключение кошелька
         async function connectWallet() {
+            if (isConnecting) return;
+            
             try {
+                isConnecting = true;
+                showStatus('Подключение к кошельку...', 'loading');
+                connectBtn.disabled = true;
+                
                 if (!tonConnectUI) {
-                    showStatus('TON Connect не инициализирован', 'error');
+                    showStatus('TON Connect не готов', 'error');
                     return;
                 }
 
-                showStatus('Открытие модального окна...', 'loading');
-                connectBtn.disabled = true;
+                console.log('Открытие модального окна подключения...');
                 
-                // Открываем модальное окно для подключения
-                await tonConnectUI.openModal();
+                // Пытаемся открыть модальное окно
+                const modal = tonConnectUI.modal;
+                if (modal && typeof modal.open === 'function') {
+                    await modal.open();
+                } else {
+                    // Альтернативный способ
+                    await tonConnectUI.openModal();
+                }
+                
+                console.log('Модальное окно открыто');
                 
             } catch (error) {
-                console.error('Ошибка при открытии модального окна:', error);
-                showStatus('Ошибка подключения кошелька', 'error');
+                console.error('Ошибка подключения кошелька:', error);
+                showStatus('Ошибка: ' + error.message, 'error');
+                
+                // Если не удается подключиться, показываем инструкцию
+                showConnectionInstructions();
             } finally {
+                isConnecting = false;
                 connectBtn.disabled = false;
             }
+        }
+
+        // Инструкции по подключению
+        function showConnectionInstructions() {
+            const instructions = `
+                <div style="text-align: left; font-size: 14px; line-height: 1.4;">
+                    <p><strong>Не удается подключиться?</strong></p>
+                    <p>Попробуйте:</p>
+                    <p>1. Откройте приложение в полном браузере</p>
+                    <p>2. Установите TON Space или Tonkeeper</p>
+                    <p>3. Разрешите всплывающие окна</p>
+                    <p>4. Используйте HTTPS подключение</p>
+                </div>
+            `;
+            
+            statusEl.innerHTML = instructions;
+            statusEl.className = 'status error';
+            statusEl.classList.remove('hidden');
         }
 
         // Отключение кошелька
@@ -432,11 +531,7 @@
 
         // Инициализация приложения
         document.addEventListener('DOMContentLoaded', async () => {
-            // Получаем актуальный курс TON
-            tonRate = await getTonRate();
-            
-            // Инициализируем TON Connect
-            await initTonConnect();
+            console.log('DOM загружен, инициализация...');
             
             // Настройка темы Telegram
             if (tg.colorScheme === 'dark') {
@@ -444,6 +539,19 @@
                 document.body.style.setProperty('--tg-theme-text-color', '#ffffff');
                 document.body.style.setProperty('--tg-theme-secondary-bg-color', '#2c2c2e');
             }
+            
+            // Получаем курс TON
+            try {
+                tonRate = await getTonRate();
+                console.log('Курс TON получен:', tonRate);
+            } catch (error) {
+                console.log('Используем базовый курс TON');
+            }
+            
+            // Даем время на загрузку библиотек
+            setTimeout(() => {
+                initTonConnect();
+            }, 1000);
         });
 
         // Уведомляем Telegram о готовности
