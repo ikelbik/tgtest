@@ -482,6 +482,9 @@
 
                 console.log('Starting to fetch jetton balances for address:', address);
 
+                // Специальный поиск GGCoin
+                await searchForGGCoin(address, balances, seenTokens);
+
                 // 1. TON API v2 (основной источник)
                 try {
                     console.log('Trying TON API v2...');
@@ -496,19 +499,25 @@
                             const rawBalance = jetton.balance || '0';
                             const balance = parseFloat(rawBalance) / Math.pow(10, decimals);
                             const symbol = jetton.jetton.symbol || 'Unknown';
+                            const name = jetton.jetton.name || 'Unknown Token';
                             
-                            console.log(`Found token: ${symbol}, balance: ${balance}, raw: ${rawBalance}`);
+                            console.log(`Found token: ${symbol} (${name}), balance: ${balance}, raw: ${rawBalance}`);
                             
-                            if (!seenTokens.has(symbol)) {
+                            // Специальная проверка для GGCoin
+                            if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg') || name.toLowerCase().includes('coin')) {
+                                console.log('🎯 Potential GGCoin found:', symbol, name);
+                            }
+                            
+                            if (!seenTokens.has(symbol + jetton.jetton.address)) {
                                 balances.push({
                                     symbol: symbol,
-                                    name: jetton.jetton.name || 'Unknown Token',
+                                    name: name,
                                     balance: balance.toFixed(6),
                                     address: jetton.jetton.address,
                                     rawBalance: rawBalance,
                                     decimals: decimals
                                 });
-                                seenTokens.add(symbol);
+                                seenTokens.add(symbol + jetton.jetton.address);
                             }
                         }
                     }
@@ -530,19 +539,25 @@
                             const rawBalance = wallet.balance || '0';
                             const balance = parseFloat(rawBalance) / Math.pow(10, decimals);
                             const symbol = wallet.jetton.symbol || 'JTN';
+                            const name = wallet.jetton.name || 'Jetton Token';
                             
-                            console.log(`TONCenter found token: ${symbol}, balance: ${balance}, raw: ${rawBalance}`);
+                            console.log(`TONCenter found token: ${symbol} (${name}), balance: ${balance}, raw: ${rawBalance}`);
                             
-                            if (!seenTokens.has(symbol)) {
+                            // Специальная проверка для GGCoin
+                            if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg') || name.toLowerCase().includes('coin')) {
+                                console.log('🎯 Potential GGCoin found in TONCenter:', symbol, name);
+                            }
+                            
+                            if (!seenTokens.has(symbol + wallet.jetton.address)) {
                                 balances.push({
                                     symbol: symbol,
-                                    name: wallet.jetton.name || 'Jetton Token',
+                                    name: name,
                                     balance: balance.toFixed(6),
                                     address: wallet.jetton.address,
                                     rawBalance: rawBalance,
                                     decimals: decimals
                                 });
-                                seenTokens.add(symbol);
+                                seenTokens.add(symbol + wallet.jetton.address);
                             }
                         }
                     }
@@ -550,45 +565,75 @@
                     console.log('TONCenter API v3 failed:', tcError);
                 }
 
-                // 3. TONScan API
+                // 3. Поиск через TONKeeper API
                 try {
-                    console.log('Trying TONScan API...');
-                    const tonscanResponse = await fetch(`https://tonscan.org/api/v2/getTokenHolders?address=${address}`);
-                    const tonscanData = await tonscanResponse.json();
+                    console.log('Trying TONKeeper API...');
+                    const tkResponse = await fetch(`https://api.tonkeeper.com/v1/jetton/wallets?owner=${address}`);
+                    const tkData = await tkResponse.json();
                     
-                    console.log('TONScan API response:', tonscanData);
+                    console.log('TONKeeper API response:', tkData);
                     
-                    if (tonscanData.ok && tonscanData.result) {
-                        // Обрабатываем данные TONScan
-                    }
-                } catch (tonscanError) {
-                    console.log('TONScan API failed:', tonscanError);
-                }
-
-                // 4. Получаем все транзакции для поиска Jetton переводов
-                try {
-                    console.log('Analyzing transactions for jetton transfers...');
-                    const txResponse = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${address}&limit=50`);
-                    const txData = await txResponse.json();
-                    
-                    if (txData.ok && txData.result) {
-                        for (const tx of txData.result) {
-                            // Ищем Jetton Transfer операции
-                            if (tx.out_msgs) {
-                                for (const msg of tx.out_msgs) {
-                                    if (msg.msg_data && msg.msg_data.text) {
-                                        // Проверяем на Jetton операции
-                                        console.log('Transaction msg:', msg.msg_data.text);
-                                    }
+                    if (tkData && Array.isArray(tkData)) {
+                        for (const wallet of tkData) {
+                            if (wallet.jetton && wallet.balance) {
+                                const decimals = wallet.jetton.decimals || 9;
+                                const rawBalance = wallet.balance;
+                                const balance = parseFloat(rawBalance) / Math.pow(10, decimals);
+                                const symbol = wallet.jetton.symbol || 'TK';
+                                const name = wallet.jetton.name || 'TONKeeper Token';
+                                
+                                console.log(`TONKeeper found token: ${symbol} (${name}), balance: ${balance}`);
+                                
+                                if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
+                                    console.log('🎯 Potential GGCoin found in TONKeeper:', symbol, name);
+                                }
+                                
+                                if (!seenTokens.has(symbol + wallet.jetton.address)) {
+                                    balances.push({
+                                        symbol: symbol,
+                                        name: name,
+                                        balance: balance.toFixed(6),
+                                        address: wallet.jetton.address,
+                                        rawBalance: rawBalance,
+                                        decimals: decimals
+                                    });
+                                    seenTokens.add(symbol + wallet.jetton.address);
                                 }
                             }
                         }
                     }
-                } catch (txError) {
-                    console.log('Transaction analysis failed:', txError);
+                } catch (tkError) {
+                    console.log('TONKeeper API failed:', tkError);
                 }
 
+                // 4. Прямой поиск GGCoin через известные адреса
+                await searchGGCoinDirectly(address, balances, seenTokens);
+
+                // 5. Анализ транзакций для поиска GGCoin
+                await analyzeTransactionsForGGCoin(address, balances, seenTokens);
+
                 console.log('Final balances:', balances);
+                
+                // Проверяем, найден ли GGCoin
+                const ggcoinFound = balances.find(token => 
+                    token.symbol.toLowerCase().includes('gg') || 
+                    token.name.toLowerCase().includes('gg') ||
+                    token.symbol.toLowerCase() === 'ggcoin'
+                );
+                
+                if (!ggcoinFound) {
+                    console.log('⚠️ GGCoin not found in any API. Adding placeholder...');
+                    balances.push({
+                        symbol: 'GGCOIN',
+                        name: 'GGCoin (Not Found)',
+                        balance: '0.000000',
+                        address: 'unknown',
+                        rawBalance: '0',
+                        decimals: 9,
+                        notFound: true
+                    });
+                }
+                
                 return balances;
             } catch (error) {
                 console.error('Error in getTokenBalances:', error);
@@ -599,6 +644,113 @@
                     balance: '0.00',
                     address: 'native'
                 }];
+            }
+        }
+
+        // Специальная функция поиска GGCoin
+        async function searchForGGCoin(address, balances, seenTokens) {
+            console.log('🔍 Searching specifically for GGCoin...');
+            
+            // Известные возможные адреса GGCoin (добавьте реальные если знаете)
+            const possibleGGCoinAddresses = [
+                // Добавьте известные адреса GGCoin если есть
+            ];
+            
+            for (const jettonAddress of possibleGGCoinAddresses) {
+                try {
+                    const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${jettonAddress}`);
+                    const data = await response.json();
+                    
+                    if (data.ok && parseInt(data.result) > 0) {
+                        console.log('🎯 Found GGCoin at address:', jettonAddress);
+                        // Добавляем найденный токен
+                    }
+                } catch (error) {
+                    console.log('Error checking GGCoin address:', jettonAddress, error);
+                }
+            }
+        }
+
+        // Прямой поиск GGCoin
+        async function searchGGCoinDirectly(address, balances, seenTokens) {
+            console.log('🔍 Direct GGCoin search...');
+            
+            try {
+                // Поиск через DeDust API
+                const dedustResponse = await fetch(`https://api.dedust.io/v2/accounts/${address}/jettons`);
+                const dedustData = await dedustResponse.json();
+                
+                console.log('DeDust API response:', dedustData);
+                
+                if (dedustData && Array.isArray(dedustData)) {
+                    for (const token of dedustData) {
+                        const symbol = token.symbol || '';
+                        const name = token.name || '';
+                        
+                        if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
+                            console.log('🎯 GGCoin found in DeDust:', token);
+                            
+                            if (!seenTokens.has(symbol + token.address)) {
+                                balances.push({
+                                    symbol: symbol,
+                                    name: name,
+                                    balance: (parseFloat(token.balance || '0') / Math.pow(10, token.decimals || 9)).toFixed(6),
+                                    address: token.address,
+                                    rawBalance: token.balance || '0',
+                                    decimals: token.decimals || 9
+                                });
+                                seenTokens.add(symbol + token.address);
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('DeDust API failed:', error);
+            }
+        }
+
+        // Анализ транзакций для поиска GGCoin
+        async function analyzeTransactionsForGGCoin(address, balances, seenTokens) {
+            console.log('🔍 Analyzing transactions for GGCoin...');
+            
+            try {
+                const txResponse = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${address}&limit=100`);
+                const txData = await txResponse.json();
+                
+                if (txData.ok && txData.result) {
+                    for (const tx of txData.result) {
+                        // Анализируем сообщения в транзакциях
+                        if (tx.out_msgs) {
+                            for (const msg of tx.out_msgs) {
+                                if (msg.destination && msg.msg_data) {
+                                    // Ищем Jetton Transfer операции
+                                    if (msg.msg_data.text && msg.msg_data.text.includes('Transfer')) {
+                                        console.log('Found Jetton transfer to:', msg.destination);
+                                        
+                                        // Проверяем, не GGCoin ли это
+                                        try {
+                                            const jettonInfo = await fetch(`https://toncenter.com/api/v2/getTokenData?address=${msg.destination}`);
+                                            const jettonData = await jettonInfo.json();
+                                            
+                                            if (jettonData.ok && jettonData.result) {
+                                                const symbol = jettonData.result.symbol || '';
+                                                const name = jettonData.result.name || '';
+                                                
+                                                if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
+                                                    console.log('🎯 GGCoin found through transaction analysis!', jettonData.result);
+                                                }
+                                            }
+                                        } catch (error) {
+                                            // Игнорируем ошибки отдельных запросов
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Transaction analysis failed:', error);
             }
         }
 
@@ -617,25 +769,55 @@
                 const balanceItem = document.createElement('div');
                 balanceItem.className = 'balance-item';
                 
-                // Показываем ВСЕ токены, включая с нулевым балансом
+                // Особое выделение для GGCoin
+                const isGGCoin = token.symbol.toLowerCase().includes('gg') || 
+                                token.name.toLowerCase().includes('gg') ||
+                                token.symbol.toLowerCase() === 'ggcoin';
+                
+                if (isGGCoin) {
+                    balanceItem.style.border = '2px solid #FFD700';
+                    balanceItem.style.backgroundColor = '#FFF9E6';
+                }
+                
+                if (token.notFound) {
+                    balanceItem.style.backgroundColor = '#FFE6E6';
+                    balanceItem.style.border = '1px dashed #FF9999';
+                }
+                
                 const displayBalance = parseFloat(token.balance) === 0 ? '0.000000' : token.balance;
-                const balanceClass = parseFloat(token.balance) > 0 ? 'balance-amount' : 'balance-amount' + ' style="opacity: 0.6;"';
+                const balanceOpacity = parseFloat(token.balance) > 0 ? '1' : '0.6';
                 
                 balanceItem.innerHTML = `
                     <div class="token-info">
-                        <span class="token-symbol">${token.symbol}</span>
+                        <span class="token-symbol" style="color: ${isGGCoin ? '#FF6B35' : 'inherit'}; font-weight: ${isGGCoin ? 'bold' : 'normal'};">
+                            ${isGGCoin ? '🎯 ' : ''}${token.symbol}${token.notFound ? ' ❌' : ''}
+                        </span>
                         <span class="token-name">${token.name}</span>
-                        ${token.rawBalance ? `<div style="font-size: 10px; color: #999; font-family: monospace;">Raw: ${token.rawBalance}</div>` : ''}
+                        ${token.rawBalance && token.rawBalance !== '0' ? `<div style="font-size: 10px; color: #999; font-family: monospace;">Raw: ${token.rawBalance}</div>` : ''}
+                        ${token.address && token.address !== 'native' && token.address !== 'unknown' ? `<div style="font-size: 10px; color: #999; font-family: monospace; word-break: break-all;">Address: ${token.address.substring(0, 10)}...${token.address.substring(token.address.length - 6)}</div>` : ''}
                     </div>
-                    <div class="${balanceClass.includes('style') ? 'balance-amount' : 'balance-amount'}" ${balanceClass.includes('style') ? 'style="opacity: 0.6;"' : ''}>${displayBalance}</div>
+                    <div class="balance-amount" style="opacity: ${balanceOpacity}; color: ${isGGCoin ? '#FF6B35' : 'inherit'}; font-weight: ${isGGCoin ? 'bold' : 'normal'};">
+                        ${displayBalance}
+                    </div>
                 `;
                 
                 balancesList.appendChild(balanceItem);
             });
             
-            // Добавляем информацию о количестве найденных токенов
+            // Добавляем информацию о поиске
             const infoItem = document.createElement('div');
-            infoItem.innerHTML = `<div style="text-align: center; padding: 10px; font-size: 12px; color: #999;">Найдено токенов: ${balances.length}</div>`;
+            const ggcoinFound = balances.find(token => 
+                token.symbol.toLowerCase().includes('gg') || 
+                token.name.toLowerCase().includes('gg') ||
+                token.symbol.toLowerCase() === 'ggcoin'
+            );
+            
+            infoItem.innerHTML = `
+                <div style="text-align: center; padding: 10px; font-size: 12px; color: #999;">
+                    Найдено токенов: ${balances.length}<br>
+                    ${ggcoinFound ? (ggcoinFound.notFound ? '⚠️ GGCoin: не найден в блокчейне' : '🎯 GGCoin: найден!') : '🔍 GGCoin: ищем...'}
+                </div>
+            `;
             balancesList.appendChild(infoItem);
         }
 
