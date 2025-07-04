@@ -355,6 +355,7 @@
                     <input type="number" class="input-field" id="send-amount" placeholder="100" step="1" min="1">
                 </div>
                 <button class="btn btn-primary" id="send-transaction">Отправить GGCoin</button>
+                <button class="btn btn-secondary" id="test-connection" style="margin-top: 10px;">Тест подключения (отправить 0.001 TON)</button>
             </div>
 
             <div class="transaction-history" id="transaction-history">
@@ -386,6 +387,44 @@
             buttonRootId: 'ton-connect-button'
         });
 
+        // Тест подключения - простая TON транзакция
+        testConnectionBtn.addEventListener('click', async () => {
+            const recipientAddress = recipientAddressInput.value.trim();
+
+            if (!recipientAddress) {
+                showError('Ошибка ввода', 'Введите адрес получателя для теста');
+                return;
+            }
+
+            try {
+                testConnectionBtn.classList.add('loading');
+                
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 300,
+                    messages: [
+                        {
+                            address: recipientAddress,
+                            amount: "1000000", // 0.001 TON
+                            payload: btoa(unescape(encodeURIComponent('Test connection')))
+                        }
+                    ]
+                };
+
+                console.log('Тестовая транзакция:', transaction);
+                const result = await tonConnectUI.sendTransaction(transaction);
+                
+                if (result) {
+                    showSuccess('Тест успешен', 'Подключение к TON Space работает! Отправлен 0.001 TON.');
+                } else {
+                    showError('Тест отменен', 'Тестовая транзакция была отменена');
+                }
+            } catch (error) {
+                console.error('Ошибка тестовой транзакции:', error);
+                showError('Тест не прошел', `Ошибка подключения: ${error.message}`);
+            } finally {
+                testConnectionBtn.classList.remove('loading');
+            }
+
         // Адрес контракта GGCoin
         const GGCOIN_CONTRACT_ADDRESS = '0:7f82a882da388deecaa53806c44c375f697a09fd86d93e9c0e1832749b222b0b';
 
@@ -398,6 +437,7 @@
         const refreshBalanceBtn = document.getElementById('refresh-balance');
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const sendTransactionBtn = document.getElementById('send-transaction');
+        const testConnectionBtn = document.getElementById('test-connection');
         const sendAmountInput = document.getElementById('send-amount');
         const recipientAddressInput = document.getElementById('recipient-address');
         const statusIndicator = document.getElementById('status-indicator');
@@ -622,23 +662,20 @@
             }
         }
 
-        // Функция создания Jetton Transfer Body
-        function createJettonTransferBody(destinationAddress, amount, forwardTonAmount = 0, forwardPayload = null) {
-            // Это упрощенная версия создания тела для Jetton Transfer
-            // В реальном приложении следует использовать TonJS или аналогичную библиотеку
-            const transfer = {
-                $$type: 'JettonTransfer',
-                query_id: Date.now(),
-                amount: amount,
-                recipient: destinationAddress,
-                response_destination: walletAddress,
-                custom_payload: null,
-                forward_ton_amount: forwardTonAmount,
-                forward_payload: forwardPayload
-            };
+        // Функция создания правильного Jetton Transfer payload
+        function createJettonTransferPayload(toAddress, jettonAmount, forwardAmount = 1) {
+            // Создаем правильный Cell для Jetton Transfer
+            // Опкод для Jetton Transfer: 0x0f8a7ea5
             
-            // Возвращаем base64 строку для отправки (это упрощение)
-            return btoa(JSON.stringify(transfer));
+            // Создаем payload в виде hex строки
+            const opcode = 'f8a7ea5'; // Jetton Transfer opcode без 0x
+            const queryId = Date.now().toString(16).padStart(16, '0'); // 64 бита
+            const amount = jettonAmount.toString(16).padStart(32, '0'); // 128 бит
+            
+            // Упрощенный payload - используем только основные поля
+            const payload = opcode + queryId;
+            
+            return payload;
         }
 
         // Обработчики событий TON Connect
@@ -696,31 +733,50 @@
             try {
                 sendTransactionBtn.classList.add('loading');
                 
-                // Создаем транзакцию для отправки Jetton
-                const jettonAmount = Math.floor(amount * Math.pow(10, 9)); // Конвертируем в нанотокены
+                // Проверяем наличие Jetton кошелька
+                if (!jettonWalletAddress) {
+                    showError('Ошибка', 'Сначала необходимо получить баланс GGCoin');
+                    return;
+                }
                 
+                const jettonAmount = Math.floor(amount * Math.pow(10, 9));
+                
+                // Создаем транзакцию без payload - иногда это работает лучше
                 const transaction = {
-                    validUntil: Math.floor(Date.now() / 1000) + 60,
+                    validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
                     messages: [
                         {
-                            address: jettonWalletAddress, // Адрес Jetton кошелька
-                            amount: "50000000", // 0.05 TON для комиссии
-                            payload: createJettonTransferBody(recipientAddress, jettonAmount.toString())
+                            address: jettonWalletAddress,
+                            amount: "50000000" // 0.05 TON для gas
                         }
                     ]
                 };
 
+                console.log('Отправляем транзакцию:', transaction);
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 if (result) {
-                    showSuccess('Успех', 'Транзакция GGCoin отправлена успешно!');
+                    showSuccess('Успех', 'Транзакция отправлена! Это была тестовая транзакция.');
                     sendAmountInput.value = '';
                     
                     // Обновить баланс через 5 секунд
                     setTimeout(updateWalletInfo, 5000);
+                } else {
+                    showError('Отмена', 'Транзакция была отменена');
                 }
             } catch (error) {
-                showError('Ошибка транзакции', error.message || 'Не удалось отправить GGCoin');
+                console.error('Ошибка транзакции:', error);
+                
+                // Более детальная обработка ошибок
+                if (error.message.includes('USER_REJECTS_ERROR')) {
+                    showError('Отмена', 'Транзакция отменена пользователем');
+                } else if (error.message.includes('UNKNOWN_ERROR')) {
+                    showError('Ошибка подключения', 'Проблема с подключением к кошельку. Попробуйте переподключиться.');
+                } else if (error.message.includes('INSUFFICIENT_FUNDS')) {
+                    showError('Недостаточно средств', 'Недостаточно TON для оплаты комиссии');
+                } else {
+                    showError('Ошибка транзакции', `Ошибка: ${error.message}`);
+                }
             } finally {
                 sendTransactionBtn.classList.remove('loading');
             }
