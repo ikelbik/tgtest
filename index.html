@@ -349,14 +349,7 @@
                 <button class="btn btn-primary" id="send-transaction">Отправить</button>
             </div>
 
-            <div class="action-group">
-                <div class="action-title">Подписать сообщение</div>
-                <div class="input-group">
-                    <label class="input-label">Сообщение для подписи:</label>
-                    <input type="text" class="input-field" id="sign-message" placeholder="Введите сообщение">
-                </div>
-                <button class="btn btn-primary" id="sign-message-btn">Подписать</button>
-            </div>
+
 
             <div class="transaction-history" id="transaction-history">
                 <div class="action-title">История транзакций</div>
@@ -396,9 +389,7 @@
         const refreshBalanceBtn = document.getElementById('refresh-balance');
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const sendTransactionBtn = document.getElementById('send-transaction');
-        const signMessageBtn = document.getElementById('sign-message-btn');
         const sendAmountInput = document.getElementById('send-amount');
-        const signMessageInput = document.getElementById('sign-message');
         const statusIndicator = document.getElementById('status-indicator');
         const networkStatus = document.getElementById('network-status');
         const transactionsList = document.getElementById('transactions-list');
@@ -470,11 +461,11 @@
         // Функция получения информации о токенах
         async function getTokenBalances(address) {
             try {
+                const balances = [];
+                
                 // Получаем баланс TON
                 const tonResponse = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
                 const tonData = await tonResponse.json();
-                
-                const balances = [];
                 
                 if (tonData.ok) {
                     const tonBalance = (parseInt(tonData.result) / 1000000000).toFixed(4);
@@ -486,49 +477,93 @@
                     });
                 }
 
-                // Получаем информацию о Jetton токенах
+                // Получаем Jetton балансы через другой API
                 try {
-                    const jettonResponse = await fetch(`https://toncenter.com/api/v2/getTokenData?address=${address}`);
+                    const jettonResponse = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons?limit=50`);
                     const jettonData = await jettonResponse.json();
                     
-                    if (jettonData.ok && jettonData.result) {
-                        for (const token of jettonData.result) {
-                            if (token.balance && parseFloat(token.balance) > 0) {
+                    if (jettonData.jettons && jettonData.jettons.length > 0) {
+                        for (const jetton of jettonData.jettons) {
+                            const balance = parseFloat(jetton.balance) / Math.pow(10, jetton.jetton.decimals || 9);
+                            if (balance > 0) {
                                 balances.push({
-                                    symbol: token.symbol || 'Unknown',
-                                    name: token.name || 'Unknown Token',
-                                    balance: parseFloat(token.balance).toFixed(4),
-                                    address: token.address
+                                    symbol: jetton.jetton.symbol || 'Unknown',
+                                    name: jetton.jetton.name || 'Unknown Token',
+                                    balance: balance.toFixed(4),
+                                    address: jetton.jetton.address
                                 });
                             }
                         }
                     }
                 } catch (jettonError) {
-                    console.log('Jetton tokens not available:', jettonError);
-                }
-
-                // Если других токенов нет, добавляем популярные для примера
-                if (balances.length === 1) {
-                    balances.push(
-                        {
-                            symbol: 'USDT',
-                            name: 'Tether USD',
-                            balance: '0.00',
-                            address: null
-                        },
-                        {
-                            symbol: 'SCALE',
-                            name: 'Scaleton',
-                            balance: '0.00',
-                            address: null
-                        },
-                        {
-                            symbol: 'GRAM',
-                            name: 'Gram',
-                            balance: '0.00',
-                            address: null
+                    console.log('Trying alternative API for jettons...');
+                    
+                    // Альтернативный способ через TON Center
+                    try {
+                        const alternativeResponse = await fetch(`https://toncenter.com/api/v3/jetton/wallets?address=${address}&limit=50`);
+                        const alternativeData = await alternativeResponse.json();
+                        
+                        if (alternativeData.jetton_wallets && alternativeData.jetton_wallets.length > 0) {
+                            for (const wallet of alternativeData.jetton_wallets) {
+                                const balance = parseFloat(wallet.balance) / Math.pow(10, wallet.jetton.decimals || 9);
+                                if (balance > 0) {
+                                    balances.push({
+                                        symbol: wallet.jetton.symbol || 'JTN',
+                                        name: wallet.jetton.name || 'Jetton Token',
+                                        balance: balance.toFixed(4),
+                                        address: wallet.jetton.address
+                                    });
+                                }
+                            }
                         }
-                    );
+                    } catch (altError) {
+                        console.log('Alternative API also failed:', altError);
+                        
+                        // Попробуем еще один метод через dton.io
+                        try {
+                            const dtonResponse = await fetch(`https://dton.io/graphql`, {
+                                method: 'POST',
+                                headers: {
+                                    'Content-Type': 'application/json',
+                                },
+                                body: JSON.stringify({
+                                    query: `
+                                        query {
+                                            account(address: "${address}") {
+                                                jettonWallets {
+                                                    balance
+                                                    jetton {
+                                                        symbol
+                                                        name
+                                                        decimals
+                                                        address
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    `
+                                })
+                            });
+                            
+                            const dtonData = await dtonResponse.json();
+                            
+                            if (dtonData.data && dtonData.data.account && dtonData.data.account.jettonWallets) {
+                                for (const wallet of dtonData.data.account.jettonWallets) {
+                                    const balance = parseFloat(wallet.balance) / Math.pow(10, wallet.jetton.decimals || 9);
+                                    if (balance > 0) {
+                                        balances.push({
+                                            symbol: wallet.jetton.symbol || 'JTN',
+                                            name: wallet.jetton.name || 'Jetton Token',
+                                            balance: balance.toFixed(4),
+                                            address: wallet.jetton.address
+                                        });
+                                    }
+                                }
+                            }
+                        } catch (dtonError) {
+                            console.log('All jetton APIs failed:', dtonError);
+                        }
+                    }
                 }
 
                 return balances;
@@ -547,20 +582,33 @@
         function displayBalances(balances) {
             balancesList.innerHTML = '';
             
+            if (balances.length === 0) {
+                balancesList.innerHTML = '<div class="balance-loading">Токены не найдены</div>';
+                return;
+            }
+            
             balances.forEach(token => {
                 const balanceItem = document.createElement('div');
                 balanceItem.className = 'balance-item';
                 
-                balanceItem.innerHTML = `
-                    <div class="token-info">
-                        <span class="token-symbol">${token.symbol}</span>
-                        <span class="token-name">${token.name}</span>
-                    </div>
-                    <div class="balance-amount">${token.balance}</div>
-                `;
-                
-                balancesList.appendChild(balanceItem);
+                // Показываем только токены с балансом больше 0 или TON
+                if (parseFloat(token.balance) > 0 || token.symbol === 'TON') {
+                    balanceItem.innerHTML = `
+                        <div class="token-info">
+                            <span class="token-symbol">${token.symbol}</span>
+                            <span class="token-name">${token.name}</span>
+                        </div>
+                        <div class="balance-amount">${token.balance}</div>
+                    `;
+                    
+                    balancesList.appendChild(balanceItem);
+                }
             });
+            
+            // Если нет видимых токенов, показываем сообщение
+            if (balancesList.children.length === 0) {
+                balancesList.innerHTML = '<div class="balance-loading">Только TON баланс доступен</div>';
+            }
         }
 
         // Функция получения транзакций
@@ -692,32 +740,6 @@
                 showError('Ошибка транзакции', error.message);
             } finally {
                 sendTransactionBtn.classList.remove('loading');
-            }
-        });
-
-        signMessageBtn.addEventListener('click', async () => {
-            const message = signMessageInput.value.trim();
-            
-            if (!message) {
-                showError('Ошибка ввода', 'Введите сообщение для подписи');
-                return;
-            }
-
-            try {
-                signMessageBtn.classList.add('loading');
-                
-                const signature = await tonConnectUI.connector.sendCustomRequest({
-                    method: 'ton_rawSign',
-                    params: [message]
-                });
-                
-                showSuccess('Подпись создана', `Подпись: ${signature}`);
-                signMessageInput.value = '';
-                
-            } catch (error) {
-                showError('Ошибка подписи', error.message);
-            } finally {
-                signMessageBtn.classList.remove('loading');
             }
         });
 
