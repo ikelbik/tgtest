@@ -1,12 +1,4 @@
-// Функция добавления отладочной информации
-        function addDebugLog(message) {
-            console.log(message);
-            if (debugOutput) {
-                const timestamp = new Date().toLocaleTimeString();
-                debugOutput.textContent += `[${timestamp}] ${message}\n`;
-                debugOutput.scrollTop = debugOutput.scrollHeight;
-            }
-        }<!DOCTYPE html>
+<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -331,6 +323,53 @@
             }
         }
 
+        // Функция добавления отладочной информации
+        function addDebugLog(message) {
+            console.log(message);
+            if (debugOutput) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugOutput.textContent += `[${timestamp}] ${message}\n`;
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+            }
+        }
+
+        // Функция конвертации адреса в TON формат
+        function convertToTonAddress(address) {
+            try {
+                // Если адрес уже в формате EQ..., возвращаем как есть
+                if (address.startsWith('EQ') || address.startsWith('UQ')) {
+                    return address;
+                }
+                
+                // Если адрес в raw формате (0:hex), конвертируем в user-friendly
+                if (address.includes(':')) {
+                    const parts = address.split(':');
+                    if (parts.length === 2) {
+                        const workchain = parseInt(parts[0]);
+                        const hex = parts[1];
+                        
+                        // Создаем user-friendly адрес
+                        // Это упрощенная конвертация, в реальном приложении лучше использовать TON SDK
+                        const prefix = workchain === 0 ? 'EQ' : 'UQ';
+                        
+                        // Конвертируем hex в base64url
+                        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
+                        const base64 = btoa(String.fromCharCode(...bytes))
+                            .replace(/\+/g, '-')
+                            .replace(/\//g, '_')
+                            .replace(/=/g, '');
+                        
+                        return prefix + base64;
+                    }
+                }
+                
+                return address;
+            } catch (error) {
+                addDebugLog(`Ошибка конвертации адреса: ${error.message}`);
+                return address;
+            }
+        }
+
         // Функция отображения сообщений
         function showMessage(title, message, isSuccess = false) {
             const errorTitle = errorWindow.querySelector('.error-title');
@@ -520,9 +559,12 @@
                 // Обработчик изменения статуса подключения
                 tonConnectUI.onStatusChange(async (wallet) => {
                     if (wallet) {
-                        walletAddress = wallet.account.address;
+                        const rawAddress = wallet.account.address;
+                        walletAddress = convertToTonAddress(rawAddress);
+                        
                         addDebugLog('=== ПОДКЛЮЧЕНИЕ КОШЕЛЬКА ===');
-                        addDebugLog(`Адрес: ${walletAddress}`);
+                        addDebugLog(`RAW адрес из кошелька: ${rawAddress}`);
+                        addDebugLog(`Конвертированный TON адрес: ${walletAddress}`);
                         addDebugLog(`Цепь: ${wallet.account.chain}`);
                         addDebugLog(`Публичный ключ: ${wallet.account.publicKey}`);
                         
