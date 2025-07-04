@@ -334,39 +334,43 @@
             }
         }
 
-        // Функция конвертации адреса в TON формат
-        function convertToTonAddress(address) {
+        // Функция конвертации адреса в RAW формат для API
+        function convertToRawAddress(address) {
             try {
-                // Если адрес уже в формате EQ..., возвращаем как есть
-                if (address.startsWith('EQ') || address.startsWith('UQ')) {
+                // Если уже в RAW формате, возвращаем как есть
+                if (address.includes(':')) {
                     return address;
                 }
                 
-                // Если адрес в raw формате (0:hex), конвертируем в user-friendly
-                if (address.includes(':')) {
-                    const parts = address.split(':');
-                    if (parts.length === 2) {
-                        const workchain = parseInt(parts[0]);
-                        const hex = parts[1];
+                // Если в user-friendly формате (EQ/UQ), конвертируем в RAW
+                if (address.startsWith('EQ') || address.startsWith('UQ')) {
+                    // Получаем workchain (0 для EQ, -1 для UQ)
+                    const workchain = address.startsWith('EQ') ? '0' : '-1';
+                    
+                    // Убираем префикс и декодируем base64url
+                    const base64 = address.slice(2)
+                        .replace(/-/g, '+')
+                        .replace(/_/g, '/');
+                    
+                    // Добавляем padding если нужно
+                    const paddedBase64 = base64 + '='.repeat((4 - base64.length % 4) % 4);
+                    
+                    try {
+                        const bytes = atob(paddedBase64);
+                        const hex = Array.from(bytes, byte => 
+                            ('0' + byte.charCodeAt(0).toString(16)).slice(-2)
+                        ).join('');
                         
-                        // Создаем user-friendly адрес
-                        // Это упрощенная конвертация, в реальном приложении лучше использовать TON SDK
-                        const prefix = workchain === 0 ? 'EQ' : 'UQ';
-                        
-                        // Конвертируем hex в base64url
-                        const bytes = new Uint8Array(hex.match(/.{1,2}/g).map(byte => parseInt(byte, 16)));
-                        const base64 = btoa(String.fromCharCode(...bytes))
-                            .replace(/\+/g, '-')
-                            .replace(/\//g, '_')
-                            .replace(/=/g, '');
-                        
-                        return prefix + base64;
+                        return `${workchain}:${hex}`;
+                    } catch (e) {
+                        addDebugLog(`Ошибка декодирования base64: ${e.message}`);
+                        return address;
                     }
                 }
                 
                 return address;
             } catch (error) {
-                addDebugLog(`Ошибка конвертации адреса: ${error.message}`);
+                addDebugLog(`Ошибка конвертации в RAW: ${error.message}`);
                 return address;
             }
         }
@@ -423,12 +427,19 @@
         // Функция получения баланса GGCoin
         async function getGGCoinBalance(address) {
             try {
+                // Конвертируем адрес в RAW формат для API
+                const rawAddress = convertToRawAddress(address);
+                
                 addDebugLog('=== НАЧАЛО ПОИСКА ТОКЕНА ===');
-                addDebugLog(`Адрес владельца кошелька: ${address}`);
+                addDebugLog(`Адрес владельца (исходный): ${address}`);
+                addDebugLog(`Адрес владельца (RAW для API): ${rawAddress}`);
                 addDebugLog(`Ищем токен (RAW): ${GGCOIN_TOKEN_ADDRESS_RAW}`);
                 addDebugLog(`Ищем токен (User-friendly): ${GGCOIN_TOKEN_ADDRESS_USER_FRIENDLY}`);
                 
-                const response = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons?limit=100`);
+                const apiUrl = `https://tonapi.io/v2/accounts/${rawAddress}/jettons?limit=100`;
+                addDebugLog(`API URL: ${apiUrl}`);
+                
+                const response = await fetch(apiUrl);
                 const data = await response.json();
                 
                 addDebugLog(`API запрос выполнен. Статус: ${response.status}`);
@@ -459,7 +470,10 @@
                         }
                     }
                 } else {
-                    addDebugLog('У этого адреса нет jetton токенов');
+                    addDebugLog('У этого адреса нет jetton токенов или ошибка API');
+                    if (data.error) {
+                        addDebugLog(`Ошибка API: ${JSON.stringify(data.error)}`);
+                    }
                 }
                 
                 addDebugLog('❌ ТОКЕН НЕ НАЙДЕН');
@@ -565,11 +579,10 @@
                 tonConnectUI.onStatusChange(async (wallet) => {
                     if (wallet) {
                         const rawAddress = wallet.account.address;
-                        walletAddress = convertToTonAddress(rawAddress);
+                        walletAddress = rawAddress; // Используем адрес как есть
                         
                         addDebugLog('=== ПОДКЛЮЧЕНИЕ КОШЕЛЬКА ===');
-                        addDebugLog(`RAW адрес из кошелька: ${rawAddress}`);
-                        addDebugLog(`Конвертированный TON адрес: ${walletAddress}`);
+                        addDebugLog(`Адрес из кошелька: ${rawAddress}`);
                         addDebugLog(`Цепь: ${wallet.account.chain}`);
                         addDebugLog(`Публичный ключ: ${wallet.account.publicKey}`);
                         
