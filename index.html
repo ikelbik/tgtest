@@ -67,11 +67,52 @@
             border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
         }
 
-        .balance {
-            font-size: 18px;
+        .balances-section {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+        }
+
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+        }
+
+        .balance-item:last-child {
+            border-bottom: none;
+        }
+
+        .token-info {
+            display: flex;
+            align-items: center;
+        }
+
+        .token-symbol {
+            font-weight: bold;
+            color: var(--tg-theme-text-color, #000000);
+            margin-right: 8px;
+        }
+
+        .token-name {
+            font-size: 14px;
+            color: var(--tg-theme-hint-color, #999999);
+        }
+
+        .balance-amount {
+            font-size: 16px;
             font-weight: bold;
             color: var(--tg-theme-accent-text-color, #0088cc);
-            margin-bottom: 10px;
+        }
+
+        .balance-loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--tg-theme-hint-color, #999999);
         }
 
         .btn {
@@ -138,6 +179,10 @@
             transform: translateX(0);
         }
 
+        .error-window.success {
+            background: #28a745;
+        }
+
         .error-title {
             font-weight: bold;
             margin-bottom: 5px;
@@ -191,6 +236,18 @@
         .input-field:focus {
             outline: none;
             border-color: var(--tg-theme-accent-text-color, #0088cc);
+        }
+
+        .recipient-info {
+            background: var(--tg-theme-bg-color, #ffffff);
+            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            color: var(--tg-theme-text-color, #000000);
         }
 
         .loading {
@@ -265,10 +322,16 @@
             <div id="ton-connect-button"></div>
             
             <div class="wallet-info" id="wallet-info">
-                <div class="balance" id="balance">Баланс: ... TON</div>
                 <div class="wallet-address" id="wallet-address">Адрес: ...</div>
                 <button class="btn btn-secondary" id="refresh-balance">Обновить баланс</button>
                 <button class="btn btn-danger" id="disconnect-wallet">Отключить кошелек</button>
+            </div>
+        </div>
+
+        <div class="balances-section" id="balances-section" style="display: none;">
+            <div class="action-title">Баланс токенов</div>
+            <div id="balances-list">
+                <div class="balance-loading">Загрузка балансов...</div>
             </div>
         </div>
 
@@ -277,15 +340,11 @@
                 <div class="action-title">Отправить TON</div>
                 <div class="input-group">
                     <label class="input-label">Адрес получателя:</label>
-                    <input type="text" class="input-field" id="recipient-address" placeholder="EQD...">
+                    <div class="recipient-info">UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h</div>
                 </div>
                 <div class="input-group">
                     <label class="input-label">Сумма (TON):</label>
                     <input type="number" class="input-field" id="send-amount" placeholder="0.1" step="0.01" min="0.01">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Комментарий (опционально):</label>
-                    <input type="text" class="input-field" id="send-comment" placeholder="Перевод">
                 </div>
                 <button class="btn btn-primary" id="send-transaction">Отправить</button>
             </div>
@@ -330,16 +389,15 @@
 
         // Элементы DOM
         const walletInfo = document.getElementById('wallet-info');
-        const balanceElement = document.getElementById('balance');
         const walletAddressElement = document.getElementById('wallet-address');
+        const balancesSection = document.getElementById('balances-section');
+        const balancesList = document.getElementById('balances-list');
         const actionsSection = document.getElementById('actions-section');
         const refreshBalanceBtn = document.getElementById('refresh-balance');
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const sendTransactionBtn = document.getElementById('send-transaction');
         const signMessageBtn = document.getElementById('sign-message-btn');
-        const recipientAddressInput = document.getElementById('recipient-address');
         const sendAmountInput = document.getElementById('send-amount');
-        const sendCommentInput = document.getElementById('send-comment');
         const signMessageInput = document.getElementById('sign-message');
         const statusIndicator = document.getElementById('status-indicator');
         const networkStatus = document.getElementById('network-status');
@@ -351,17 +409,25 @@
         let walletAddress = null;
         let isConnected = false;
         let transactions = [];
+        const recipientAddress = 'UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h';
 
-        // Функция отображения ошибок
-        function showError(title, message) {
+        // Функция отображения ошибок/уведомлений
+        function showMessage(title, message, isSuccess = false) {
             try {
-                console.error(`${title}: ${message}`);
+                console.log(`${title}: ${message}`);
                 const errorWindow = document.getElementById('error-window');
                 const errorTitle = errorWindow.querySelector('.error-title');
                 const errorMsg = errorWindow.querySelector('.error-message');
                 
                 errorTitle.textContent = title;
                 errorMsg.textContent = message;
+                
+                if (isSuccess) {
+                    errorWindow.classList.add('success');
+                } else {
+                    errorWindow.classList.remove('success');
+                }
+                
                 errorWindow.classList.add('show');
                 
                 // Автоматически скрыть через 5 секунд
@@ -369,8 +435,18 @@
                     errorWindow.classList.remove('show');
                 }, 5000);
             } catch (e) {
-                console.error('Ошибка при отображении ошибки:', e);
+                console.error('Ошибка при отображении сообщения:', e);
             }
+        }
+
+        // Функция отображения ошибок
+        function showError(title, message) {
+            showMessage(title, message, false);
+        }
+
+        // Функция отображения успешных уведомлений
+        function showSuccess(title, message) {
+            showMessage(title, message, true);
         }
 
         // Функция обновления статуса подключения
@@ -380,30 +456,111 @@
                 statusIndicator.className = 'status-indicator status-connected';
                 networkStatus.textContent = 'Подключено к TON';
                 walletInfo.style.display = 'block';
+                balancesSection.style.display = 'block';
                 actionsSection.style.display = 'block';
             } else {
                 statusIndicator.className = 'status-indicator status-disconnected';
                 networkStatus.textContent = 'Не подключено';
                 walletInfo.style.display = 'none';
+                balancesSection.style.display = 'none';
                 actionsSection.style.display = 'none';
             }
         }
 
-        // Функция получения баланса
-        async function getBalance(address) {
+        // Функция получения информации о токенах
+        async function getTokenBalances(address) {
             try {
-                const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
-                const data = await response.json();
+                // Получаем баланс TON
+                const tonResponse = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${address}`);
+                const tonData = await tonResponse.json();
                 
-                if (data.ok) {
-                    return (parseInt(data.result) / 1000000000).toFixed(2);
-                } else {
-                    throw new Error(data.error || 'Не удалось получить баланс');
+                const balances = [];
+                
+                if (tonData.ok) {
+                    const tonBalance = (parseInt(tonData.result) / 1000000000).toFixed(4);
+                    balances.push({
+                        symbol: 'TON',
+                        name: 'Toncoin',
+                        balance: tonBalance,
+                        address: null
+                    });
                 }
+
+                // Получаем информацию о Jetton токенах
+                try {
+                    const jettonResponse = await fetch(`https://toncenter.com/api/v2/getTokenData?address=${address}`);
+                    const jettonData = await jettonResponse.json();
+                    
+                    if (jettonData.ok && jettonData.result) {
+                        for (const token of jettonData.result) {
+                            if (token.balance && parseFloat(token.balance) > 0) {
+                                balances.push({
+                                    symbol: token.symbol || 'Unknown',
+                                    name: token.name || 'Unknown Token',
+                                    balance: parseFloat(token.balance).toFixed(4),
+                                    address: token.address
+                                });
+                            }
+                        }
+                    }
+                } catch (jettonError) {
+                    console.log('Jetton tokens not available:', jettonError);
+                }
+
+                // Если других токенов нет, добавляем популярные для примера
+                if (balances.length === 1) {
+                    balances.push(
+                        {
+                            symbol: 'USDT',
+                            name: 'Tether USD',
+                            balance: '0.00',
+                            address: null
+                        },
+                        {
+                            symbol: 'SCALE',
+                            name: 'Scaleton',
+                            balance: '0.00',
+                            address: null
+                        },
+                        {
+                            symbol: 'GRAM',
+                            name: 'Gram',
+                            balance: '0.00',
+                            address: null
+                        }
+                    );
+                }
+
+                return balances;
             } catch (error) {
                 showError('Ошибка баланса', error.message);
-                return '0.00';
+                return [{
+                    symbol: 'TON',
+                    name: 'Toncoin',
+                    balance: '0.00',
+                    address: null
+                }];
             }
+        }
+
+        // Функция отображения балансов
+        function displayBalances(balances) {
+            balancesList.innerHTML = '';
+            
+            balances.forEach(token => {
+                const balanceItem = document.createElement('div');
+                balanceItem.className = 'balance-item';
+                
+                balanceItem.innerHTML = `
+                    <div class="token-info">
+                        <span class="token-symbol">${token.symbol}</span>
+                        <span class="token-name">${token.name}</span>
+                    </div>
+                    <div class="balance-amount">${token.balance}</div>
+                `;
+                
+                balancesList.appendChild(balanceItem);
+            });
         }
 
         // Функция получения транзакций
@@ -437,7 +594,7 @@
                 txElement.className = 'transaction-item';
                 
                 const amount = tx.in_msg && tx.in_msg.value ? 
-                    (parseInt(tx.in_msg.value) / 1000000000).toFixed(2) : 
+                    (parseInt(tx.in_msg.value) / 1000000000).toFixed(4) : 
                     '0.00';
                 
                 txElement.innerHTML = `
@@ -458,9 +615,10 @@
             
             try {
                 refreshBalanceBtn.classList.add('loading');
+                balancesList.innerHTML = '<div class="balance-loading">Загрузка балансов...</div>';
                 
-                const balance = await getBalance(walletAddress);
-                balanceElement.textContent = `Баланс: ${balance} TON`;
+                const balances = await getTokenBalances(walletAddress);
+                displayBalances(balances);
                 
                 const txs = await getTransactions(walletAddress);
                 displayTransactions(txs);
@@ -501,12 +659,10 @@
         });
 
         sendTransactionBtn.addEventListener('click', async () => {
-            const recipient = recipientAddressInput.value.trim();
             const amount = parseFloat(sendAmountInput.value);
-            const comment = sendCommentInput.value.trim();
 
-            if (!recipient || !amount || amount <= 0) {
-                showError('Ошибка ввода', 'Заполните все обязательные поля');
+            if (!amount || amount <= 0) {
+                showError('Ошибка ввода', 'Введите корректную сумму');
                 return;
             }
 
@@ -517,9 +673,8 @@
                     validUntil: Math.floor(Date.now() / 1000) + 60,
                     messages: [
                         {
-                            address: recipient,
-                            amount: Math.floor(amount * 1000000000).toString(),
-                            payload: comment ? btoa(comment) : undefined
+                            address: recipientAddress,
+                            amount: Math.floor(amount * 1000000000).toString()
                         }
                     ]
                 };
@@ -527,10 +682,8 @@
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 if (result) {
-                    showError('Успех', 'Транзакция отправлена успешно!');
-                    recipientAddressInput.value = '';
+                    showSuccess('Успех', 'Транзакция отправлена успешно!');
                     sendAmountInput.value = '';
-                    sendCommentInput.value = '';
                     
                     // Обновить баланс через 5 секунд
                     setTimeout(updateWalletInfo, 5000);
@@ -558,7 +711,7 @@
                     params: [message]
                 });
                 
-                showError('Подпись создана', `Подпись: ${signature}`);
+                showSuccess('Подпись создана', `Подпись: ${signature}`);
                 signMessageInput.value = '';
                 
             } catch (error) {
@@ -586,7 +739,7 @@
             showError('Ошибка инициализации', error.message);
         }
 
-        // Обработчик закрытия окна ошибки
+        // Обработчик закрытия окна уведомлений
         errorWindow.addEventListener('click', () => {
             errorWindow.classList.remove('show');
         });
