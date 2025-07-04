@@ -443,36 +443,56 @@
                 const data = await response.json();
                 
                 addDebugLog(`API запрос выполнен. Статус: ${response.status}`);
+                addDebugLog(`Полный ответ API: ${JSON.stringify(data)}`);
                 
+                // Проверяем структуру ответа - может быть jettons или balances
+                let tokens = [];
                 if (data.jettons && data.jettons.length > 0) {
-                    addDebugLog(`Найдено ${data.jettons.length} токенов у владельца:`);
-                    
-                    // Показываем все найденные токены
-                    data.jettons.forEach((jetton, index) => {
-                        addDebugLog(`${index + 1}. ${jetton.jetton.symbol || 'Unknown'} (${jetton.jetton.name || 'Unknown'})`);
-                        addDebugLog(`   Адрес: ${jetton.jetton.address}`);
-                        addDebugLog(`   Баланс: ${jetton.balance}`);
-                        addDebugLog(`   Jetton кошелек: ${jetton.wallet_address.address}`);
-                        addDebugLog('   ---');
-                    });
-                    
-                    for (const jetton of data.jettons) {
-                        // Проверяем по обеим форматам адреса
-                        if (jetton.jetton.address === GGCOIN_TOKEN_ADDRESS_RAW || 
-                            jetton.jetton.address === GGCOIN_TOKEN_ADDRESS_USER_FRIENDLY) {
-                            const balance = parseFloat(jetton.balance) / Math.pow(10, jetton.jetton.decimals || 9);
-                            jettonWalletAddress = jetton.wallet_address.address;
-                            addDebugLog('✅ НАЙДЕН ИСКОМЫЙ ТОКЕН!');
-                            addDebugLog(`Найден по адресу: ${jetton.jetton.address}`);
-                            addDebugLog(`Баланс: ${balance}`);
-                            addDebugLog(`Jetton кошелек: ${jettonWalletAddress}`);
-                            return balance;
-                        }
-                    }
+                    tokens = data.jettons;
+                    addDebugLog('Используем структуру jettons');
+                } else if (data.balances && data.balances.length > 0) {
+                    tokens = data.balances;
+                    addDebugLog('Используем структуру balances');
                 } else {
-                    addDebugLog('У этого адреса нет jetton токенов или ошибка API');
+                    addDebugLog('Токены не найдены в ответе API');
                     if (data.error) {
                         addDebugLog(`Ошибка API: ${JSON.stringify(data.error)}`);
+                    }
+                    return 0;
+                }
+                
+                addDebugLog(`Найдено ${tokens.length} токенов у владельца:`);
+                
+                // Показываем все найденные токены
+                tokens.forEach((tokenData, index) => {
+                    const jetton = tokenData.jetton || tokenData;
+                    const walletAddr = tokenData.wallet_address || tokenData.wallet_address;
+                    
+                    addDebugLog(`${index + 1}. ${jetton.symbol || 'Unknown'} (${jetton.name || 'Unknown'})`);
+                    addDebugLog(`   Адрес токена: ${jetton.address}`);
+                    addDebugLog(`   Баланс: ${tokenData.balance}`);
+                    addDebugLog(`   Jetton кошелек: ${walletAddr ? walletAddr.address : 'N/A'}`);
+                    addDebugLog('   ---');
+                });
+                
+                for (const tokenData of tokens) {
+                    const jetton = tokenData.jetton || tokenData;
+                    
+                    // Проверяем по обеим форматам адреса
+                    if (jetton.address === GGCOIN_TOKEN_ADDRESS_RAW || 
+                        jetton.address === GGCOIN_TOKEN_ADDRESS_USER_FRIENDLY) {
+                        const balance = parseFloat(tokenData.balance) / Math.pow(10, jetton.decimals || 9);
+                        jettonWalletAddress = tokenData.wallet_address ? tokenData.wallet_address.address : null;
+                        
+                        addDebugLog('✅ НАЙДЕН ИСКОМЫЙ ТОКЕН!');
+                        addDebugLog(`Найден по адресу: ${jetton.address}`);
+                        addDebugLog(`Символ: ${jetton.symbol}`);
+                        addDebugLog(`Название: ${jetton.name}`);
+                        addDebugLog(`Баланс (RAW): ${tokenData.balance}`);
+                        addDebugLog(`Баланс (форматированный): ${balance}`);
+                        addDebugLog(`Десятичные знаки: ${jetton.decimals}`);
+                        addDebugLog(`Jetton кошелек: ${jettonWalletAddress}`);
+                        return balance;
                     }
                 }
                 
