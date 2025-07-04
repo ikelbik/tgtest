@@ -366,7 +366,7 @@
 
         <div class="network-info">
             <span class="status-indicator" id="status-indicator"></span>
-            <span id="network-status">Инициализация...</span>
+            <span id="network-status">Загрузка...</span>
         </div>
     </div>
 
@@ -376,16 +376,86 @@
     </div>
 
     <script>
-        // Инициализация Telegram WebApp
-        const tg = window.Telegram.WebApp;
-        tg.ready();
-        tg.expand();
+        // Ждем полной загрузки всех скриптов
+        function waitForLibraries() {
+            return new Promise((resolve) => {
+                let attempts = 0;
+                const maxAttempts = 50; // 5 секунд максимум
+                
+                const checkLibraries = () => {
+                    attempts++;
+                    console.log(`Проверка библиотек, попытка ${attempts}...`);
+                    
+                    const telegramReady = window.Telegram && window.Telegram.WebApp;
+                    const tonConnectReady = window.TON_CONNECT_UI;
+                    
+                    console.log('Telegram WebApp:', telegramReady ? 'Готов' : 'Не готов');
+                    console.log('TON Connect UI:', tonConnectReady ? 'Готов' : 'Не готов');
+                    
+                    if (tonConnectReady || attempts >= maxAttempts) {
+                        resolve({ telegramReady, tonConnectReady });
+                    } else {
+                        setTimeout(checkLibraries, 100);
+                    }
+                };
+                
+                checkLibraries();
+            });
+        }
 
-        // Конфигурация TON Connect
-        const tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
-            manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
-            buttonRootId: 'ton-connect-button'
-        });
+        // Запускаем инициализацию после загрузки библиотек
+        async function initApp() {
+            console.log('Начинаем инициализацию приложения...');
+            
+            // Обновляем статус
+            document.getElementById('network-status').textContent = 'Загрузка библиотек...';
+            
+            // Ждем загрузки библиотек
+            const { telegramReady, tonConnectReady } = await waitForLibraries();
+            
+            if (!tonConnectReady) {
+                document.getElementById('network-status').textContent = 'Ошибка загрузки TON Connect';
+                showError('Ошибка загрузки', 'Не удалось загрузить TON Connect. Проверьте интернет соединение и перезагрузите страницу.');
+                return;
+            }
+
+        // Инициализация с проверками
+        console.log('Начинаем инициализацию...');
+        
+        // Проверяем наличие Telegram WebApp
+        let tg = null;
+        if (window.Telegram && window.Telegram.WebApp) {
+            console.log('Telegram WebApp найден');
+            tg = window.Telegram.WebApp;
+            try {
+                tg.ready();
+                tg.expand();
+                console.log('Telegram WebApp инициализирован');
+            } catch (e) {
+                console.error('Ошибка инициализации Telegram WebApp:', e);
+            }
+        } else {
+            console.log('Telegram WebApp не найден, работаем в браузере');
+        }
+
+        // Проверяем наличие TON Connect
+        let tonConnectUI = null;
+        if (window.TON_CONNECT_UI) {
+            console.log('TON Connect UI найден');
+            try {
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-button'
+                });
+                console.log('TON Connect UI инициализирован');
+            } catch (e) {
+                console.error('Ошибка инициализации TON Connect UI:', e);
+                showError('Ошибка инициализации', 'Не удалось загрузить TON Connect. Перезагрузите страницу.');
+            }
+        } else {
+            console.error('TON Connect UI не найден');
+            showError('Ошибка загрузки', 'TON Connect библиотека не загружена. Проверьте интернет соединение.');
+        }
 
         // Тест подключения - простая TON транзакция
         testConnectionBtn.addEventListener('click', async () => {
@@ -678,33 +748,51 @@
             return payload;
         }
 
-        // Обработчики событий TON Connect
-        tonConnectUI.onStatusChange(async (wallet) => {
-            try {
-                if (wallet) {
-                    walletAddress = wallet.account.address;
-                    walletAddressElement.textContent = `Адрес: ${walletAddress}`;
-                    updateConnectionStatus(true);
-                    await updateWalletInfo();
-                } else {
-                    walletAddress = null;
-                    updateConnectionStatus(false);
+        // Обработчики событий TON Connect (только если tonConnectUI доступен)
+        if (tonConnectUI) {
+            console.log('Настраиваем обработчики TON Connect...');
+            
+            tonConnectUI.onStatusChange(async (wallet) => {
+                try {
+                    console.log('Статус кошелька изменился:', wallet);
+                    if (wallet) {
+                        walletAddress = wallet.account.address;
+                        console.log('Кошелек подключен:', walletAddress);
+                        walletAddressElement.textContent = `Адрес: ${walletAddress}`;
+                        updateConnectionStatus(true);
+                        await updateWalletInfo();
+                    } else {
+                        console.log('Кошелек отключен');
+                        walletAddress = null;
+                        updateConnectionStatus(false);
+                    }
+                } catch (error) {
+                    console.error('Ошибка в onStatusChange:', error);
+                    showError('Ошибка подключения', error.message);
                 }
-            } catch (error) {
-                showError('Ошибка подключения', error.message);
-            }
-        });
+            });
+            
+            console.log('Обработчики TON Connect настроены');
+        }
 
-        // Обработчики кнопок
-        refreshBalanceBtn.addEventListener('click', updateWalletInfo);
+        // Обработчики кнопок (только если элементы найдены)
+        if (refreshBalanceBtn) {
+            refreshBalanceBtn.addEventListener('click', updateWalletInfo);
+            console.log('Обработчик refreshBalance добавлен');
+        }
 
-        disconnectWalletBtn.addEventListener('click', async () => {
-            try {
-                await tonConnectUI.disconnect();
-            } catch (error) {
-                showError('Ошибка отключения', error.message);
-            }
-        });
+        if (disconnectWalletBtn && tonConnectUI) {
+            disconnectWalletBtn.addEventListener('click', async () => {
+                try {
+                    console.log('Отключаем кошелек...');
+                    await tonConnectUI.disconnect();
+                } catch (error) {
+                    console.error('Ошибка отключения:', error);
+                    showError('Ошибка отключения', error.message);
+                }
+            });
+            console.log('Обработчик disconnect добавлен');
+        }
 
         sendTransactionBtn.addEventListener('click', async () => {
             const amount = parseFloat(sendAmountInput.value);
@@ -782,21 +870,31 @@
             }
         });
 
-        // Обработчики Telegram WebApp
-        tg.onEvent('themeChanged', () => {
-            try {
-                document.body.style.backgroundColor = tg.themeParams.bg_color;
-                document.body.style.color = tg.themeParams.text_color;
-            } catch (error) {
-                showError('Ошибка темы', error.message);
-            }
-        });
+        // Обработчики Telegram WebApp (только если tg доступен)
+        if (tg) {
+            tg.onEvent('themeChanged', () => {
+                try {
+                    document.body.style.backgroundColor = tg.themeParams.bg_color;
+                    document.body.style.color = tg.themeParams.text_color;
+                    console.log('Тема изменена');
+                } catch (error) {
+                    console.error('Ошибка смены темы:', error);
+                }
+            });
+        }
 
-        // Инициализация
+        // Финальная инициализация
         try {
             updateConnectionStatus(false);
-            console.log('GGCoin WebApp инициализирован');
+            console.log('GGCoin WebApp успешно инициализирован');
+            
+            // Показываем статус готовности
+            setTimeout(() => {
+                networkStatus.textContent = 'Готов к подключению';
+            }, 1000);
+            
         } catch (error) {
+            console.error('Ошибка финальной инициализации:', error);
             showError('Ошибка инициализации', error.message);
         }
 
@@ -811,6 +909,14 @@
                 updateWalletInfo();
             }
         }, 30000);
+        }
+
+        // Запускаем инициализацию
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initApp);
+        } else {
+            initApp();
+        }
     </script>
 </body>
 </html>
