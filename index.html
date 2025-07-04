@@ -1,4 +1,12 @@
-<!DOCTYPE html>
+// Функция добавления отладочной информации
+        function addDebugLog(message) {
+            console.log(message);
+            if (debugOutput) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugOutput.textContent += `[${timestamp}] ${message}\n`;
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+            }
+        }<!DOCTYPE html>
 <html lang="ru">
 <head>
     <meta charset="UTF-8">
@@ -265,7 +273,7 @@
 
         <div class="action-group" id="debug-section" style="display: none;">
             <div class="action-title">Отладочная информация</div>
-            <div id="debug-output" style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
+            <div id="debug-output" style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; white-space: pre-wrap; color: #333; border: 1px solid #ddd;"></div>
         </div>
 
         <div class="network-info">
