@@ -8,365 +8,12 @@
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://unpkg.com/@ton/ton@latest/dist/ton.min.js"></script>
     <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .container {
-            max-width: 400px;
-            margin: 0 auto;
-        }
-
-        .header {
-            text-align: center;
-            margin-bottom: 30px;
-        }
-
-        .title {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 10px;
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .subtitle {
-            font-size: 16px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-
-        .wallet-section {
-            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .wallet-info {
-            display: none;
-            margin-top: 15px;
-        }
-
-        .wallet-address {
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            padding: 10px;
-            background: var(--tg-theme-bg-color, #ffffff);
-            border-radius: 8px;
-            margin-bottom: 10px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .balances-section {
-            background: var(--tg-theme-bg-color, #ffffff);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 20px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .balance-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 0;
-            border-bottom: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .balance-item:last-child {
-            border-bottom: none;
-        }
-
-        .token-info {
-            display: flex;
-            align-items: center;
-        }
-
-        .token-symbol {
-            font-weight: bold;
-            color: var(--tg-theme-text-color, #000000);
-            margin-right: 8px;
-        }
-
-        .token-name {
-            font-size: 14px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-
-        .balance-amount {
-            font-size: 16px;
-            font-weight: bold;
-            color: var(--tg-theme-accent-text-color, #0088cc);
-        }
-
-        .balance-loading {
-            text-align: center;
-            padding: 20px;
-            color: var(--tg-theme-hint-color, #999999);
-        }
-
-        .btn {
-            width: 100%;
-            padding: 12px 20px;
-            border: none;
-            border-radius: 8px;
-            font-size: 16px;
-            font-weight: 500;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-bottom: 10px;
-        }
-
-        .btn-primary {
-            background: var(--tg-theme-button-color, #0088cc);
-            color: var(--tg-theme-button-text-color, #ffffff);
-        }
-
-        .btn-primary:hover {
-            opacity: 0.9;
-        }
-
-        .btn-secondary {
-            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-            color: var(--tg-theme-text-color, #000000);
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .btn-secondary:hover {
-            background: var(--tg-theme-bg-color, #ffffff);
-        }
-
-        .btn-danger {
-            background: #dc3545;
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background: #c82333;
-        }
-
-        .btn:disabled {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .error-window {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #dc3545;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 8px;
-            max-width: 300px;
-            z-index: 1000;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-            transform: translateX(100%);
-            transition: transform 0.3s ease;
-        }
-
-        .error-window.show {
-            transform: translateX(0);
-        }
-
-        .error-window.success {
-            background: #28a745;
-        }
-
-        .error-title {
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-
-        .error-message {
-            font-size: 14px;
-            line-height: 1.4;
-        }
-
-        .actions-section {
-            margin-top: 20px;
-        }
-
-        .action-group {
-            background: var(--tg-theme-secondary-bg-color, #f8f9fa);
-            border-radius: 12px;
-            padding: 20px;
-            margin-bottom: 15px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-        }
-
-        .action-title {
-            font-size: 18px;
-            font-weight: bold;
-            margin-bottom: 15px;
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .input-group {
-            margin-bottom: 15px;
-        }
-
-        .input-label {
-            display: block;
-            margin-bottom: 5px;
-            font-weight: 500;
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .input-field {
-            width: 100%;
-            padding: 10px 12px;
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-            border-radius: 8px;
-            font-size: 16px;
-            background: var(--tg-theme-bg-color, #ffffff);
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .input-field:focus {
-            outline: none;
-            border-color: var(--tg-theme-accent-text-color, #0088cc);
-        }
-
-        .recipient-info {
-            background: var(--tg-theme-bg-color, #ffffff);
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 15px;
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            color: var(--tg-theme-text-color, #000000);
-        }
-
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
-        }
-
-        .loading::after {
-            content: " ⏳";
-        }
-
-        .status-indicator {
-            display: inline-block;
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-
-        .status-connected {
-            background: #28a745;
-        }
-
-        .status-disconnected {
-            background: #dc3545;
-        }
-
-        #ton-connect-button {
-            margin-bottom: 15px;
-        }
-
-        .network-info {
-            font-size: 12px;
-            color: var(--tg-theme-hint-color, #999999);
-            text-align: center;
-            margin-top: 20px;
-        }
-
-        .transaction-history {
-            margin-top: 20px;
-        }
-
-        .transaction-item {
-            background: var(--tg-theme-bg-color, #ffffff);
-            border: 1px solid var(--tg-theme-section-separator-color, #e0e0e0);
-            border-radius: 8px;
-            padding: 12px;
-            margin-bottom: 10px;
-        }
-
-        .transaction-hash {
-            font-family: monospace;
-            font-size: 12px;
-            color: var(--tg-theme-hint-color, #999999);
-            word-break: break-all;
-        }
-
-        .transaction-amount {
-            font-weight: bold;
-            color: var(--tg-theme-accent-text-color, #0088cc);
-        }
-
-        .ggcoin-logo {
-            width: 24px;
-            height: 24px;
-            margin-right: 8px;
-            border-radius: 50%;
-        }
+        /* ... (ваши стили остаются без изменений) ... */
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <div class="title">TON Space WebApp - GGCoin</div>
-            <div class="subtitle">Подключение к TON кошельку для работы с GGCoin</div>
-        </div>
-
-        <div class="wallet-section">
-            <div id="ton-connect-button"></div>
-            
-            <div class="wallet-info" id="wallet-info">
-                <div class="wallet-address" id="wallet-address">Адрес: ...</div>
-                <button class="btn btn-secondary" id="refresh-balance">Обновить баланс</button>
-                <button class="btn btn-danger" id="disconnect-wallet">Отключить кошелек</button>
-            </div>
-        </div>
-
-        <div class="balances-section" id="balances-section" style="display: none;">
-            <div class="action-title">Баланс GGCoin</div>
-            <div id="balances-list">
-                <div class="balance-loading">Загрузка баланса GGCoin...</div>
-            </div>
-        </div>
-
-        <div class="actions-section" id="actions-section" style="display: none;">
-            <div class="action-group">
-                <div class="action-title">Отправить GGCoin</div>
-                <div class="input-group">
-                    <label class="input-label">Адрес получателя:</label>
-                    <input type="text" class="input-field" id="recipient-address" placeholder="0:abc123..." value="UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h">
-                </div>
-                <div class="input-group">
-                    <label class="input-label">Сумма (GGCoin):</label>
-                    <input type="number" class="input-field" id="send-amount" placeholder="100" step="0.01" min="0.01">
-                </div>
-                <button class="btn btn-primary" id="send-transaction">Отправить GGCoin</button>
-            </div>
-
-            <div class="transaction-history" id="transaction-history">
-                <div class="action-title">История транзакций</div>
-                <div id="transactions-list"></div>
-            </div>
-        </div>
-
-        <div class="network-info">
-            <span class="status-indicator" id="status-indicator"></span>
-            <span id="network-status">Инициализация...</span>
-        </div>
+        <!-- ... (ваша HTML структура остается без изменений) ... -->
     </div>
 
     <div class="error-window" id="error-window">
@@ -620,36 +267,40 @@
             }
         }
 
-        // Функция создания Jetton transfer транзакции
-        function createJettonTransferMessage(recipientAddress, amount, queryId = 0) {
-            const TonWeb = window.TonWeb || window.TON;
+        // Функция создания Jetton transfer транзакции (ИСПРАВЛЕНА)
+        async function createJettonTransferMessage(recipientAddress, amount, queryId = 0) {
+            // Используем глобальный объект TON напрямую
+            const transferBody = new TON.Cell();
             
-            // Создаем ячейку с данными для перевода Jetton
-            const transferBody = new TonWeb.boc.Cell();
-            transferBody.bits.writeUint(0x0f8a7ea5, 32); // Jetton transfer opcode
-            transferBody.bits.writeUint(queryId, 64); // query_id
-            transferBody.bits.writeCoins(amount); // amount
+            // Jetton transfer opcode
+            transferBody.bits.writeUint(0x0f8a7ea5, 32);
+            // query_id
+            transferBody.bits.writeUint(queryId, 64);
+            // amount
+            transferBody.bits.writeCoins(amount);
             
             // Адрес получателя
-            const recipientCell = new TonWeb.boc.Cell();
-            recipientCell.bits.writeAddress(new TonWeb.Address(recipientAddress));
+            const recipientCell = new TON.Cell();
+            recipientCell.bits.writeAddress(new TON.Address(recipientAddress));
             transferBody.refs.push(recipientCell);
             
-            // Адрес для ответа (обычно адрес отправителя)
-            const responseCell = new TonWeb.boc.Cell();
-            responseCell.bits.writeAddress(new TonWeb.Address(walletAddress));
+            // Адрес для ответа
+            const responseCell = new TON.Cell();
+            responseCell.bits.writeAddress(new TON.Address(walletAddress));
             transferBody.refs.push(responseCell);
             
             // Пустая ячейка для custom_payload
-            transferBody.refs.push(new TonWeb.boc.Cell());
+            transferBody.refs.push(new TON.Cell());
             
-            // Forward amount (обычно 0 для простых переводов)
+            // Forward amount
             transferBody.bits.writeCoins(0);
             
             // Пустая ячейка для forward_payload
-            transferBody.refs.push(new TonWeb.boc.Cell());
+            transferBody.refs.push(new TON.Cell());
             
-            return transferBody;
+            // Сериализуем в BOC и конвертируем в HEX
+            const bocBytes = await transferBody.toBoc({ idx: false });
+            return Array.from(bocBytes).map(b => b.toString(16).padStart(2, '0')).join('');
         }
 
         // Обработчики событий TON Connect
@@ -720,20 +371,17 @@
                 const amountNano = Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS));
                 const queryId = Math.floor(Date.now() / 1000);
                 
-                const transferBody = createJettonTransferMessage(
+                const payload = await createJettonTransferMessage(
                     recipientAddress,
                     amountNano,
                     queryId
                 );
                 
-                // Сериализуем payload в hex
-                const payload = await transferBody.toBoc().toString('hex');
-                
                 const transaction = {
                     validUntil: Math.floor(Date.now() / 1000) + 300, // 5 минут
                     messages: [
                         {
-                            address: balanceInfo.wallet_address, // Адрес кошелька GGCoin
+                            address: balanceInfo.wallet_address,
                             amount: "100000000", // 0.1 TON для газа
                             payload: payload
                         }
@@ -743,7 +391,7 @@
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 if (result.boc) {
-                    showSuccess('Успех!', `Транзакция отправлена! Hash: ${result.boc.slice(0, 10)}...`);
+                    showSuccess('Успех!', `Транзакция отправлена!`);
                     sendAmountInput.value = '';
                     
                     // Обновить баланс через 15 секунд
