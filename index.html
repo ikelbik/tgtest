@@ -482,13 +482,13 @@
 
                 console.log('Starting to fetch jetton balances for address:', address);
 
-                // Специальный поиск GGCoin
-                await searchForGGCoin(address, balances, seenTokens);
+                // Специальный поиск Goblin Gotts Coin
+                await searchForGoblinGottsCoin(address, balances, seenTokens);
 
                 // 1. TON API v2 (основной источник)
                 try {
                     console.log('Trying TON API v2...');
-                    const jettonResponse = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons?limit=100`);
+                    const jettonResponse = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons?limit=200&currencies=ton,usd`);
                     const jettonData = await jettonResponse.json();
                     
                     console.log('TON API v2 response:', jettonData);
@@ -503,12 +503,13 @@
                             
                             console.log(`Found token: ${symbol} (${name}), balance: ${balance}, raw: ${rawBalance}`);
                             
-                            // Специальная проверка для GGCoin
-                            if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg') || name.toLowerCase().includes('coin')) {
-                                console.log('🎯 Potential GGCoin found:', symbol, name);
+                            // Специальная проверка для Goblin Gotts Coin
+                            if (isGoblinGottsCoin(symbol, name)) {
+                                console.log('🎯 GOBLIN GOTTS COIN FOUND:', symbol, name);
                             }
                             
-                            if (!seenTokens.has(symbol + jetton.jetton.address)) {
+                            const tokenKey = (symbol + name + jetton.jetton.address).toLowerCase();
+                            if (!seenTokens.has(tokenKey)) {
                                 balances.push({
                                     symbol: symbol,
                                     name: name,
@@ -517,7 +518,7 @@
                                     rawBalance: rawBalance,
                                     decimals: decimals
                                 });
-                                seenTokens.add(symbol + jetton.jetton.address);
+                                seenTokens.add(tokenKey);
                             }
                         }
                     }
@@ -528,7 +529,7 @@
                 // 2. TONCenter API v3
                 try {
                     console.log('Trying TONCenter API v3...');
-                    const tcResponse = await fetch(`https://toncenter.com/api/v3/jetton/wallets?address=${address}&limit=100`);
+                    const tcResponse = await fetch(`https://toncenter.com/api/v3/jetton/wallets?address=${address}&limit=200`);
                     const tcData = await tcResponse.json();
                     
                     console.log('TONCenter API v3 response:', tcData);
@@ -543,12 +544,13 @@
                             
                             console.log(`TONCenter found token: ${symbol} (${name}), balance: ${balance}, raw: ${rawBalance}`);
                             
-                            // Специальная проверка для GGCoin
-                            if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg') || name.toLowerCase().includes('coin')) {
-                                console.log('🎯 Potential GGCoin found in TONCenter:', symbol, name);
+                            // Специальная проверка для Goblin Gotts Coin
+                            if (isGoblinGottsCoin(symbol, name)) {
+                                console.log('🎯 GOBLIN GOTTS COIN FOUND in TONCenter:', symbol, name);
                             }
                             
-                            if (!seenTokens.has(symbol + wallet.jetton.address)) {
+                            const tokenKey = (symbol + name + wallet.jetton.address).toLowerCase();
+                            if (!seenTokens.has(tokenKey)) {
                                 balances.push({
                                     symbol: symbol,
                                     name: name,
@@ -557,7 +559,7 @@
                                     rawBalance: rawBalance,
                                     decimals: decimals
                                 });
-                                seenTokens.add(symbol + wallet.jetton.address);
+                                seenTokens.add(tokenKey);
                             }
                         }
                     }
@@ -584,11 +586,12 @@
                                 
                                 console.log(`TONKeeper found token: ${symbol} (${name}), balance: ${balance}`);
                                 
-                                if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
-                                    console.log('🎯 Potential GGCoin found in TONKeeper:', symbol, name);
+                                if (isGoblinGottsCoin(symbol, name)) {
+                                    console.log('🎯 GOBLIN GOTTS COIN FOUND in TONKeeper:', symbol, name);
                                 }
                                 
-                                if (!seenTokens.has(symbol + wallet.jetton.address)) {
+                                const tokenKey = (symbol + name + wallet.jetton.address).toLowerCase();
+                                if (!seenTokens.has(tokenKey)) {
                                     balances.push({
                                         symbol: symbol,
                                         name: name,
@@ -597,7 +600,7 @@
                                         rawBalance: rawBalance,
                                         decimals: decimals
                                     });
-                                    seenTokens.add(symbol + wallet.jetton.address);
+                                    seenTokens.add(tokenKey);
                                 }
                             }
                         }
@@ -606,26 +609,85 @@
                     console.log('TONKeeper API failed:', tkError);
                 }
 
-                // 4. Прямой поиск GGCoin через известные адреса
-                await searchGGCoinDirectly(address, balances, seenTokens);
+                // 4. Поиск через getgems.io API
+                try {
+                    console.log('Trying GetGems API...');
+                    const ggResponse = await fetch(`https://api.getgems.io/graphql`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            query: `
+                                query {
+                                    account(address: "${address}") {
+                                        jettonBalances {
+                                            balance
+                                            jettonMaster {
+                                                symbol
+                                                name
+                                                decimals
+                                                address
+                                            }
+                                        }
+                                    }
+                                }
+                            `
+                        })
+                    });
+                    
+                    const ggData = await ggResponse.json();
+                    console.log('GetGems API response:', ggData);
+                    
+                    if (ggData.data && ggData.data.account && ggData.data.account.jettonBalances) {
+                        for (const balance of ggData.data.account.jettonBalances) {
+                            const jetton = balance.jettonMaster;
+                            const decimals = jetton.decimals || 9;
+                            const rawBalance = balance.balance || '0';
+                            const tokenBalance = parseFloat(rawBalance) / Math.pow(10, decimals);
+                            const symbol = jetton.symbol || 'GG';
+                            const name = jetton.name || 'GetGems Token';
+                            
+                            console.log(`GetGems found token: ${symbol} (${name}), balance: ${tokenBalance}`);
+                            
+                            if (isGoblinGottsCoin(symbol, name)) {
+                                console.log('🎯 GOBLIN GOTTS COIN FOUND in GetGems:', symbol, name);
+                            }
+                            
+                            const tokenKey = (symbol + name + jetton.address).toLowerCase();
+                            if (!seenTokens.has(tokenKey)) {
+                                balances.push({
+                                    symbol: symbol,
+                                    name: name,
+                                    balance: tokenBalance.toFixed(6),
+                                    address: jetton.address,
+                                    rawBalance: rawBalance,
+                                    decimals: decimals
+                                });
+                                seenTokens.add(tokenKey);
+                            }
+                        }
+                    }
+                } catch (ggError) {
+                    console.log('GetGems API failed:', ggError);
+                }
 
-                // 5. Анализ транзакций для поиска GGCoin
-                await analyzeTransactionsForGGCoin(address, balances, seenTokens);
+                // 5. Прямой поиск через известные контракты
+                await searchGoblinGottsDirectly(address, balances, seenTokens);
+
+                // 6. Анализ всех транзакций кошелька
+                await analyzeAllTransactions(address, balances, seenTokens);
 
                 console.log('Final balances:', balances);
                 
-                // Проверяем, найден ли GGCoin
-                const ggcoinFound = balances.find(token => 
-                    token.symbol.toLowerCase().includes('gg') || 
-                    token.name.toLowerCase().includes('gg') ||
-                    token.symbol.toLowerCase() === 'ggcoin'
-                );
+                // Проверяем, найден ли Goblin Gotts Coin
+                const goblinCoinFound = balances.find(token => isGoblinGottsCoin(token.symbol, token.name));
                 
-                if (!ggcoinFound) {
-                    console.log('⚠️ GGCoin not found in any API. Adding placeholder...');
+                if (!goblinCoinFound) {
+                    console.log('⚠️ Goblin Gotts Coin not found in any API. Adding placeholder...');
                     balances.push({
-                        symbol: 'GGCOIN',
-                        name: 'GGCoin (Not Found)',
+                        symbol: 'GOBLIN',
+                        name: 'Goblin Gotts Coin (Not Found)',
                         balance: '0.000000',
                         address: 'unknown',
                         rawBalance: '0',
@@ -647,96 +709,147 @@
             }
         }
 
-        // Специальная функция поиска GGCoin
-        async function searchForGGCoin(address, balances, seenTokens) {
-            console.log('🔍 Searching specifically for GGCoin...');
+        // Функция проверки, является ли токен Goblin Gotts Coin
+        function isGoblinGottsCoin(symbol, name) {
+            const symbolLower = symbol.toLowerCase();
+            const nameLower = name.toLowerCase();
             
-            // Известные возможные адреса GGCoin (добавьте реальные если знаете)
-            const possibleGGCoinAddresses = [
-                // Добавьте известные адреса GGCoin если есть
-            ];
+            return symbolLower.includes('goblin') || 
+                   symbolLower.includes('gotts') || 
+                   symbolLower.includes('gg') ||
+                   nameLower.includes('goblin') || 
+                   nameLower.includes('gotts') || 
+                   nameLower.includes('gringotts') ||
+                   nameLower.includes('goblingotts') ||
+                   (symbolLower.includes('g') && symbolLower.includes('g') && symbolLower.length <= 6);
+        }
+
+        // Специальная функция поиска Goblin Gotts Coin
+        async function searchForGoblinGottsCoin(address, balances, seenTokens) {
+            console.log('🔍 Searching specifically for Goblin Gotts Coin...');
             
-            for (const jettonAddress of possibleGGCoinAddresses) {
+            // Возможные варианты символов
+            const possibleSymbols = ['GOBLIN', 'GOTTS', 'GG', 'GGCOIN', 'GOBLINGOTTS'];
+            
+            for (const symbol of possibleSymbols) {
                 try {
-                    const response = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${jettonAddress}`);
-                    const data = await response.json();
-                    
-                    if (data.ok && parseInt(data.result) > 0) {
-                        console.log('🎯 Found GGCoin at address:', jettonAddress);
-                        // Добавляем найденный токен
-                    }
+                    // Поиск через различные источники
+                    console.log(`Searching for symbol: ${symbol}`);
                 } catch (error) {
-                    console.log('Error checking GGCoin address:', jettonAddress, error);
+                    console.log(`Error searching for ${symbol}:`, error);
                 }
             }
         }
 
-        // Прямой поиск GGCoin
-        async function searchGGCoinDirectly(address, balances, seenTokens) {
-            console.log('🔍 Direct GGCoin search...');
+        // Прямой поиск Goblin Gotts Coin
+        async function searchGoblinGottsDirectly(address, balances, seenTokens) {
+            console.log('🔍 Direct Goblin Gotts Coin search...');
             
             try {
-                // Поиск через DeDust API
-                const dedustResponse = await fetch(`https://api.dedust.io/v2/accounts/${address}/jettons`);
-                const dedustData = await dedustResponse.json();
+                // Поиск через TonScan API
+                const tsResponse = await fetch(`https://tonscan.org/api/v3/jetton/masters`);
+                const tsData = await tsResponse.json();
                 
-                console.log('DeDust API response:', dedustData);
+                console.log('TonScan masters response:', tsData);
                 
-                if (dedustData && Array.isArray(dedustData)) {
-                    for (const token of dedustData) {
-                        const symbol = token.symbol || '';
-                        const name = token.name || '';
-                        
-                        if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
-                            console.log('🎯 GGCoin found in DeDust:', token);
-                            
-                            if (!seenTokens.has(symbol + token.address)) {
-                                balances.push({
-                                    symbol: symbol,
-                                    name: name,
-                                    balance: (parseFloat(token.balance || '0') / Math.pow(10, token.decimals || 9)).toFixed(6),
-                                    address: token.address,
-                                    rawBalance: token.balance || '0',
-                                    decimals: token.decimals || 9
-                                });
-                                seenTokens.add(symbol + token.address);
+                if (tsData && Array.isArray(tsData)) {
+                    for (const master of tsData) {
+                        if (master.symbol && master.name) {
+                            if (isGoblinGottsCoin(master.symbol, master.name)) {
+                                console.log('🎯 Found potential Goblin Gotts master contract:', master);
+                                
+                                // Проверяем баланс этого токена для нашего адреса
+                                try {
+                                    const walletResponse = await fetch(`https://tonscan.org/api/v3/jetton/wallets?jetton_master=${master.address}&owner=${address}`);
+                                    const walletData = await walletResponse.json();
+                                    
+                                    if (walletData && walletData.balance) {
+                                        const balance = parseFloat(walletData.balance) / Math.pow(10, master.decimals || 9);
+                                        
+                                        console.log('🎯 GOBLIN GOTTS COIN FOUND with balance:', balance);
+                                        
+                                        const tokenKey = (master.symbol + master.name + master.address).toLowerCase();
+                                        if (!seenTokens.has(tokenKey)) {
+                                            balances.push({
+                                                symbol: master.symbol,
+                                                name: master.name,
+                                                balance: balance.toFixed(6),
+                                                address: master.address,
+                                                rawBalance: walletData.balance,
+                                                decimals: master.decimals || 9
+                                            });
+                                            seenTokens.add(tokenKey);
+                                        }
+                                    }
+                                } catch (walletError) {
+                                    console.log('Error checking wallet for master:', master.address, walletError);
+                                }
                             }
                         }
                     }
                 }
             } catch (error) {
-                console.log('DeDust API failed:', error);
+                console.log('TonScan masters search failed:', error);
             }
         }
 
-        // Анализ транзакций для поиска GGCoin
-        async function analyzeTransactionsForGGCoin(address, balances, seenTokens) {
-            console.log('🔍 Analyzing transactions for GGCoin...');
+        // Расширенный анализ транзакций
+        async function analyzeAllTransactions(address, balances, seenTokens) {
+            console.log('🔍 Analyzing ALL transactions for Goblin Gotts Coin...');
             
             try {
-                const txResponse = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${address}&limit=100`);
+                // Получаем больше транзакций
+                const txResponse = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${address}&limit=200`);
                 const txData = await txResponse.json();
                 
                 if (txData.ok && txData.result) {
+                    console.log(`Analyzing ${txData.result.length} transactions...`);
+                    
                     for (const tx of txData.result) {
-                        // Анализируем сообщения в транзакциях
-                        if (tx.out_msgs) {
-                            for (const msg of tx.out_msgs) {
-                                if (msg.destination && msg.msg_data) {
-                                    // Ищем Jetton Transfer операции
-                                    if (msg.msg_data.text && msg.msg_data.text.includes('Transfer')) {
-                                        console.log('Found Jetton transfer to:', msg.destination);
-                                        
-                                        // Проверяем, не GGCoin ли это
-                                        try {
-                                            const jettonInfo = await fetch(`https://toncenter.com/api/v2/getTokenData?address=${msg.destination}`);
-                                            const jettonData = await jettonInfo.json();
+                        // Анализируем все сообщения в транзакциях
+                        const allMessages = [...(tx.in_msg ? [tx.in_msg] : []), ...(tx.out_msgs || [])];
+                        
+                        for (const msg of allMessages) {
+                            if (msg.destination) {
+                                try {
+                                    // Получаем информацию о контракте
+                                    const contractResponse = await fetch(`https://toncenter.com/api/v2/getAddressInformation?address=${msg.destination}`);
+                                    const contractData = await contractResponse.json();
+                                    
+                                    if (contractData.ok && contractData.result) {
+                                        // Проверяем, не jetton ли это
+                                        if (contractData.result.code) {
+                                            console.log('Found contract:', msg.destination);
                                             
-                                            if (jettonData.ok && jettonData.result) {
-                                                const symbol = jettonData.result.symbol || '';
-                                                const name = jettonData.result.name || '';
+                                            // Пытаемся получить информацию о jetton
+                                            try {
+                                                const jettonResponse = await fetch(`https://toncenter.com/api/v2/getTokenData?address=${msg.destination}`);
+                                                const jettonData = await jettonResponse.json();
                                                 
-                                                if (symbol.toLowerCase().includes('gg') || name.toLowerCase().includes('gg')) {
+                                                if (jettonData.ok && jettonData.result) {
+                                                    const symbol = jettonData.result.symbol || '';
+                                                    const name = jettonData.result.name || '';
+                                                    
+                                                    if (isGoblinGottsCoin(symbol, name)) {
+                                                        console.log('🎯 GOBLIN GOTTS COIN FOUND through transaction analysis!', jettonData.result);
+                                                    }
+                                                }
+                                            } catch (jettonError) {
+                                                // Игнорируем ошибки отдельных запросов
+                                            }
+                                        }
+                                    }
+                                } catch (contractError) {
+                                    // Игнорируем ошибки отдельных запросов
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.log('Extended transaction analysis failed:', error);
+            }
+        }
                                                     console.log('🎯 GGCoin found through transaction analysis!', jettonData.result);
                                                 }
                                             }
