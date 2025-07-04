@@ -6,8 +6,7 @@
     <title>TON GGCoin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://unpkg.com/ton@13.5.0/dist/ton.js"></script>
-    <script src="https://unpkg.com/ton-core@0.53.0/dist/index.js"></script>
+    <script src="https://unpkg.com/tonweb@0.0.66/dist/tonweb.js"></script>
     <style>
         * {
             margin: 0;
@@ -474,11 +473,7 @@
         // Функция конвертации адреса
         function convertAddress(address) {
             try {
-                // Используем TonCore для парсинга адресов
-                if (window.TonCore) {
-                    const addr = window.TonCore.Address.parse(address);
-                    return addr.toString();
-                }
+                // Просто возвращаем адрес как есть для API
                 return address;
             } catch (error) {
                 console.error('Ошибка конвертации адреса:', error);
@@ -661,35 +656,23 @@
         async function sendGGCoin(amount) {
             try {
                 if (!ggcoinWalletAddress) {
-                    throw new Error('GGCoin кошелек не найден');
+                    throw new Error('GGCoin кошелек не найден. Убедитесь, что у вас есть GGCoin токены.');
                 }
 
-                // Используем TonCore для создания сообщения
-                if (!window.TonCore) {
-                    throw new Error('TonCore библиотека не загружена');
+                // Проверяем наличие TonWeb
+                if (!window.TonWeb) {
+                    throw new Error('TonWeb библиотека не загружена');
                 }
 
-                const { beginCell, Address } = window.TonCore;
-
-                // Создаем payload для transfer
-                const forwardPayload = beginCell()
-                    .storeUint(0, 32) // op = 0
-                    .storeStringTail('GGCoin transfer') // comment
-                    .endCell();
-
-                const transferBody = beginCell()
-                    .storeUint(0xf8a7ea5, 32) // op = transfer
-                    .storeUint(0, 64) // query_id
-                    .storeCoins(Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS))) // amount
-                    .storeAddress(Address.parse(RECIPIENT_ADDRESS)) // destination
-                    .storeAddress(Address.parse(walletAddress)) // response_destination
-                    .storeBit(false) // no custom_payload
-                    .storeCoins(1) // forward_ton_amount (1 nanoton)
-                    .storeBit(true) // forward_payload in ref
-                    .storeRef(forwardPayload)
-                    .endCell();
-
-                const boc = transferBody.toBoc().toString('base64');
+                const tonweb = new window.TonWeb();
+                
+                // Создаем payload для Jetton transfer
+                const jettonTransferPayload = await createJettonTransferPayload(
+                    tonweb,
+                    amount,
+                    RECIPIENT_ADDRESS,
+                    walletAddress
+                );
 
                 const transaction = {
                     validUntil: Math.floor(Date.now() / 1000) + 60,
@@ -697,15 +680,58 @@
                         {
                             address: ggcoinWalletAddress,
                             amount: "50000000", // 0.05 TON для комиссии
-                            payload: boc
+                            payload: jettonTransferPayload
                         }
                     ]
                 };
+
+                console.log('Отправка транзакции:', transaction);
 
                 const result = await tonConnectUI.sendTransaction(transaction);
                 return result;
             } catch (error) {
                 console.error('Ошибка отправки GGCoin:', error);
+                throw error;
+            }
+        }
+
+        // Функция создания payload для Jetton transfer с использованием TonWeb
+        async function createJettonTransferPayload(tonweb, amount, toAddress, fromAddress) {
+            try {
+                const Cell = tonweb.boc.Cell;
+                
+                // Создаем comment для forward payload
+                const forwardPayload = new Cell();
+                forwardPayload.bits.writeUint(0, 32); // op = 0 (comment)
+                const comment = new TextEncoder().encode('GGCoin transfer');
+                forwardPayload.bits.writeBytes(comment);
+                
+                // Создаем основной payload для transfer
+                const transferBody = new Cell();
+                transferBody.bits.writeUint(0xf8a7ea5, 32); // op = transfer
+                transferBody.bits.writeUint(0, 64); // query_id
+                transferBody.bits.writeCoins(Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS))); // amount
+                
+                // Парсим и записываем адрес получателя
+                const toAddr = new tonweb.Address(toAddress);
+                transferBody.bits.writeAddress(toAddr);
+                
+                // Парсим и записываем адрес отправителя для ответа
+                const fromAddr = new tonweb.Address(fromAddress);
+                transferBody.bits.writeAddress(fromAddr);
+                
+                transferBody.bits.writeBit(false); // no custom_payload
+                transferBody.bits.writeCoins(1); // forward_ton_amount (1 nanoton)
+                transferBody.bits.writeBit(true); // forward_payload in ref
+                transferBody.refs.push(forwardPayload);
+                
+                // Конвертируем в base64
+                const boc = await transferBody.toBoc(false);
+                const base64 = tonweb.utils.bytesToBase64(boc);
+                
+                return base64;
+            } catch (error) {
+                console.error('Ошибка создания payload:', error);
                 throw error;
             }
         }
