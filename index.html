@@ -263,6 +263,11 @@
             <button class="btn btn-primary" id="send-transaction">Отправить</button>
         </div>
 
+        <div class="action-group" id="debug-section" style="display: none;">
+            <div class="action-title">Отладочная информация</div>
+            <div id="debug-output" style="background: #f8f9fa; padding: 10px; border-radius: 8px; font-family: monospace; font-size: 12px; max-height: 200px; overflow-y: auto; white-space: pre-wrap;"></div>
+        </div>
+
         <div class="network-info">
             <span class="status-indicator" id="status-indicator"></span>
             <span id="network-status">Инициализация...</span>
@@ -292,6 +297,8 @@
         const balanceSection = document.getElementById('balance-section');
         const balanceDisplay = document.getElementById('balance-display');
         const sendSection = document.getElementById('send-section');
+        const debugSection = document.getElementById('debug-section');
+        const debugOutput = document.getElementById('debug-output');
         const refreshBalanceBtn = document.getElementById('refresh-balance');
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const sendTransactionBtn = document.getElementById('send-transaction');
@@ -304,6 +311,16 @@
         if (window.Telegram?.WebApp) {
             window.Telegram.WebApp.ready();
             window.Telegram.WebApp.expand();
+        }
+
+        // Функция добавления отладочной информации
+        function addDebugLog(message) {
+            console.log(message);
+            if (debugOutput) {
+                const timestamp = new Date().toLocaleTimeString();
+                debugOutput.textContent += `[${timestamp}] ${message}\n`;
+                debugOutput.scrollTop = debugOutput.scrollHeight;
+            }
         }
 
         // Функция отображения сообщений
@@ -344,39 +361,64 @@
                 walletInfo.style.display = 'block';
                 balanceSection.style.display = 'block';
                 sendSection.style.display = 'block';
+                debugSection.style.display = 'block';
             } else {
                 statusIndicator.className = 'status-indicator status-disconnected';
                 networkStatus.textContent = 'Не подключено';
                 walletInfo.style.display = 'none';
                 balanceSection.style.display = 'none';
                 sendSection.style.display = 'none';
+                debugSection.style.display = 'none';
             }
         }
 
         // Функция получения баланса GGCoin
         async function getGGCoinBalance(address) {
             try {
-                console.log('Получение баланса GGCoin для адреса:', address);
+                addDebugLog('=== НАЧАЛО ПОИСКА ТОКЕНА ===');
+                addDebugLog(`Адрес владельца кошелька: ${address}`);
+                addDebugLog(`Ищем токен с адресом: ${GGCOIN_TOKEN_ADDRESS}`);
                 
                 const response = await fetch(`https://tonapi.io/v2/accounts/${address}/jettons?limit=100`);
                 const data = await response.json();
                 
+                addDebugLog(`API запрос выполнен. Статус: ${response.status}`);
+                
                 if (data.jettons && data.jettons.length > 0) {
+                    addDebugLog(`Найдено ${data.jettons.length} токенов у владельца:`);
+                    
+                    // Показываем все найденные токены
+                    data.jettons.forEach((jetton, index) => {
+                        addDebugLog(`${index + 1}. ${jetton.jetton.symbol || 'Unknown'} (${jetton.jetton.name || 'Unknown'})`);
+                        addDebugLog(`   Адрес: ${jetton.jetton.address}`);
+                        addDebugLog(`   Баланс: ${jetton.balance}`);
+                        addDebugLog(`   Jetton кошелек: ${jetton.wallet_address.address}`);
+                        addDebugLog('   ---');
+                    });
+                    
                     for (const jetton of data.jettons) {
                         if (jetton.jetton.address === GGCOIN_TOKEN_ADDRESS) {
                             const balance = parseFloat(jetton.balance) / Math.pow(10, jetton.jetton.decimals || 9);
                             jettonWalletAddress = jetton.wallet_address.address;
-                            console.log('Найден GGCoin:', balance, 'Jetton кошелек:', jettonWalletAddress);
+                            addDebugLog('✅ НАЙДЕН ИСКОМЫЙ ТОКЕН!');
+                            addDebugLog(`Баланс: ${balance}`);
+                            addDebugLog(`Jetton кошелек: ${jettonWalletAddress}`);
                             return balance;
                         }
                     }
+                } else {
+                    addDebugLog('У этого адреса нет jetton токенов');
                 }
                 
-                console.log('GGCoin не найден');
+                addDebugLog('❌ ТОКЕН НЕ НАЙДЕН');
+                addDebugLog('Возможные причины:');
+                addDebugLog('1. Неправильный адрес токена');
+                addDebugLog('2. У кошелька нет этого токена');
+                addDebugLog('3. Токен имеет нулевой баланс');
                 return 0;
             } catch (error) {
-                console.error('Ошибка получения баланса:', error);
-                showError('Ошибка', 'Не удалось получить баланс');
+                addDebugLog(`ОШИБКА API: ${error.message}`);
+                showError('Ошибка', 'Не удалось получить баланс: ' + error.message);
                 return 0;
             }
         }
@@ -471,10 +513,16 @@
                 tonConnectUI.onStatusChange(async (wallet) => {
                     if (wallet) {
                         walletAddress = wallet.account.address;
+                        addDebugLog('=== ПОДКЛЮЧЕНИЕ КОШЕЛЬКА ===');
+                        addDebugLog(`Адрес: ${walletAddress}`);
+                        addDebugLog(`Цепь: ${wallet.account.chain}`);
+                        addDebugLog(`Публичный ключ: ${wallet.account.publicKey}`);
+                        
                         walletAddressElement.textContent = `Адрес: ${walletAddress}`;
                         updateConnectionStatus(true);
                         await updateWalletInfo();
                     } else {
+                        addDebugLog('Кошелек отключен');
                         walletAddress = null;
                         updateConnectionStatus(false);
                     }
