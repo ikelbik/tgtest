@@ -6,7 +6,8 @@
     <title>TON GGCoin WebApp</title>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
-    <script src="https://unpkg.com/@ton/ton@13.9.0/dist/index.js"></script>
+    <script src="https://unpkg.com/ton@13.5.0/dist/ton.js"></script>
+    <script src="https://unpkg.com/ton-core@0.53.0/dist/index.js"></script>
     <style>
         * {
             margin: 0;
@@ -348,7 +349,7 @@
                 <div class="action-title">Отправить GGCoin</div>
                 <div class="input-group">
                     <label class="input-label">Адрес получателя:</label>
-                    <input type="text" class="input-field" id="recipient-address" placeholder="UQ...">
+                    <div class="recipient-info">UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h</div>
                 </div>
                 <div class="input-group">
                     <label class="input-label">Сумма (GGCoin):</label>
@@ -386,9 +387,10 @@
             buttonRootId: 'ton-connect-button'
         });
 
-        // GGCoin контракт адрес
+        // GGCoin контракт адрес и получатель
         const GGCOIN_MASTER_ADDRESS = '0:7f82a882da388deecaa53806c44c375f697a09fd86d93e9c0e1832749b222b0b';
         const GGCOIN_DECIMALS = 9;
+        const RECIPIENT_ADDRESS = 'UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h';
 
         // Элементы DOM
         const walletInfo = document.getElementById('wallet-info');
@@ -400,7 +402,6 @@
         const disconnectWalletBtn = document.getElementById('disconnect-wallet');
         const sendTransactionBtn = document.getElementById('send-transaction');
         const sendAmountInput = document.getElementById('send-amount');
-        const recipientAddressInput = document.getElementById('recipient-address');
         const statusIndicator = document.getElementById('status-indicator');
         const networkStatus = document.getElementById('network-status');
         const transactionsList = document.getElementById('transactions-list');
@@ -473,9 +474,12 @@
         // Функция конвертации адреса
         function convertAddress(address) {
             try {
-                // Преобразуем адрес в формат, подходящий для API
-                const addr = TON.Address.parse(address);
-                return addr.toString();
+                // Используем TonCore для парсинга адресов
+                if (window.TonCore) {
+                    const addr = window.TonCore.Address.parse(address);
+                    return addr.toString();
+                }
+                return address;
             } catch (error) {
                 console.error('Ошибка конвертации адреса:', error);
                 return address;
@@ -654,27 +658,38 @@
         }
 
         // Функция отправки GGCoin
-        async function sendGGCoin(recipientAddress, amount) {
+        async function sendGGCoin(amount) {
             try {
                 if (!ggcoinWalletAddress) {
                     throw new Error('GGCoin кошелек не найден');
                 }
 
-                // Создаем payload для transfer
-                const forwardPayload = new TON.Cell();
-                forwardPayload.bits.writeUint(0, 32); // op = 0
-                forwardPayload.bits.writeString('GGCoin transfer'); // comment
+                // Используем TonCore для создания сообщения
+                if (!window.TonCore) {
+                    throw new Error('TonCore библиотека не загружена');
+                }
 
-                const transferBody = new TON.Cell();
-                transferBody.bits.writeUint(0xf8a7ea5, 32); // op = transfer
-                transferBody.bits.writeUint(0, 64); // query_id
-                transferBody.bits.writeCoins(Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS))); // amount
-                transferBody.bits.writeAddress(TON.Address.parse(recipientAddress)); // destination
-                transferBody.bits.writeAddress(TON.Address.parse(walletAddress)); // response_destination
-                transferBody.bits.writeBit(false); // no custom_payload
-                transferBody.bits.writeCoins(1); // forward_ton_amount (1 nanoton)
-                transferBody.bits.writeBit(true); // forward_payload in ref
-                transferBody.refs.push(forwardPayload);
+                const { beginCell, Address } = window.TonCore;
+
+                // Создаем payload для transfer
+                const forwardPayload = beginCell()
+                    .storeUint(0, 32) // op = 0
+                    .storeStringTail('GGCoin transfer') // comment
+                    .endCell();
+
+                const transferBody = beginCell()
+                    .storeUint(0xf8a7ea5, 32) // op = transfer
+                    .storeUint(0, 64) // query_id
+                    .storeCoins(Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS))) // amount
+                    .storeAddress(Address.parse(RECIPIENT_ADDRESS)) // destination
+                    .storeAddress(Address.parse(walletAddress)) // response_destination
+                    .storeBit(false) // no custom_payload
+                    .storeCoins(1) // forward_ton_amount (1 nanoton)
+                    .storeBit(true) // forward_payload in ref
+                    .storeRef(forwardPayload)
+                    .endCell();
+
+                const boc = transferBody.toBoc().toString('base64');
 
                 const transaction = {
                     validUntil: Math.floor(Date.now() / 1000) + 60,
@@ -682,7 +697,7 @@
                         {
                             address: ggcoinWalletAddress,
                             amount: "50000000", // 0.05 TON для комиссии
-                            payload: transferBody.toBoc().toString('base64')
+                            payload: boc
                         }
                     ]
                 };
@@ -725,12 +740,6 @@
 
         sendTransactionBtn.addEventListener('click', async () => {
             const amount = parseFloat(sendAmountInput.value);
-            const recipientAddress = recipientAddressInput.value.trim();
-
-            if (!recipientAddress) {
-                showError('Ошибка ввода', 'Введите адрес получателя');
-                return;
-            }
 
             if (!amount || amount <= 0) {
                 showError('Ошибка ввода', 'Введите корректную сумму');
@@ -745,12 +754,11 @@
             try {
                 sendTransactionBtn.classList.add('loading');
                 
-                const result = await sendGGCoin(recipientAddress, amount);
+                const result = await sendGGCoin(amount);
                 
                 if (result) {
                     showSuccess('Успех', `${amount} GGCoin отправлено успешно!`);
                     sendAmountInput.value = '';
-                    recipientAddressInput.value = '';
                     
                     // Обновить баланс через 5 секунд
                     setTimeout(updateWalletInfo, 5000);
