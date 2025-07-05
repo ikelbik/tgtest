@@ -359,7 +359,7 @@ function unloadScreen() {
 				this.plane01.setDepth(100);
 				this.plane01.z=1;
 				
-				this.plane02.setDepth(50);
+				this.plane02.setDepth(0);
 				this.plane02.z=0.5;				
 
 				this.scaleX = this.cameras.main.width / this.bg.width;//-1;
@@ -422,9 +422,10 @@ function unloadScreen() {
 				
 				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 2000);
 				//this.SetPile(this.pileY, 350*this.scale, 400*this.scale);
-				safe3 = new Safe3(this, 300, 400);		
+				safe3 = new Safe3(this, 600, 900);		
                 safe3.addVerticesFromObj('Safe3', 0.1).panZ(7).modelRotation.x += 0.3;
 				safe3.setDepth = 220;
+				safe3.setScale(2);
             }
 					
 			createMultiCoin(n){
