@@ -422,8 +422,8 @@ function unloadScreen() {
 				
 				this.InitPile(this.pileY, 400*this.scale, 400*this.scale, 0, 2000);
 				//this.SetPile(this.pileY, 350*this.scale, 400*this.scale);
-				safe3 = new Safe3(this, 600, 900);		
-                safe3.addVerticesFromObj('Safe3', 0.1).panZ(7).modelRotation.x += 0.3;
+				safe3 = new Safe3(this, 500, 1100);		
+                safe3.addVerticesFromObj('Safe3', 0.1).panZ(7).modelRotation.y -= Math.PI/2;
 				safe3.setDepth = 220;
 				safe3.setScale(2);
             }
