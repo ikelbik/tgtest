@@ -96,15 +96,19 @@
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 this.load.image('loadscreen', 'assets/loadscreen.png');
                 
-                // Отслеживание прогресса загрузки
+                // Отслеживание прогресса загрузки только для этой сцены
                 this.load.on('progress', (value) => {
                     this.loadProgress = value;
-                    this.updateProgressBar();
+                    if (this.scene.isActive()) {
+                        this.updateProgressBar();
+                    }
                 });
                 
                 this.load.on('complete', () => {
                     this.isLoading = false;
-                    this.showPlayButton();
+                    if (this.scene.isActive()) {
+                        this.showPlayButton();
+                    }
                 });
             }
 
@@ -162,6 +166,8 @@
             }
 
             updateProgressBar() {
+                if (!this.progressBar) return; // Проверяем существование progressBar
+                
                 const barWidth = 300;
                 const barHeight = 20;
                 const x = this.cameras.main.centerX - barWidth / 2;
@@ -187,13 +193,17 @@
                 }
                 
                 // Обновляем текст процента
-                this.percentText.setText(Math.floor(progress * 100) + '%');
+                if (this.percentText) {
+                    this.percentText.setText(Math.floor(progress * 100) + '%');
+                }
                 
                 // Обновляем текст загрузки
-                if (progress < 1) {
-                    this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
-                } else {
-                    this.loadingText.setText('Загрузка завершена!');
+                if (this.loadingText) {
+                    if (progress < 1) {
+                        this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
+                    } else {
+                        this.loadingText.setText('Загрузка завершена!');
+                    }
                 }
             }
 
