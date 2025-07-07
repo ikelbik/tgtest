@@ -161,7 +161,7 @@
                 this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
                     'Загрузка...', {
                     font: '28px Arial',
-                    fill: '#ffffff',
+                    fill: '#1',
                     align: 'center'
                 }).setOrigin(0.5);
 
@@ -323,7 +323,7 @@
                 
                 this.plane01.setDepth(100);
                 this.plane01.z = 1;
-                this.plane02.setDepth(0);
+                this.plane02.setDepth(200);
                 this.plane02.z = 0.5;				
 
                 const scaleX = this.cameras.main.width / this.bg.width;
