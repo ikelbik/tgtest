@@ -92,51 +92,76 @@
                 this.isLoading = true;
             }
 
-            preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                this.load.image('loadscreen', 'assets/loadscreen.jpg');
-                
-                // Отслеживание прогресса загрузки только для этой сцены
+            init() {
+                // Устанавливаем обработчики событий загрузки до начала preload
                 this.load.on('progress', (value) => {
                     this.loadProgress = value;
-                    if (this.scene.isActive()) {
-                        this.updateProgressBar();
-                    }
+                    this.updateProgressBar();
                 });
                 
                 this.load.on('complete', () => {
                     this.isLoading = false;
-                    if (this.scene.isActive()) {
+                    this.time.delayedCall(500, () => {
                         this.showPlayButton();
-                    }
+                    });
                 });
             }
 
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                
+                // Загружаем все ресурсы игры в LoadScene
+                this.load.image('loadscreen', 'assets/loadscreen.jpg');
+                this.load.image('bg', 'assets/bg00.jpg');
+                this.load.image('bg01', 'assets/bg01.png');	
+                this.load.image('bg02', 'assets/bg02.png');				
+                this.load.obj('coin', 'assets/ggcoin.obj');
+                this.load.image('texture', 'assets/coin_txt_n.png');
+                this.load.image('coin_t0', 'assets/coin_c00.png');
+                this.load.image('coin_t1', 'assets/coin_c01.png');
+                this.load.image('coin_t2', 'assets/coin_c02.png');
+                this.load.image('coin_t3', 'assets/coin_c03.png');				
+                this.load.image('cshdw', 'assets/shd_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+            }
+
             create() {
-                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
-                
-                const scaleX = this.cameras.main.width / this.bg.width;
-                const scaleY = this.cameras.main.height / this.bg.height;
-                const scale = Math.max(scaleX, scaleY);
-                this.bg.setScale(scale);
+                // Ждем загрузки фонового изображения
+                this.time.delayedCall(100, () => {
+                    if (this.textures.exists('loadscreen')) {
+                        this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
+                        
+                        const scaleX = this.cameras.main.width / this.bg.width;
+                        const scaleY = this.cameras.main.height / this.bg.height;
+                        const scale = Math.max(scaleX, scaleY);
+                        this.bg.setScale(scale);
+                    } else {
+                        // Если изображение не загружено, создаем простой фон
+                        this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
+                                                   this.cameras.main.width, this.cameras.main.height, 0x000022);
+                    }
 
-                // Создание прогресс-бара
-                this.createProgressBar();
-                
-                // Текст загрузки
-                this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
-                    'Загрузка...', {
-                    font: '28px Arial',
-                    fill: '#ffffff',
-                    align: 'center'
-                }).setOrigin(0.5);
+                    // Создание прогресс-бара
+                    this.createProgressBar();
+                    
+                    // Текст загрузки
+                    this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
+                        'Загрузка...', {
+                        font: '28px Arial',
+                        fill: '#ffffff',
+                        align: 'center'
+                    }).setOrigin(0.5);
 
-                this.instructionText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 100, 
-                    'Нажмите кнопку "Играть" для начала игры', {
-                    font: '24px Arial',
-                    fill: '#ffffff',
-                    align: 'center'
-                }).setOrigin(0.5).setVisible(false);
+                    this.instructionText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 100, 
+                        'Нажмите кнопку "Играть" для начала игры', {
+                        font: '24px Arial',
+                        fill: '#ffffff',
+                        align: 'center'
+                    }).setOrigin(0.5).setVisible(false);
+                });
             }
 
             createProgressBar() {
@@ -254,21 +279,8 @@
             }
         
             preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                this.load.image('bg', 'assets/bg00.jpg');
-                this.load.image('bg01', 'assets/bg01.png');	
-                this.load.image('bg02', 'assets/bg02.png');				
-                this.load.obj('coin', 'assets/ggcoin.obj');
-                this.load.image('texture', 'assets/coin_txt_n.png');
-                this.load.image('coin_t0', 'assets/coin_c00.png');
-                this.load.image('coin_t1', 'assets/coin_c01.png');
-                this.load.image('coin_t2', 'assets/coin_c02.png');
-                this.load.image('coin_t3', 'assets/coin_c03.png');				
-                this.load.image('cshdw', 'assets/shd_txt.png');
-                this.load.audio('coinDrop', 'assets/drop.mp3');
-                this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.audio('magic', 'assets/rise.wav');  
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json'); 
+                // Все ресурсы уже загружены в LoadScene
+                // Здесь можно добавить дополнительные ресурсы, специфичные для MainScene
             }
 
             create() {
