@@ -102,6 +102,13 @@
                     this.updateProgressBar();
                 });
                 
+                this.load.on('filecomplete', (key) => {
+                    // Как только загрузится заставка, показываем её
+                    if (key === 'loadscreen' && !this.bg) {
+                        this.showLoadScreen();
+                    }
+                });
+                
                 this.load.on('complete', () => {
                     this.isLoading = false;
                     this.time.delayedCall(500, () => {
@@ -111,13 +118,12 @@
             }
 
             preload() {
-                // Создаем UI элементы сразу в preload, до загрузки ресурсов
-                this.createInitialUI();
-                
                 this.load.setBaseURL('https://ikelbik.github.io/tgtest');
                 
-                // Загружаем все ресурсы игры в LoadScene
+                // Загружаем заставку первой
                 this.load.image('loadscreen', 'assets/loadscreen.jpg');
+                
+                // Остальные ресурсы
                 this.load.image('bg', 'assets/bg00.jpg');
                 this.load.image('bg01', 'assets/bg01.png');	
                 this.load.image('bg02', 'assets/bg02.png');				
@@ -134,11 +140,20 @@
                 this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
             }
 
-            createInitialUI() {
-                // Создаем временный фон
-                this.tempBg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
-                                               this.cameras.main.width, this.cameras.main.height, 0x000044);
+            showLoadScreen() {
+                // Показываем заставку как только она загрузилась
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
+                
+                const scaleX = this.cameras.main.width / this.bg.width;
+                const scaleY = this.cameras.main.height / this.bg.height;
+                const scale = Math.max(scaleX, scaleY);
+                this.bg.setScale(scale);
 
+                // Создаем UI элементы поверх заставки
+                this.createProgressBarUI();
+            }
+
+            createProgressBarUI() {
                 // Создание прогресс-бара
                 this.createProgressBar();
                 
@@ -146,26 +161,26 @@
                 this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
                     'Загрузка...', {
                     font: '28px Arial',
-                    fill: '#555555',
+                    fill: '#ffffff',
                     align: 'center'
                 }).setOrigin(0.5);
+
 
             }
 
             create() {
-                // В create заменяем временный фон на загруженное изображение
-                if (this.textures.exists('loadscreen')) {
-                    this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
-                    
-                    const scaleX = this.cameras.main.width / this.bg.width;
-                    const scaleY = this.cameras.main.height / this.bg.height;
-                    const scale = Math.max(scaleX, scaleY);
-                    this.bg.setScale(scale);
-                    
-                    // Убираем временный фон
-                    if (this.tempBg) {
-                        this.tempBg.destroy();
-                    }
+                // Если заставка еще не показана (например, не загрузилась), создаем fallback
+                if (!this.bg) {
+                    this.time.delayedCall(100, () => {
+                        if (this.textures.exists('loadscreen')) {
+                            this.showLoadScreen();
+                        } else {
+                            // Fallback - простой фон
+                            this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
+                                                       this.cameras.main.width, this.cameras.main.height, 0x000044);
+                            this.createProgressBarUI();
+                        }
+                    });
                 }
             }
 
@@ -245,8 +260,6 @@
                 this.percentText.setVisible(false);
                 this.loadingText.setVisible(false);
                 
-                // Показываем инструкцию
-                this.instructionText.setVisible(true);
 
                 if (tg) {
                     tg.MainButton.setText('Играть');
