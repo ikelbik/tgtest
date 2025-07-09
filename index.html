@@ -7,313 +7,335 @@
     <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
     <meta name="theme-color" content="#000022">
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent; 
-        }
-        
-        body { 
-            background: #000022;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            overflow: hidden;
-        }
-        
-        html, body {
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
+        html, body, #game-container {
             margin: 0;
             padding: 0;
             width: 100%;
             height: 100%;
-        }
-        
-        #app-container {
-            width: 100%;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-        
-        #content-area {
-            flex: 1;
-            width: 100%;
-            position: relative;
             overflow: hidden;
         }
-        
-        #content-area iframe {
+        .menu-container {
+            position: absolute;
+            bottom: 20px;
             width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        /* Навигационное меню */
-        #nav-menu {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background: rgba(10, 10, 30, 0.95);
-            backdrop-filter: blur(10px);
             display: flex;
-            justify-content: space-around;
-            align-items: center;
-            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            justify-content: center;
             z-index: 1000;
-            transition: transform 0.3s ease;
         }
-        
-        .nav-item {
-            flex: 1;
+        .menu-button {
+            width: 70px;
+            height: 70px;
+            background: rgba(30, 30, 80, 0.8);
+            border: 2px solid #4a6fff;
+            border-radius: 50%;
+            margin: 0 10px;
             display: flex;
-            flex-direction: column;
             align-items: center;
             justify-content: center;
-            padding: 8px;
+            color: white;
+            font-size: 12px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            position: relative;
-            height: 100%;
+            user-select: none;
         }
-        
-        .nav-item::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 0;
-            height: 3px;
-            background: linear-gradient(90deg, #4A90E2, #7B68EE);
-            transition: width 0.3s ease;
-            border-radius: 0 0 3px 3px;
-        }
-        
-        .nav-item.active::before {
-            width: 60%;
-        }
-        
-        .nav-icon {
-            width: 24px;
-            height: 24px;
-            margin-bottom: 4px;
-            fill: #666;
-            transition: all 0.3s ease;
-        }
-        
-        .nav-label {
-            font-size: 12px;
-            color: #666;
-            transition: all 0.3s ease;
-            font-weight: 500;
-        }
-        
-        .nav-item.active .nav-icon {
-            fill: #4A90E2;
+        .menu-button:hover {
+            background: rgba(60, 60, 150, 0.9);
             transform: scale(1.1);
-        }
-        
-        .nav-item.active .nav-label {
-            color: #4A90E2;
-            font-weight: 600;
-        }
-        
-        .nav-item:active {
-            transform: scale(0.95);
-        }
-        
-        /* Эффект пульсации при переключении */
-        @keyframes pulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.15); }
-            100% { transform: scale(1); }
-        }
-        
-        .nav-item.pulse .nav-icon {
-            animation: pulse 0.3s ease;
-        }
-        
-        /* Загрузчик */
-        .loader {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(74, 144, 226, 0.3);
-            border-top-color: #4A90E2;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
-        }
-        
-        @keyframes spin {
-            to { transform: translate(-50%, -50%) rotate(360deg); }
-        }
-        
-        /* Адаптация под безопасные зоны */
-        @supports (padding-bottom: env(safe-area-inset-bottom)) {
-            #nav-menu {
-                padding-bottom: env(safe-area-inset-bottom);
-                height: calc(70px + env(safe-area-inset-bottom));
-            }
         }
     </style>
 </head>
 <body>
-    <div id="app-container">
-        <div id="content-area">
-            <div class="loader"></div>
-        </div>
-        
-        <nav id="nav-menu">
-            <div class="nav-item active" data-page="farming">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z"/>
-                </svg>
-                <span class="nav-label">Фарминг</span>
-            </div>
-            
-            <div class="nav-item" data-page="safes">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M18 8h-1V6c0-2.76-2.24-5-5-5S7 3.24 7 6v2H6c-1.1 0-2 .9-2 2v10c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V10c0-1.1-.9-2-2-2zM9 6c0-1.66 1.34-3 3-3s3 1.34 3 3v2H9V6zm9 14H6V10h12v10zm-6-3c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2z"/>
-                </svg>
-                <span class="nav-label">Сейфы</span>
-            </div>
-            
-            <div class="nav-item" data-page="wallet">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M21 18v1c0 1.1-.9 2-2 2H5c-1.11 0-2-.9-2-2V5c0-1.1.89-2 2-2h14c1.1 0 2 .9 2 2v1h-9c-1.11 0-2 .9-2 2v8c0 1.1.89 2 2 2h9zm-9-2h10V8H12v8zm4-2.5c-.83 0-1.5-.67-1.5-1.5s.67-1.5 1.5-1.5 1.5.67 1.5 1.5-.67 1.5-1.5 1.5z"/>
-                </svg>
-                <span class="nav-label">Кошелек</span>
-            </div>
-            
-            <div class="nav-item" data-page="profile">
-                <svg class="nav-icon" viewBox="0 0 24 24">
-                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
-                </svg>
-                <span class="nav-label">Профиль</span>
-            </div>
-        </nav>
-    </div>
+    <div id="game"></div>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
+        // Функция для создания меню
+        function createMenu(scene) {
+            const menuContainer = document.createElement('div');
+            menuContainer.className = 'menu-container';
+            
+            const buttons = [
+                { text: 'Играть', scene: 'MainScene' },
+                { text: 'Инфо', scene: 'InfoScene' },
+                { text: 'Настройки', scene: 'SettingsScene' },
+                { text: 'Выход', action: () => { if (window.Telegram?.WebApp) window.Telegram.WebApp.close(); } }
+            ];
+            
+            buttons.forEach((btn, index) => {
+                const button = document.createElement('div');
+                button.className = 'menu-button';
+                button.innerHTML = btn.text;
+                
+                button.addEventListener('click', () => {
+                    if (btn.scene) {
+                        scene.scene.start(btn.scene);
+                    } else if (btn.action) {
+                        btn.action();
+                    }
+                });
+                
+                menuContainer.appendChild(button);
+            });
+            
+            document.body.appendChild(menuContainer);
+            return menuContainer;
+        }
+
+        // Класс сцены загрузки
+        class LoadScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'LoadScene' });
+                this.loadProgress = 0;
+                this.isLoading = true;
+            }
+
+            init() {
+                this.cameras.main.setBackgroundColor('#000022');
+                
+                this.load.on('progress', (value) => {
+                    this.loadProgress = value;
+                    this.updateProgressBar();
+                });
+                
+                this.load.on('filecomplete', (key) => {
+                    if (key === 'loadscreen' && !this.bg) {
+                        this.showLoadScreen();
+                    }
+                });
+                
+                this.load.on('complete', () => {
+                    this.isLoading = false;
+                    this.time.delayedCall(500, () => {
+                        this.showPlayButton();
+                    });
+                });
+            }
+
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                this.load.image('loadscreen', 'assets/loadscreen.jpg');
+                this.load.image('bg', 'assets/bg00.jpg');
+                this.load.image('bg01', 'assets/bg01.png');	
+                this.load.image('bg02', 'assets/bg02.png');				
+                this.load.obj('coin', 'assets/ggcoin.obj');
+                this.load.image('texture', 'assets/coin_txt_n.png');
+                this.load.image('coin_t0', 'assets/coin_c00.png');
+                this.load.image('coin_t1', 'assets/coin_c01.png');
+                this.load.image('coin_t2', 'assets/coin_c02.png');
+                this.load.image('coin_t3', 'assets/coin_c03.png');				
+                this.load.image('cshdw', 'assets/shd_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+            }
+
+            showLoadScreen() {
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
+                const scaleX = this.cameras.main.width / this.bg.width;
+                const scaleY = this.cameras.main.height / this.bg.height;
+                const scale = Math.max(scaleX, scaleY);
+                this.bg.setScale(scale);
+                this.createProgressBarUI();
+            }
+
+            createProgressBarUI() {
+                this.createProgressBar();
+                this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
+                    'Загрузка...', {
+                    font: '28px Arial',
+                    fill: '#1',
+                    align: 'center'
+                }).setOrigin(0.5);
+            }
+
+            create() {
+                if (!this.bg) {
+                    this.time.delayedCall(100, () => {
+                        if (this.textures.exists('loadscreen')) {
+                            this.showLoadScreen();
+                        } else {
+                            this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
+                                                       this.cameras.main.width, this.cameras.main.height, 0x000044);
+                            this.createProgressBarUI();
+                        }
+                    });
+                }
+            }
+
+            createProgressBar() {
+                const barWidth = 300;
+                const barHeight = 20;
+                const x = this.cameras.main.centerX - barWidth / 2;
+                const y = this.cameras.main.height - 250;
+
+                this.progressBg = this.add.graphics();
+                this.progressBg.fillStyle(0x222222, 0.8);
+                this.progressBg.fillRoundedRect(x, y, barWidth, barHeight, 10);
+                
+                this.progressBorder = this.add.graphics();
+                this.progressBorder.lineStyle(2, 0xffffff, 0.8);
+                this.progressBorder.strokeRoundedRect(x, y, barWidth, barHeight, 10);
+
+                this.progressBar = this.add.graphics();
+                this.percentText = this.add.text(this.cameras.main.centerX, y + barHeight / 2, '0%', {
+                    font: '16px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+            }
+
+            updateProgressBar() {
+                if (!this.progressBar) return;
+                
+                const barWidth = 300;
+                const barHeight = 20;
+                const x = this.cameras.main.centerX - barWidth / 2;
+                const y = this.cameras.main.height - 250;
+                
+                this.progressBar.clear();
+                const progress = this.loadProgress;
+                const fillWidth = barWidth * progress;
+                
+                if (fillWidth > 0) {
+                    const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        { r: 100, g: 150, b: 255 },
+                        { r: 100, g: 255, b: 100 },
+                        100,
+                        Math.floor(progress * 100)
+                    );
+                    
+                    this.progressBar.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+                    this.progressBar.fillRoundedRect(x, y, fillWidth, barHeight, 10);
+                }
+                
+                if (this.percentText) {
+                    this.percentText.setText(Math.floor(progress * 100) + '%');
+                }
+                
+                if (this.loadingText) {
+                    if (progress < 1) {
+                        this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
+                    } else {
+                        this.loadingText.setText('Загрузка завершена!');
+                    }
+                }
+            }
+
+            showPlayButton() {
+                this.progressBg.setVisible(false);
+                this.progressBorder.setVisible(false);
+                this.progressBar.setVisible(false);
+                this.percentText.setVisible(false);
+                this.loadingText.setVisible(false);
+                
+                if (tg) {
+                    tg.MainButton.setText('Играть');
+                    tg.MainButton.show();
+                    tg.MainButton.onClick(() => {
+                        this.scene.start('MainScene');
+                    });
+                }
+            }
+        }
+
+        // Класс сцены меню
+        class MenuScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MenuScene' });
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#000022');
+                this.add.text(this.cameras.main.centerX, 200, 'МЕНЮ', { 
+                    fontSize: '48px', 
+                    fill: '#4a6fff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Создаем меню
+                this.menu = createMenu(this);
+                
+                // Скрываем кнопку Telegram
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.MainButton.hide();
+                }
+            }
+            
+            shutdown() {
+                // Удаляем меню при переходе на другую сцену
+                if (this.menu) {
+                    this.menu.remove();
+                }
+            }
+        }
+
+        // Конфигурация игры
+        const config = {
+            type: Phaser.WEBGL,
+            parent: 'game',
+            scene: [LoadScene, MenuScene],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 1024,
+                height: 1920,
+                resolution: Math.max(window.devicePixelRatio || 1, 1),
+            },
+            cameras: {
+                default: {
+                    zoom: 1,
+                    near: -1000,
+                    far: 1000,
+                    position: { x: 0, y: 0, z: 100 }
+                }
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60,
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true,
+                pixelArt: false
+            }
+        };
+
+        // Инициализация Telegram WebApp
         const tg = window.Telegram?.WebApp;
-        
         if (tg) {
             tg.ready();
             tg.expand();
-            tg.setHeaderColor('#000022');
-            tg.setBackgroundColor('#000022');
         }
+
+        // Адаптация под Android
+        if (navigator.userAgent.toLowerCase().includes('android')) {
+            document.body.style.height = `${window.innerHeight}px`;
+            setTimeout(() => {
+                document.body.style.height = `${window.innerHeight}px`;
+            }, 1000);
+        }	   
         
-        const contentArea = document.getElementById('content-area');
-        const navItems = document.querySelectorAll('.nav-item');
-        let currentPage = 'farming';
-        let currentIframe = null;
-        
-        // Предзагрузка страниц
-        const pages = {
-            farming: 'farming.html',
-            safes: 'safes.html',
-            wallet: 'wallet.html',
-            profile: 'profile.html'
-        };
-        
-        function showLoader() {
-            if (!contentArea.querySelector('.loader')) {
-                contentArea.innerHTML = '<div class="loader"></div>';
-            }
-        }
-        
-        function hideLoader() {
-            const loader = contentArea.querySelector('.loader');
-            if (loader) {
-                loader.remove();
-            }
-        }
-        
-        function loadPage(pageName) {
-            if (currentPage === pageName && currentIframe) return;
-            
-            // Показываем загрузчик
-            showLoader();
-            
-            // Удаляем текущий iframe
-            if (currentIframe) {
-                currentIframe.remove();
-            }
-            
-            // Создаем новый iframe
-            const iframe = document.createElement('iframe');
-            iframe.src = pages[pageName];
-            iframe.style.opacity = '0';
-            iframe.style.transition = 'opacity 0.3s ease';
-            
-            iframe.onload = function() {
-                hideLoader();
-                iframe.style.opacity = '1';
-                
-                // Передаем Telegram WebApp в iframe
-                if (tg && iframe.contentWindow) {
-                    iframe.contentWindow.tg = tg;
-                }
-            };
-            
-            iframe.onerror = function() {
-                hideLoader();
-                contentArea.innerHTML = `
-                    <div style="color: white; text-align: center; padding: 20px;">
-                        <p>Ошибка загрузки страницы</p>
-                        <button onclick="loadPage('${pageName}')" style="margin-top: 10px; padding: 10px 20px; background: #4A90E2; color: white; border: none; border-radius: 5px;">
-                            Повторить
-                        </button>
-                    </div>
-                `;
-            };
-            
-            contentArea.appendChild(iframe);
-            currentIframe = iframe;
-            currentPage = pageName;
-            
-            // Обновляем активный пункт меню
-            navItems.forEach(item => {
-                item.classList.remove('active', 'pulse');
-                if (item.dataset.page === pageName) {
-                    item.classList.add('active', 'pulse');
-                    setTimeout(() => item.classList.remove('pulse'), 300);
+        // Создание игры
+        setTimeout(() => {
+            const game = new Phaser.Game(config);
+            window.addEventListener('resize', () => {
+                if (game && game.scale) {
+                    game.scale.refresh();
                 }
             });
-            
-            // Вибрация при переключении (если поддерживается)
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        }
+        }, 300);
         
-        // Обработчики клика по меню
-        navItems.forEach(item => {
-            item.addEventListener('click', () => {
-                const page = item.dataset.page;
-                loadPage(page);
-            });
-        });
-        
-        // Загружаем начальную страницу
-        loadPage('farming');
-        
-        // Обработка изменения размера окна
-        window.addEventListener('resize', () => {
-            if (currentIframe) {
-                currentIframe.style.height = `${contentArea.offsetHeight}px`;
-            }
-        });
-        
-        // Предотвращение контекстного меню
         document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
+    
+    <!-- Подключаем основную сцену из отдельного файла -->
+    <script src="mainscene.js"></script>
 </body>
 </html>
