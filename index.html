@@ -126,7 +126,8 @@
                 // Остальные ресурсы
                 this.load.image('bg', 'assets/bg00.jpg');
                 this.load.image('bg01', 'assets/bg01.png');	
-                this.load.image('bg02', 'assets/bg02.png');				
+                this.load.image('bg02', 'assets/bg02.png');
+                this.load.image('menu_btn', 'assets/coin_t0.png'); // Текстура для кнопок меню				
                 this.load.obj('coin', 'assets/ggcoin.obj');
                 this.load.image('texture', 'assets/coin_txt_n.png');
                 this.load.image('coin_t0', 'assets/coin_c00.png');
@@ -136,7 +137,8 @@
                 this.load.image('cshdw', 'assets/shd_txt.png');
                 this.load.audio('coinDrop', 'assets/drop.mp3');
                 this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.audio('magic', 'assets/rise.wav');  
+                this.load.audio('magic', 'assets/rise.wav');
+                this.load.audio('menuClick', 'assets/up.mp3');  
                 this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
             }
 
@@ -271,6 +273,125 @@
             }
         }
 
+        class MenuScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'MenuScene' });
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#000022');
+                this.add.text(this.cameras.main.centerX, 200, 'МЕНЮ', { 
+                    fontSize: '48px', 
+                    fill: '#4a6fff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Создаем кнопки меню
+                this.createMenuButtons();
+                
+                // Скрываем кнопку Telegram
+                if (window.Telegram?.WebApp) {
+                    window.Telegram.WebApp.MainButton.hide();
+                }
+            }
+            
+            createMenuButtons() {
+                const buttonWidth = 200;
+                const buttonHeight = 80;
+                const spacing = 30;
+                const startY = this.cameras.main.centerY - 100;
+                
+                const buttonLabels = [
+                    { text: 'Игра', scene: 'MainScene' },
+                    { text: 'Сейф', url: 'safe.html' },
+                    { text: 'Кошелек', url: 'wallet.html' },
+                    { text: 'Профиль', url: 'profile.html' }
+                ];
+                
+                this.menuClickSound = this.sound.add('menuClick', { volume: 0.5 });
+                
+                // Создаем кнопки
+                this.buttons = [];
+                for (let i = 0; i < buttonLabels.length; i++) {
+                    const button = this.add.sprite(
+                        this.cameras.main.centerX, 
+                        startY + i * (buttonHeight + spacing), 
+                        'menu_btn'
+                    ).setScale(0.5);
+                    
+                    // Добавляем текст
+                    const text = this.add.text(
+                        button.x, 
+                        button.y, 
+                        buttonLabels[i].text, 
+                        { 
+                            font: '28px Arial', 
+                            fill: '#ffffff',
+                            stroke: '#000000',
+                            strokeThickness: 4
+                        }
+                    ).setOrigin(0.5);
+                    
+                    // Делаем кнопку интерактивной
+                    button.setInteractive();
+                    button.setData('action', buttonLabels[i]);
+                    
+                    // Эффекты при наведении
+                    button.on('pointerover', () => {
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.55,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        button.setTint(0x88aaff);
+                    });
+                    
+                    button.on('pointerout', () => {
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.5,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        button.clearTint();
+                    });
+                    
+                    button.on('pointerdown', () => {
+                        this.menuClickSound.play();
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.45,
+                            duration: 100,
+                            ease: 'Sine.easeOut',
+                            yoyo: true
+                        });
+                        
+                        const action = button.getData('action');
+                        if (action.scene) {
+                            this.scene.start(action.scene);
+                        } else if (action.url) {
+                            window.location.href = action.url;
+                        }
+                    });
+                    
+                    // Анимация появления
+                    this.tweens.add({
+                        targets: [button, text],
+                        y: startY + i * (buttonHeight + spacing),
+                        alpha: 1,
+                        duration: 500,
+                        delay: i * 150,
+                        ease: 'Back.easeOut',
+                        fromY: this.cameras.main.height + 100,
+                        fromAlpha: 0
+                    });
+                    
+                    this.buttons.push({ button, text });
+                }
+            }
+        }
+
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -294,18 +415,25 @@
                 this.resolution_coeff = 1;
                 this.max_i = 0;
                 this.e_flag = true;
+                this.menuButton = null;
+                this.menuVisible = false;
             }
         
             preload() {
                 // Все ресурсы уже загружены в LoadScene
-                // Здесь можно добавить дополнительные ресурсы, специфичные для MainScene
+                // Загружаем текстуру для кнопки меню
+                this.load.image('menu_btn', 'assets/coin_t0.png');
             }
 
             create() {
                 if (tg) {
                     tg.MainButton.hide();
                     tg.onEvent('backButtonClicked', () => {
-                        tg.close();
+                        if (this.menuVisible) {
+                            this.hideMenu();
+                        } else {
+                            tg.close();
+                        }
                     });
                 }
                 
@@ -315,6 +443,7 @@
                 this.bounceSound = this.sound.add('coinDrop', { volume: this.soundVolume });
                 this.upSound = this.sound.add('coinUp', { volume: this.soundVolume });
                 this.mSound = this.sound.add('magic', { volume: this.soundVolume - 0.2 });
+                this.menuClickSound = this.sound.add('menuClick', { volume: 0.5 });
 
                 this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
 
@@ -362,6 +491,231 @@
                 this.createMultiCoin(this.is_n);
                 this.get_up_coin();
                 this.InitPile();
+                
+                // Создаем кнопку меню
+                this.createMenuButton();
+                
+                // Создаем меню (скрытое изначально)
+                this.createMenu();
+            }
+            
+            createMenuButton() {
+                this.menuButton = this.add.sprite(
+                    this.cameras.main.width - 50, 
+                    50, 
+                    'menu_btn'
+                ).setScale(0.4).setDepth(300);
+                
+                // Добавляем иконку меню
+                const menuIcon = this.add.text(
+                    this.menuButton.x, 
+                    this.menuButton.y, 
+                    '☰', 
+                    { 
+                        font: '36px Arial', 
+                        fill: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 4
+                    }
+                ).setOrigin(0.5).setDepth(301);
+                
+                // Делаем кнопку интерактивной
+                this.menuButton.setInteractive();
+                
+                // Эффекты при наведении
+                this.menuButton.on('pointerover', () => {
+                    this.tweens.add({
+                        targets: [this.menuButton, menuIcon],
+                        scale: 0.45,
+                        duration: 200,
+                        ease: 'Sine.easeOut'
+                    });
+                    this.menuButton.setTint(0x88aaff);
+                });
+                
+                this.menuButton.on('pointerout', () => {
+                    this.tweens.add({
+                        targets: [this.menuButton, menuIcon],
+                        scale: 0.4,
+                        duration: 200,
+                        ease: 'Sine.easeOut'
+                    });
+                    this.menuButton.clearTint();
+                });
+                
+                this.menuButton.on('pointerdown', () => {
+                    this.menuClickSound.play();
+                    this.toggleMenu();
+                });
+            }
+            
+            createMenu() {
+                // Создаем фон меню
+                this.menuBg = this.add.rectangle(
+                    this.cameras.main.centerX,
+                    this.cameras.main.centerY,
+                    this.cameras.main.width * 0.8,
+                    this.cameras.main.height * 0.7,
+                    0x112244,
+                    0.9
+                ).setDepth(350).setStrokeStyle(2, 0x4a6fff);
+                
+                // Заголовок меню
+                this.menuTitle = this.add.text(
+                    this.cameras.main.centerX,
+                    this.cameras.main.centerY - 250,
+                    'МЕНЮ',
+                    {
+                        font: '42px Arial',
+                        fill: '#4a6fff',
+                        stroke: '#000000',
+                        strokeThickness: 4
+                    }
+                ).setOrigin(0.5).setDepth(351);
+                
+                // Создаем кнопки меню
+                const buttonLabels = [
+                    { text: 'Вернуться', action: 'return' },
+                    { text: 'Сейф', url: 'safe.html' },
+                    { text: 'Кошелек', url: 'wallet.html' },
+                    { text: 'Профиль', url: 'profile.html' }
+                ];
+                
+                this.menuButtons = [];
+                const buttonHeight = 80;
+                const spacing = 30;
+                const startY = this.cameras.main.centerY - 100;
+                
+                for (let i = 0; i < buttonLabels.length; i++) {
+                    const button = this.add.sprite(
+                        this.cameras.main.centerX, 
+                        startY + i * (buttonHeight + spacing), 
+                        'menu_btn'
+                    ).setScale(0.5).setDepth(351);
+                    
+                    // Добавляем текст
+                    const text = this.add.text(
+                        button.x, 
+                        button.y, 
+                        buttonLabels[i].text, 
+                        { 
+                            font: '28px Arial', 
+                            fill: '#ffffff',
+                            stroke: '#000000',
+                            strokeThickness: 4
+                        }
+                    ).setOrigin(0.5).setDepth(352);
+                    
+                    // Делаем кнопку интерактивной
+                    button.setInteractive();
+                    button.setData('action', buttonLabels[i]);
+                    
+                    // Эффекты при наведении
+                    button.on('pointerover', () => {
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.55,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        button.setTint(0x88aaff);
+                    });
+                    
+                    button.on('pointerout', () => {
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.5,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        button.clearTint();
+                    });
+                    
+                    button.on('pointerdown', () => {
+                        this.menuClickSound.play();
+                        this.tweens.add({
+                            targets: [button, text],
+                            scale: 0.45,
+                            duration: 100,
+                            ease: 'Sine.easeOut',
+                            yoyo: true
+                        });
+                        
+                        const action = button.getData('action');
+                        if (action.action === 'return') {
+                            this.hideMenu();
+                        } else if (action.url) {
+                            window.location.href = action.url;
+                        }
+                    });
+                    
+                    this.menuButtons.push({ button, text });
+                }
+                
+                // Скрываем меню изначально
+                this.hideMenu();
+            }
+            
+            toggleMenu() {
+                if (this.menuVisible) {
+                    this.hideMenu();
+                } else {
+                    this.showMenu();
+                }
+            }
+            
+            showMenu() {
+                this.menuVisible = true;
+                
+                // Показываем элементы меню
+                this.menuBg.setVisible(true);
+                this.menuTitle.setVisible(true);
+                
+                // Анимация появления
+                this.tweens.add({
+                    targets: this.menuBg,
+                    alpha: { from: 0, to: 0.9 },
+                    duration: 300,
+                    ease: 'Cubic.easeOut'
+                });
+                
+                this.menuButtons.forEach((item, index) => {
+                    item.button.setVisible(true);
+                    item.text.setVisible(true);
+                    
+                    this.tweens.add({
+                        targets: [item.button, item.text],
+                        y: this.cameras.main.centerY - 100 + index * (80 + 30),
+                        alpha: 1,
+                        duration: 500,
+                        delay: index * 100,
+                        ease: 'Back.easeOut',
+                        fromY: this.cameras.main.centerY - 300,
+                        fromAlpha: 0
+                    });
+                });
+            }
+            
+            hideMenu() {
+                this.menuVisible = false;
+                
+                // Анимация скрытия
+                this.tweens.add({
+                    targets: this.menuBg,
+                    alpha: 0,
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+                    onComplete: () => {
+                        this.menuBg.setVisible(false);
+                    }
+                });
+                
+                this.menuTitle.setVisible(false);
+                
+                this.menuButtons.forEach(item => {
+                    item.button.setVisible(false);
+                    item.text.setVisible(false);
+                });
             }
                     
             createMultiCoin(n) {
@@ -767,7 +1121,7 @@
         const config = {
             type: Phaser.WEBGL,
             parent: 'game',
-            scene: [LoadScene, MainScene],
+            scene: [LoadScene, MenuScene, MainScene],
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
