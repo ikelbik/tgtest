@@ -369,7 +369,7 @@
             
             createBottomMenu() {
                 // Создаем контейнер для меню
-                this.menuContainer = this.add.container(0, this.cameras.main.height - 80);
+                this.menuContainer = this.add.container(0, this.cameras.main.height - 60);
                 this.menuContainer.setDepth(10000); // Убедимся, что меню поверх всего
                 
                 // Фон меню
@@ -377,9 +377,9 @@
                     this.cameras.main.centerX, 
                     0, 
                     this.cameras.main.width, 
-                    80, 
+                    60, 
                     0x000033, 
-                    0.8
+                    0.9
                 ).setOrigin(0.5, 0);
                 
                 // Пункты меню
@@ -392,59 +392,31 @@
                 
                 const menuButtons = [];
                 const buttonWidth = this.cameras.main.width / menuItems.length;
+                const iconSize = 15; // Уменьшенный размер иконок
+                const fontSize = 12; // Уменьшенный размер шрифта
                 
                 menuItems.forEach((item, index) => {
                     const button = this.add.container(
                         buttonWidth * (index + 0.5) - this.cameras.main.width / 2,
-                        40,
+                        30,
                         []
                     );
                     
-                    // Создаем иконку
-                    const icon = this.add.circle(0, -10, 20, 0x5DADE2);
+                    // Создаем иконку (просто круг)
+                    const icon = this.add.circle(0, -5, iconSize, 0x5DADE2);
                     
                     // Создаем текст
-                    const text = this.add.text(0, 15, item.name, {
-                        font: '16px Arial',
+                    const text = this.add.text(0, iconSize + 2, item.name, {
+                        font: `${fontSize}px Arial`,
                         fill: '#ffffff',
                         align: 'center'
                     }).setOrigin(0.5);
                     
                     button.add([icon, text]);
-                    button.setSize(buttonWidth, 80);
+                    button.setSize(buttonWidth, 60);
                     button.setInteractive();
                     
-                    // Анимация при наведении
-                    button.on('pointerover', () => {
-                        this.tweens.add({
-                            targets: [icon, text],
-                            scale: 1.1,
-                            duration: 200,
-                            ease: 'Sine.easeOut'
-                        });
-                        
-                        this.tweens.add({
-                            targets: icon,
-                            fillColor: 0x3498DB,
-                            duration: 200
-                        });
-                    });
-                    
-                    button.on('pointerout', () => {
-                        this.tweens.add({
-                            targets: [icon, text],
-                            scale: 1,
-                            duration: 200,
-                            ease: 'Sine.easeOut'
-                        });
-                        
-                        this.tweens.add({
-                            targets: icon,
-                            fillColor: 0x5DADE2,
-                            duration: 200
-                        });
-                    });
-                    
+                    // Анимация при нажатии (для мобильных)
                     button.on('pointerdown', () => {
                         // Анимация нажатия
                         this.tweens.add({
