@@ -1,8 +1,12 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">	
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#000022">
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
         * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
@@ -14,15 +18,41 @@
             height: 100%;
             overflow: hidden;
         }
+        .back-button {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            z-index: 1000;
+            background: linear-gradient(135deg, #4a6fff, #2a4fff);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 111, 255, 0.4);
+            transition: all 0.3s ease;
+        }
+        .back-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(74, 111, 255, 0.6);
+        }
     </style>
 </head>
 <body>
+    <button class="back-button" onclick="window.location.href='index.html'">←</button>
     <div id="game"></div>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Получаем Telegram WebApp из родительского окна
-        const tg = window.parent.tg || window.Telegram?.WebApp;
+        const tg = window.Telegram?.WebApp;
         
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
         let coins;
         let pile;
         
@@ -76,152 +106,6 @@
             }		
         }
 
-        class LoadScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'LoadScene' });
-                this.loadProgress = 0;
-                this.isLoading = true;
-            }
-
-            init() {
-                this.cameras.main.setBackgroundColor('#000022');
-                
-                this.load.on('progress', (value) => {
-                    this.loadProgress = value;
-                    this.updateProgressBar();
-                });
-                
-                this.load.on('filecomplete', (key) => {
-                    if (key === 'loadscreen' && !this.bg) {
-                        this.showLoadScreen();
-                    }
-                });
-                
-                this.load.on('complete', () => {
-                    this.isLoading = false;
-                    this.time.delayedCall(500, () => {
-                        this.scene.start('MainScene');
-                    });
-                });
-            }
-
-            preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                
-                this.load.image('loadscreen', 'assets/loadscreen.jpg');
-                this.load.image('bg', 'assets/bg00.jpg');
-                this.load.image('bg01', 'assets/bg01.png');	
-                this.load.image('bg02', 'assets/bg02.png');				
-                this.load.obj('coin', 'assets/ggcoin.obj');
-                this.load.image('texture', 'assets/coin_txt_n.png');
-                this.load.image('coin_t0', 'assets/coin_c00.png');
-                this.load.image('coin_t1', 'assets/coin_c01.png');
-                this.load.image('coin_t2', 'assets/coin_c02.png');
-                this.load.image('coin_t3', 'assets/coin_c03.png');				
-                this.load.image('cshdw', 'assets/shd_txt.png');
-                this.load.audio('coinDrop', 'assets/drop.mp3');
-                this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.audio('magic', 'assets/rise.wav');  
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
-            }
-
-            showLoadScreen() {
-                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
-                
-                const scaleX = this.cameras.main.width / this.bg.width;
-                const scaleY = this.cameras.main.height / this.bg.height;
-                const scale = Math.max(scaleX, scaleY);
-                this.bg.setScale(scale);
-
-                this.createProgressBarUI();
-            }
-
-            createProgressBarUI() {
-                this.createProgressBar();
-                
-                this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
-                    'Загрузка...', {
-                    font: '28px Arial',
-                    fill: '#ffffff',
-                    align: 'center'
-                }).setOrigin(0.5);
-            }
-
-            create() {
-                if (!this.bg) {
-                    this.time.delayedCall(100, () => {
-                        if (this.textures.exists('loadscreen')) {
-                            this.showLoadScreen();
-                        } else {
-                            this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
-                                                       this.cameras.main.width, this.cameras.main.height, 0x000044);
-                            this.createProgressBarUI();
-                        }
-                    });
-                }
-            }
-
-            createProgressBar() {
-                const barWidth = 300;
-                const barHeight = 20;
-                const x = this.cameras.main.centerX - barWidth / 2;
-                const y = this.cameras.main.height - 250;
-
-                this.progressBg = this.add.graphics();
-                this.progressBg.fillStyle(0x222222, 0.8);
-                this.progressBg.fillRoundedRect(x, y, barWidth, barHeight, 10);
-                
-                this.progressBorder = this.add.graphics();
-                this.progressBorder.lineStyle(2, 0xffffff, 0.8);
-                this.progressBorder.strokeRoundedRect(x, y, barWidth, barHeight, 10);
-
-                this.progressBar = this.add.graphics();
-                
-                this.percentText = this.add.text(this.cameras.main.centerX, y + barHeight / 2, '0%', {
-                    font: '16px Arial',
-                    fill: '#ffffff'
-                }).setOrigin(0.5);
-            }
-
-            updateProgressBar() {
-                if (!this.progressBar) return;
-                
-                const barWidth = 300;
-                const barHeight = 20;
-                const x = this.cameras.main.centerX - barWidth / 2;
-                const y = this.cameras.main.height - 250;
-                
-                this.progressBar.clear();
-                
-                const progress = this.loadProgress;
-                const fillWidth = barWidth * progress;
-                
-                if (fillWidth > 0) {
-                    const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        { r: 100, g: 150, b: 255 },
-                        { r: 100, g: 255, b: 100 },
-                        100,
-                        Math.floor(progress * 100)
-                    );
-                    
-                    this.progressBar.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-                    this.progressBar.fillRoundedRect(x, y, fillWidth, barHeight, 10);
-                }
-                
-                if (this.percentText) {
-                    this.percentText.setText(Math.floor(progress * 100) + '%');
-                }
-                
-                if (this.loadingText) {
-                    if (progress < 1) {
-                        this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
-                    } else {
-                        this.loadingText.setText('Загрузка завершена!');
-                    }
-                }
-            }
-        }
-
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -247,7 +131,33 @@
                 this.e_flag = true;
             }
 
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                
+                this.load.image('bg', 'assets/bg00.jpg');
+                this.load.image('bg01', 'assets/bg01.png');	
+                this.load.image('bg02', 'assets/bg02.png');				
+                this.load.obj('coin', 'assets/ggcoin.obj');
+                this.load.image('texture', 'assets/coin_txt_n.png');
+                this.load.image('coin_t0', 'assets/coin_c00.png');
+                this.load.image('coin_t1', 'assets/coin_c01.png');
+                this.load.image('coin_t2', 'assets/coin_c02.png');
+                this.load.image('coin_t3', 'assets/coin_c03.png');				
+                this.load.image('cshdw', 'assets/shd_txt.png');
+                this.load.audio('coinDrop', 'assets/drop.mp3');
+                this.load.audio('coinUp', 'assets/up.mp3');
+                this.load.audio('magic', 'assets/rise.wav');
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+            }
+
             create() {
+                if (tg) {
+                    tg.MainButton.hide();
+                    tg.onEvent('backButtonClicked', () => {
+                        window.location.href = 'index.html';
+                    });
+                }
+                
                 coins = this.add.group();
                 pile = this.add.group();
 
@@ -290,7 +200,7 @@
                 this.b2 = (this.zfactor / this.perspective + 1) * 0.85;
                 this.b3 = (this.zfactor / this.perspective + 1) * 1;				
                 
-                this.scoreText = this.add.text(20, 30, "Монет : 0", {
+                this.scoreText = this.add.text(20, 100, "Монет : 0", {
                     font: '28px Arial',
                     fill: '#ffffff',
                     stroke: '#000000',
@@ -706,7 +616,7 @@
         const config = {
             type: Phaser.WEBGL,
             parent: 'game',
-            scene: [LoadScene, MainScene],
+            scene: [MainScene],
             scale: {
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,

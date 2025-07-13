@@ -1,559 +1,557 @@
 <!DOCTYPE html>
 <html>
 <head>
+    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">	
+    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
+    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <meta name="theme-color" content="#000022">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
-        * { 
-            margin: 0; 
-            padding: 0; 
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
-        }
-        
-        body { 
-            background: #000022;
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            color: white;
-            overflow-y: auto;
-            overflow-x: hidden;
-        }
-        
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Профиль карточка */
-        .profile-card {
-            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(123, 104, 238, 0.1) 100%);
-            border: 2px solid rgba(74, 144, 226, 0.3);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .profile-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(74, 144, 226, 0.1) 0%, transparent 50%);
-            animation: rotate 30s linear infinite;
-        }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .avatar-container {
-            position: relative;
-            display: inline-block;
-            margin-bottom: 20px;
-        }
-        
-        .avatar {
-            width: 120px;
-            height: 120px;
-            border-radius: 50%;
-            background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 48px;
-            position: relative;
-            z-index: 1;
-            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
-        }
-        
-        .avatar-edit {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            width: 36px;
-            height: 36px;
-            background: #4A90E2;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 3px solid #000022;
-            z-index: 2;
-        }
-        
-        .avatar-edit:hover {
-            transform: scale(1.1);
-            background: #7B68EE;
-        }
-        
-        .username {
-            font-size: 24px;
-            font-weight: bold;
-            margin-bottom: 5px;
-        }
-        
-        .user-id {
-            color: #888;
-            font-size: 14px;
-            margin-bottom: 20px;
-        }
-        
-        .level-badge {
-            display: inline-block;
-            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
-            color: #000;
-            padding: 8px 20px;
-            border-radius: 20px;
-            font-weight: bold;
-            font-size: 14px;
-            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
-        }
-        
-        /* Статистика */
-        .stats-section {
-            margin-bottom: 30px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-            margin-bottom: 15px;
-        }
-        
-        .stats-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 15px;
-        }
-        
-        .stat-item {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s ease;
-        }
-        
-        .stat-item:hover {
-            background: rgba(255, 255, 255, 0.08);
-            transform: translateY(-3px);
-        }
-        
-        .stat-value {
-            font-size: 28px;
-            font-weight: bold;
-            color: #4A90E2;
-            margin-bottom: 5px;
-        }
-        
-        .stat-label {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        /* Достижения */
-        .achievements-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 15px;
-            margin-bottom: 20px;
-        }
-        
-        .achievement-item {
-            aspect-ratio: 1;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 32px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-        }
-        
-        .achievement-item.locked {
-            opacity: 0.3;
-            filter: grayscale(1);
-        }
-        
-        .achievement-item:not(.locked):hover {
-            transform: scale(1.1);
-            background: rgba(255, 255, 255, 0.1);
-        }
-        
-        .achievement-progress {
-            position: absolute;
-            bottom: 5px;
-            right: 5px;
-            background: #4A90E2;
-            color: white;
-            font-size: 10px;
-            padding: 2px 6px;
-            border-radius: 10px;
-            font-weight: bold;
-        }
-        
-        /* Прогресс бар */
-        .progress-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .progress-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 10px;
-        }
-        
-        .progress-bar {
+        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
+        body { background: #000022 }
+        html, body, #game-container {
+            margin: 0;
+            padding: 0;
             width: 100%;
-            height: 20px;
-            background: rgba(255, 255, 255, 0.1);
-            border-radius: 10px;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        .progress-fill {
             height: 100%;
-            background: linear-gradient(90deg, #4A90E2 0%, #7B68EE 100%);
-            border-radius: 10px;
-            transition: width 0.5s ease;
-            position: relative;
             overflow: hidden;
         }
-        
-        .progress-fill::after {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: linear-gradient(
-                90deg,
-                transparent 0%,
-                rgba(255, 255, 255, 0.3) 50%,
-                transparent 100%
-            );
-            animation: shimmer 2s infinite;
-        }
-        
-        @keyframes shimmer {
-            from { transform: translateX(-100%); }
-            to { transform: translateX(100%); }
-        }
-        
-        /* Меню настроек */
-        .settings-menu {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 10px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .menu-item {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 15px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-            border-radius: 10px;
-        }
-        
-        .menu-item:hover {
-            background: rgba(255, 255, 255, 0.05);
-        }
-        
-        .menu-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .menu-icon {
-            width: 40px;
-            height: 40px;
-            background: rgba(74, 144, 226, 0.2);
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .menu-text {
-            flex: 1;
-        }
-        
-        .menu-title {
-            font-size: 16px;
-            margin-bottom: 2px;
-        }
-        
-        .menu-subtitle {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .menu-arrow {
-            color: #888;
-            font-size: 20px;
-        }
-        
-        /* Переключатель */
-        .toggle-switch {
-            position: relative;
-            width: 50px;
-            height: 26px;
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 13px;
-            cursor: pointer;
-            transition: background 0.3s ease;
-        }
-        
-        .toggle-switch.active {
-            background: #4A90E2;
-        }
-        
-        .toggle-knob {
-            position: absolute;
-            top: 3px;
-            left: 3px;
-            width: 20px;
-            height: 20px;
-            background: white;
-            border-radius: 50%;
-            transition: transform 0.3s ease;
-        }
-        
-        .toggle-switch.active .toggle-knob {
-            transform: translateX(24px);
-        }
-        
-        /* Модальное окно */
-        .modal {
+        .back-button {
             position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.9);
-            display: none;
-            align-items: center;
-            justify-content: center;
+            top: 20px;
+            left: 20px;
             z-index: 1000;
+            background: linear-gradient(135deg, #4a6fff, #2a4fff);
+            border: none;
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            color: white;
+            font-size: 24px;
+            cursor: pointer;
+            box-shadow: 0 4px 15px rgba(74, 111, 255, 0.4);
+            transition: all 0.3s ease;
         }
-        
-        .modal-content {
-            background: #0a0a1e;
-            border-radius: 20px;
-            padding: 30px;
-            max-width: 400px;
-            width: 90%;
-            text-align: center;
-            animation: modalSlideIn 0.3s ease;
-        }
-        
-        @keyframes modalSlideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
-        }
-        
-        /* Адаптивность */
-        @media (max-width: 480px) {
-            .stats-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
-            
-            .achievements-grid {
-                grid-template-columns: repeat(3, 1fr);
-            }
+        .back-button:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(74, 111, 255, 0.6);
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Профиль -->
-        <div class="profile-card">
-            <div class="avatar-container">
-                <div class="avatar" id="avatar">👤</div>
-                <div class="avatar-edit" onclick="changeAvatar()">✏️</div>
-            </div>
-            <div class="username" id="username">Игрок</div>
-            <div class="user-id">ID: <span id="user-id">000000</span></div>
-            <div class="level-badge">Уровень <span id="level">1</span></div>
-        </div>
-        
-        <!-- Статистика -->
-        <div class="stats-section">
-            <h2 class="section-title">Статистика</h2>
-            <div class="stats-grid">
-                <div class="stat-item">
-                    <div class="stat-value" id="total-coins">0</div>
-                    <div class="stat-label">Всего монет</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="games-played">0</div>
-                    <div class="stat-label">Игр сыграно</div>
-                </div>
-                <div class="stat-item">
-                    <div class="stat-value" id="days-streak">0</div>
-                    <div class="stat-label">Дней подряд</div>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Прогресс до следующего уровня -->
-        <div class="progress-section">
-            <div class="progress-header">
-                <span>Уровень <span id="current-level">1</span></span>
-                <span>Уровень <span id="next-level">2</span></span>
-            </div>
-            <div class="progress-bar">
-                <div class="progress-fill" id="level-progress" style="width: 0%"></div>
-            </div>
-            <div style="text-align: center; margin-top: 10px; color: #888; font-size: 14px;">
-                <span id="exp-current">0</span> / <span id="exp-needed">100</span> XP
-            </div>
-        </div>
-        
-        <!-- Достижения -->
-        <div class="achievements-section">
-            <h2 class="section-title">Достижения</h2>
-            <div class="achievements-grid" id="achievements-grid">
-                <!-- Достижения будут добавлены динамически -->
-            </div>
-        </div>
-        
-        <!-- Настройки -->
-        <div class="settings-section">
-            <h2 class="section-title">Настройки</h2>
-            <div class="settings-menu">
-                <div class="menu-item" onclick="toggleNotifications()">
-                    <div class="menu-info">
-                        <div class="menu-icon">🔔</div>
-                        <div class="menu-text">
-                            <div class="menu-title">Уведомления</div>
-                            <div class="menu-subtitle">Получать push-уведомления</div>
-                        </div>
-                    </div>
-                    <div class="toggle-switch" id="notifications-toggle">
-                        <div class="toggle-knob"></div>
-                    </div>
-                </div>
-                
-                <div class="menu-item" onclick="toggleSound()">
-                    <div class="menu-info">
-                        <div class="menu-icon">🔊</div>
-                        <div class="menu-text">
-                            <div class="menu-title">Звук</div>
-                            <div class="menu-subtitle">Звуковые эффекты в игре</div>
-                        </div>
-                    </div>
-                    <div class="toggle-switch active" id="sound-toggle">
-                        <div class="toggle-knob"></div>
-                    </div>
-                </div>
-                
-                <div class="menu-item" onclick="showLanguageModal()">
-                    <div class="menu-info">
-                        <div class="menu-icon">🌐</div>
-                        <div class="menu-text">
-                            <div class="menu-title">Язык</div>
-                            <div class="menu-subtitle">Русский</div>
-                        </div>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-                
-                <div class="menu-item" onclick="showSupportModal()">
-                    <div class="menu-info">
-                        <div class="menu-icon">💬</div>
-                        <div class="menu-text">
-                            <div class="menu-title">Поддержка</div>
-                            <div class="menu-subtitle">Связаться с нами</div>
-                        </div>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-                
-                <div class="menu-item" onclick="showAboutModal()">
-                    <div class="menu-info">
-                        <div class="menu-icon">ℹ️</div>
-                        <div class="menu-text">
-                            <div class="menu-title">О приложении</div>
-                            <div class="menu-subtitle">Версия 1.0.0</div>
-                        </div>
-                    </div>
-                    <div class="menu-arrow">›</div>
-                </div>
-            </div>
-        </div>
-    </div>
+    <button class="back-button" onclick="window.location.href='index.html'">←</button>
+    <div id="game"></div>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Получаем Telegram WebApp из родительского окна
-        const tg = window.parent.tg || window.Telegram?.WebApp;
+        const tg = window.Telegram?.WebApp;
         
-        // Состояние профиля
-        let profile = {
-            username: localStorage.getItem('username') || 'Игрок',
-            userId: localStorage.getItem('userId') || generateUserId(),
-            avatar: localStorage.getItem('avatar') || '👤',
-            level: parseInt(localStorage.getItem('level') || '1'),
-            experience: parseInt(localStorage.getItem('experience') || '0'),
-            totalCoins: parseInt(localStorage.getItem('totalCoins') || '0'),
-            gamesPlayed: parseInt(localStorage.getItem('gamesPlayed') || '0'),
-            daysStreak: parseInt(localStorage.getItem('daysStreak') || '0'),
-            notifications: localStorage.getItem('notifications') === 'true',
-            sound: localStorage.getItem('sound') !== 'false'
-        };
-        
-        // Достижения
-        const achievements = [
-            { id: 1, icon: '🏆', name: 'Первая игра', condition: () => profile.gamesPlayed >= 1 },
-            { id: 2, icon: '🎯', name: '100 монет', condition: () => profile.totalCoins >= 100 },
-            { id: 3, icon: '⭐', name: 'Уровень 5', condition: () => profile.level >= 5 },
-            { id: 4, icon: '🔥', name: '7 дней подряд', condition: () => profile.daysStreak >= 7 },
-            { id: 5, icon: '💰', name: '1000 монет', condition: () => profile.totalCoins >= 1000 },
-            { id: 6, icon: '🎮', name: '50 игр', condition: () => profile.gamesPlayed >= 50 },
-            { id: 7, icon: '🌟', name: 'Уровень 10', condition: () => profile.level >= 10 },
-            { id: 8, icon: '💎', name: '10000 монет', condition: () => profile.totalCoins >= 10000 }
-        ];
-        
-        // Генерация ID пользователя
-        function generateUserId() {
-            const id = Math.floor(Math.random() * 1000000).toString().padStart(6, '0');
-            localStorage.setItem('userId', id);
-            return id;
+        if (tg) {
+            tg.ready();
+            tg.expand();
+        }
+
+        class ProfileScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'ProfileScene' });
+                this.userStats = {
+                    username: 'CryptoMiner',
+                    level: 12,
+                    experience: 2840,
+                    experienceToNext: 3500,
+                    totalCoins: 45720,
+                    coinsPerHour: 450,
+                    safesOpened: 23,
+                    daysPlayed: 15,
+                    achievements: [
+                        { name: 'Первые шаги', description: 'Собрать 100 монет', completed: true, icon: '🥉' },
+                        { name: 'Коллекционер', description: 'Собрать 1000 монет', completed: true, icon: '🥈' },
+                        { name: 'Магнат', description: 'Собрать 10000 монет', completed: true, icon: '🥇' },
+                        { name: 'Взломщик', description: 'Открыть 10 сейфов', completed: true, icon: '🔓' },
+                        { name: 'Миллионер', description: 'Собрать 100000 монет', completed: false, icon: '💎' },
+                        { name: 'Мастер', description: 'Открыть 50 сейфов', completed: false, icon: '🏆' }
+                    ]
+                };
+            }
+
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                this.load.image('avatar_bg', 'assets/coin_t0.png');
+                this.load.audio('levelUp', 'assets/rise.wav');
+                this.load.audio('click', 'assets/up.mp3');
+                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+            }
+
+            create() {
+                this.cameras.main.setBackgroundColor('#000022');
+                
+                // Создаем фоновый градиент
+                this.createBackground();
+                
+                // Создаем плавающие частицы
+                this.createBackgroundParticles();
+                
+                // Заголовок
+                this.createTitle();
+                
+                // Карточка профиля
+                this.createProfileCard();
+                
+                // Статистика
+                this.createStatsSection();
+                
+                // Достижения
+                this.createAchievementsSection();
+                
+                if (tg) {
+                    tg.MainButton.hide();
+                    tg.onEvent('backButtonClicked', () => {
+                        window.location.href = 'index.html';
+                    });
+                }
+            }
+            
+            createBackground() {
+                const graphics = this.add.graphics();
+                const centerX = this.cameras.main.centerX;
+                const centerY = this.cameras.main.centerY;
+                const radius = Math.max(this.cameras.main.width, this.cameras.main.height);
+                
+                for (let i = 0; i < radius; i += 10) {
+                    const alpha = 1 - (i / radius) * 0.8;
+                    const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                        { r: 50, g: 20, b: 80 },
+                        { r: 0, g: 0, b: 34 },
+                        100,
+                        Math.floor((i / radius) * 100)
+                    );
+                    
+                    graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), alpha);
+                    graphics.fillCircle(centerX, centerY, radius - i);
+                }
+            }
+            
+            createBackgroundParticles() {
+                for (let i = 0; i < 25; i++) {
+                    const particle = this.add.circle(
+                        Phaser.Math.Between(0, this.cameras.main.width),
+                        Phaser.Math.Between(0, this.cameras.main.height),
+                        Phaser.Math.Between(1, 3),
+                        0x8a2be2,
+                        0.4
+                    );
+                    
+                    this.tweens.add({
+                        targets: particle,
+                        y: particle.y + Phaser.Math.Between(-100, 100),
+                        x: particle.x + Phaser.Math.Between(-50, 50),
+                        alpha: { from: 0.2, to: 0.6 },
+                        duration: Phaser.Math.Between(6000, 12000),
+                        ease: 'Sine.easeInOut',
+                        yoyo: true,
+                        repeat: -1,
+                        delay: Phaser.Math.Between(0, 5000)
+                    });
+                }
+            }
+            
+            createTitle() {
+                const title = this.add.text(this.cameras.main.centerX, 120, '👤 ПРОФИЛЬ', { 
+                    fontSize: '48px', 
+                    fill: '#8a2be2',
+                    fontStyle: 'bold',
+                    stroke: '#000044',
+                    strokeThickness: 6,
+                    shadow: {
+                        offsetX: 3,
+                        offsetY: 3,
+                        color: '#000000',
+                        blur: 10,
+                        fill: true
+                    }
+                }).setOrigin(0.5);
+                
+                // Название достижения
+                const name = this.add.text(10, -12, achievement.name, {
+                    font: '16px Arial',
+                    fill: achievement.completed ? '#ffffff' : '#999999',
+                    fontStyle: achievement.completed ? 'bold' : 'normal'
+                }).setOrigin(0, 0.5);
+                
+                // Описание достижения
+                const description = this.add.text(10, 8, achievement.description, {
+                    font: '12px Arial',
+                    fill: achievement.completed ? '#cccccc' : '#666666',
+                    wordWrap: { width: 160 }
+                }).setOrigin(0, 0.5);
+                
+                // Отметка о выполнении
+                if (achievement.completed) {
+                    const checkmark = this.add.text(100, -25, '✓', {
+                        font: '20px Arial',
+                        fill: '#00ff00',
+                        fontStyle: 'bold'
+                    }).setOrigin(0.5);
+                    
+                    container.add(checkmark);
+                }
+                
+                container.add([achievementBg, icon, name, description]);
+                
+                // Анимация появления
+                container.setAlpha(0);
+                container.x += isLeft ? -100 : 100;
+                this.tweens.add({
+                    targets: container,
+                    alpha: 1,
+                    x: x,
+                    duration: 600,
+                    delay: 2000 + index * 150,
+                    ease: 'Back.easeOut'
+                });
+                
+                return container;
+            }
+            
+            formatNumber(num) {
+                if (num >= 1000000) {
+                    return (num / 1000000).toFixed(1) + 'M';
+                } else if (num >= 1000) {
+                    return (num / 1000).toFixed(1) + 'K';
+                }
+                return num.toString();
+            }
+            
+            update() {
+                // Можно добавить анимации или обновления в реальном времени
+            }
         }
         
-        // Инициализация
-        function init() {
-            // Получаем данные из Telegram, если доступны
-            if (tg && tg.initDataUnsafe && tg.initDataUnsafe.user) {
-                const tgUser =
+        const config = {
+            type: Phaser.WEBGL,
+            parent: 'game',
+            scene: [ProfileScene],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 1024,
+                height: 1920,
+                resolution: Math.max(window.devicePixelRatio || 1, 1),
+            },
+            input: { 
+                activePointers: 2 
+            },
+            fps: { 
+                target: 60,
+                smoothStep: true 
+            },
+            render: { 
+                antialiasGL: true,
+                pixelArt: false
+            }
+        };
+
+        if (navigator.userAgent.toLowerCase().includes('android')) {
+            document.body.style.height = `${window.innerHeight}px`;
+            setTimeout(() => {
+                document.body.style.height = `${window.innerHeight}px`;
+            }, 1000);
+        }
+        
+        setTimeout(() => {
+            const game = new Phaser.Game(config);
+            window.addEventListener('resize', () => {
+                if (game && game.scale) {
+                    game.scale.refresh();
+                }
+            });
+        }, 300);
+        
+        document.addEventListener('contextmenu', e => e.preventDefault());
+    </script>
+</body>
+</html>.5);
+                
+                this.tweens.add({
+                    targets: title,
+                    scale: { from: 1, to: 1.05 },
+                    duration: 2500,
+                    ease: 'Sine.easeInOut',
+                    yoyo: true,
+                    repeat: -1
+                });
+                
+                title.setAlpha(0);
+                this.tweens.add({
+                    targets: title,
+                    alpha: 1,
+                    duration: 1000,
+                    ease: 'Power2.easeOut'
+                });
+            }
+            
+            createProfileCard() {
+                const cardWidth = this.cameras.main.width - 60;
+                const cardHeight = 200;
+                const cardX = this.cameras.main.centerX;
+                const cardY = 280;
+                
+                // Фон карточки
+                const cardBg = this.add.graphics();
+                cardBg.fillGradientStyle(0x4a2fff, 0x4a2fff, 0x3a1eee, 0x3a1eee, 1);
+                cardBg.fillRoundedRect(cardX - cardWidth/2, cardY - cardHeight/2, cardWidth, cardHeight, 20);
+                cardBg.lineStyle(3, 0x8a2be2, 0.8);
+                cardBg.strokeRoundedRect(cardX - cardWidth/2, cardY - cardHeight/2, cardWidth, cardHeight, 20);
+                
+                // Эффект свечения
+                const glow = this.add.graphics();
+                glow.fillStyle(0x8a2be2, 0.3);
+                glow.fillRoundedRect(cardX - cardWidth/2 - 5, cardY - cardHeight/2 - 5, cardWidth + 10, cardHeight + 10, 25);
+                
+                this.tweens.add({
+                    targets: glow,
+                    alpha: { from: 0.2, to: 0.5 },
+                    duration: 2000,
+                    ease: 'Sine.easeInOut',
+                    yoyo: true,
+                    repeat: -1
+                });
+                
+                // Аватар
+                const avatar = this.add.text(cardX - 120, cardY - 20, '👤', {
+                    font: '64px Arial'
+                }).setOrigin(0.5);
+                
+                // Имя пользователя
+                const username = this.add.text(cardX - 20, cardY - 50, this.userStats.username, {
+                    font: '28px Arial',
+                    fill: '#ffffff',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Уровень
+                const level = this.add.text(cardX - 20, cardY - 20, `Уровень ${this.userStats.level}`, {
+                    font: '20px Arial',
+                    fill: '#ffd700',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Прогресс бар опыта
+                this.createExperienceBar(cardX - 20, cardY + 20);
+                
+                // Анимация появления
+                const cardElements = [cardBg, glow, avatar, username, level];
+                cardElements.forEach(element => {
+                    element.setAlpha(0);
+                    element.y += 30;
+                });
+                
+                this.tweens.add({
+                    targets: cardElements,
+                    alpha: 1,
+                    y: '-=30',
+                    duration: 800,
+                    delay: 500,
+                    ease: 'Back.easeOut'
+                });
+            }
+            
+            createExperienceBar(x, y) {
+                const barWidth = 200;
+                const barHeight = 16;
+                const progress = this.userStats.experience / this.userStats.experienceToNext;
+                
+                // Фон бара
+                const expBg = this.add.graphics();
+                expBg.fillStyle(0x333333, 0.8);
+                expBg.fillRoundedRect(x - barWidth/2, y - barHeight/2, barWidth, barHeight, 8);
+                
+                // Заполнение бара
+                const expFill = this.add.graphics();
+                expFill.fillStyle(0x00ff00, 0.8);
+                expFill.fillRoundedRect(x - barWidth/2, y - barHeight/2, barWidth * progress, barHeight, 8);
+                
+                // Текст опыта
+                const expText = this.add.text(x, y + 25, `${this.userStats.experience}/${this.userStats.experienceToNext} XP`, {
+                    font: '14px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                // Анимация заполнения
+                expFill.scaleX = 0;
+                this.tweens.add({
+                    targets: expFill,
+                    scaleX: 1,
+                    duration: 1500,
+                    delay: 1000,
+                    ease: 'Power2.easeOut'
+                });
+            }
+            
+            createStatsSection() {
+                const sectionY = 450;
+                
+                // Заголовок секции
+                const statsTitle = this.add.text(this.cameras.main.centerX, sectionY, 'СТАТИСТИКА', {
+                    font: '24px Arial',
+                    fill: '#8a2be2',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Статистики
+                const stats = [
+                    { label: 'Всего монет', value: this.formatNumber(this.userStats.totalCoins), icon: '🪙' },
+                    { label: 'Монет/час', value: this.userStats.coinsPerHour, icon: '⏱️' },
+                    { label: 'Сейфов открыто', value: this.userStats.safesOpened, icon: '🔓' },
+                    { label: 'Дней в игре', value: this.userStats.daysPlayed, icon: '📅' }
+                ];
+                
+                const cols = 2;
+                const spacing = 220;
+                const startX = this.cameras.main.centerX - spacing/2;
+                const startY = sectionY + 60;
+                
+                stats.forEach((stat, index) => {
+                    const col = index % cols;
+                    const row = Math.floor(index / cols);
+                    const x = startX + col * spacing;
+                    const y = startY + row * 100;
+                    
+                    this.createStatCard(x, y, stat, index);
+                });
+                
+                // Анимация заголовка
+                statsTitle.setAlpha(0);
+                this.tweens.add({
+                    targets: statsTitle,
+                    alpha: 1,
+                    duration: 600,
+                    delay: 1200,
+                    ease: 'Power2.easeOut'
+                });
+            }
+            
+            createStatCard(x, y, stat, index) {
+                const container = this.add.container(x, y);
+                const width = 180;
+                const height = 80;
+                
+                // Фон карточки
+                const cardBg = this.add.graphics();
+                cardBg.fillStyle(0x2a2a4e, 0.8);
+                cardBg.fillRoundedRect(-width/2, -height/2, width, height, 12);
+                cardBg.lineStyle(2, 0x8a2be2, 0.6);
+                cardBg.strokeRoundedRect(-width/2, -height/2, width, height, 12);
+                
+                // Иконка
+                const icon = this.add.text(-50, 0, stat.icon, {
+                    font: '24px Arial'
+                }).setOrigin(0.5);
+                
+                // Значение
+                const value = this.add.text(20, -8, stat.value, {
+                    font: '20px Arial',
+                    fill: '#ffd700',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Описание
+                const label = this.add.text(20, 12, stat.label, {
+                    font: '12px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                container.add([cardBg, icon, value, label]);
+                
+                // Анимация появления
+                container.setAlpha(0);
+                container.y += 50;
+                this.tweens.add({
+                    targets: container,
+                    alpha: 1,
+                    y: y,
+                    duration: 600,
+                    delay: 1400 + index * 150,
+                    ease: 'Back.easeOut'
+                });
+                
+                return container;
+            }
+            
+            createAchievementsSection() {
+                const sectionY = 750;
+                
+                // Заголовок секции
+                const achievementsTitle = this.add.text(this.cameras.main.centerX, sectionY, 'ДОСТИЖЕНИЯ', {
+                    font: '24px Arial',
+                    fill: '#8a2be2',
+                    fontStyle: 'bold'
+                }).setOrigin(0.5);
+                
+                // Фон секции
+                const sectionBg = this.add.graphics();
+                const sectionHeight = this.cameras.main.height - sectionY - 50;
+                sectionBg.fillStyle(0x1a1a2e, 0.6);
+                sectionBg.fillRoundedRect(40, sectionY + 40, this.cameras.main.width - 80, sectionHeight - 40, 15);
+                sectionBg.lineStyle(2, 0x8a2be2, 0.5);
+                sectionBg.strokeRoundedRect(40, sectionY + 40, this.cameras.main.width - 80, sectionHeight - 40, 15);
+                
+                // Создаем достижения
+                this.userStats.achievements.forEach((achievement, index) => {
+                    this.createAchievement(achievement, index, sectionY + 90 + Math.floor(index / 2) * 120);
+                });
+                
+                // Анимация появления
+                achievementsTitle.setAlpha(0);
+                sectionBg.setAlpha(0);
+                
+                this.tweens.add({
+                    targets: [achievementsTitle, sectionBg],
+                    alpha: 1,
+                    duration: 600,
+                    delay: 1800,
+                    ease: 'Power2.easeOut'
+                });
+            }
+            
+            createAchievement(achievement, index, y) {
+                const isLeft = index % 2 === 0;
+                const x = isLeft ? this.cameras.main.centerX - 150 : this.cameras.main.centerX + 150;
+                const container = this.add.container(x, y);
+                const width = 260;
+                const height = 80;
+                
+                // Фон достижения
+                const achievementBg = this.add.graphics();
+                const bgColor = achievement.completed ? 0x004400 : 0x333333;
+                const borderColor = achievement.completed ? 0x00ff00 : 0x666666;
+                
+                achievementBg.fillStyle(bgColor, 0.6);
+                achievementBg.fillRoundedRect(-width/2, -height/2, width, height, 10);
+                achievementBg.lineStyle(2, borderColor, 0.8);
+                achievementBg.strokeRoundedRect(-width/2, -height/2, width, height, 10);
+                
+                // Эффект свечения для выполненных достижений
+                if (achievement.completed) {
+                    const glow = this.add.graphics();
+                    glow.fillStyle(0x00ff00, 0.2);
+                    glow.fillRoundedRect(-width/2 - 3, -height/2 - 3, width + 6, height + 6, 13);
+                    container.add(glow);
+                    
+                    this.tweens.add({
+                        targets: glow,
+                        alpha: { from: 0.1, to: 0.3 },
+                        duration: 2000,
+                        ease: 'Sine.easeInOut',
+                        yoyo: true,
+                        repeat: -1
+                    });
+                }
+                
+                // Иконка достижения
+                const icon = this.add.text(-80, 0, achievement.icon, {
+                    font: achievement.completed ? '32px Arial' : '24px Arial',
+                    fill: achievement.completed ? '#ffffff' : '#666666'
+                }).setOrigin(0
