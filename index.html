@@ -362,6 +362,156 @@
                 this.createMultiCoin(this.is_n);
                 this.get_up_coin();
                 this.InitPile();
+                
+                // Создаем нижнее меню
+                this.createBottomMenu();
+            }
+            
+            createBottomMenu() {
+                // Создаем контейнер для меню
+                this.menuContainer = this.add.container(0, this.cameras.main.height - 80);
+                this.menuContainer.setDepth(10000); // Убедимся, что меню поверх всего
+                
+                // Фон меню
+                const menuBg = this.add.rectangle(
+                    this.cameras.main.centerX, 
+                    0, 
+                    this.cameras.main.width, 
+                    80, 
+                    0x000033, 
+                    0.8
+                ).setOrigin(0.5, 0);
+                
+                // Пункты меню
+                const menuItems = [
+                    { name: "Фарминг", link: "index.html" },
+                    { name: "Сейфы", link: "safes.html" },
+                    { name: "Кошелек", link: "wallet.html" },
+                    { name: "Профиль", link: "profile.html" }
+                ];
+                
+                const menuButtons = [];
+                const buttonWidth = this.cameras.main.width / menuItems.length;
+                
+                menuItems.forEach((item, index) => {
+                    const button = this.add.container(
+                        buttonWidth * (index + 0.5) - this.cameras.main.width / 2,
+                        40,
+                        []
+                    );
+                    
+                    // Создаем иконку
+                    const icon = this.add.circle(0, -10, 20, 0x5DADE2);
+                    
+                    // Создаем текст
+                    const text = this.add.text(0, 15, item.name, {
+                        font: '16px Arial',
+                        fill: '#ffffff',
+                        align: 'center'
+                    }).setOrigin(0.5);
+                    
+                    button.add([icon, text]);
+                    button.setSize(buttonWidth, 80);
+                    button.setInteractive();
+                    
+                    // Анимация при наведении
+                    button.on('pointerover', () => {
+                        this.tweens.add({
+                            targets: [icon, text],
+                            scale: 1.1,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        
+                        this.tweens.add({
+                            targets: icon,
+                            fillColor: 0x3498DB,
+                            duration: 200
+                        });
+                    });
+                    
+                    button.on('pointerout', () => {
+                        this.tweens.add({
+                            targets: [icon, text],
+                            scale: 1,
+                            duration: 200,
+                            ease: 'Sine.easeOut'
+                        });
+                        
+                        this.tweens.add({
+                            targets: icon,
+                            fillColor: 0x5DADE2,
+                            duration: 200
+                        });
+                    });
+                    
+                    button.on('pointerdown', () => {
+                        // Анимация нажатия
+                        this.tweens.add({
+                            targets: [icon, text],
+                            scale: 0.9,
+                            duration: 100,
+                            yoyo: true,
+                            ease: 'Sine.easeInOut'
+                        });
+                        
+                        // Подсветка активного пункта
+                        this.highlightActiveButton(index);
+                        
+                        // Переход на страницу с сохранением состояния загрузки
+                        setTimeout(() => {
+                            // Сохраняем состояние загрузки в sessionStorage
+                            sessionStorage.setItem('skipIntro', 'true');
+                            window.location.href = item.link;
+                        }, 300);
+                    });
+                    
+                    menuButtons.push(button);
+                });
+                
+                // Добавляем все элементы в контейнер
+                this.menuContainer.add([menuBg, ...menuButtons]);
+                
+                // Подсветка активного пункта меню
+                this.highlightActiveButton();
+            }
+            
+            highlightActiveButton(activeIndex = null) {
+                // Определяем текущую страницу
+                const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+                
+                // Находим индекс активной страницы
+                if (activeIndex === null) {
+                    const menuItems = [
+                        { link: "index.html" },
+                        { link: "safes.html" },
+                        { link: "wallet.html" },
+                        { link: "profile.html" }
+                    ];
+                    
+                    activeIndex = menuItems.findIndex(item => item.link === currentPage);
+                }
+                
+                // Подсвечиваем активный элемент
+                const buttons = this.menuContainer.getAll();
+                buttons.forEach((button, index) => {
+                    if (button instanceof Phaser.GameObjects.Container) {
+                        const [icon] = button.getAll();
+                        if (index === activeIndex) {
+                            this.tweens.add({
+                                targets: icon,
+                                fillColor: 0x2ECC71,
+                                duration: 300
+                            });
+                        } else {
+                            this.tweens.add({
+                                targets: icon,
+                                fillColor: 0x5DADE2,
+                                duration: 300
+                            });
+                        }
+                    }
+                });
             }
                     
             createMultiCoin(n) {
@@ -803,8 +953,18 @@
             }, 1000);
         }	   
         
+        // Проверяем, нужно ли пропускать загрузочную сцену
+        const skipIntro = sessionStorage.getItem('skipIntro') === 'true';
+        
         setTimeout(() => {
             const game = new Phaser.Game(config);
+            
+            // Пропускаем загрузочную сцену при повторном заходе
+            if (skipIntro) {
+                game.scene.stop('LoadScene');
+                game.scene.start('MainScene');
+            }
+            
             window.addEventListener('resize', () => {
                 if (game && game.scale) {
                     game.scale.refresh();
