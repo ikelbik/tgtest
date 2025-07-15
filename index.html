@@ -28,7 +28,7 @@
         const tg = window.Telegram?.WebApp;
         
         if (tg) {
-            tg.ready();
+            <!-- tg.ready(); -->
             tg.expand();
         }
 
@@ -128,6 +128,7 @@
                 this.load.image('bg01', 'assets/bg01.png');	
                 this.load.image('bg02', 'assets/bg02.png');				
                 this.load.obj('coin', 'assets/ggcoin.obj');
+				this.load.image('menubutton_1', 'assets/mbtn1.png');
                 this.load.image('texture', 'assets/coin_txt_n.png');
                 this.load.image('coin_t0', 'assets/coin_c00.png');
                 this.load.image('coin_t1', 'assets/coin_c01.png');
@@ -309,6 +310,43 @@
                     });
                 }
                 
+				
+				// Добавляем кнопку меню
+                this.menuButton = this.add.sprite(50, 50, 'menubutton_1')
+                    .setInteractive()
+                    .setDepth(1000);
+                this.menuButton.setScale(0.5);
+                
+                // Эффект блеска для кнопки (прозрачный спрайт)
+                this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
+                    .setScale(0.5)
+                    .setAlpha(0)
+                    .setDepth(1001)
+                    .setBlendMode(Phaser.BlendModes.ADD);
+
+                // Обработчики ориентации устройства
+                this.lastGamma = 0;
+                this.canShine = true;
+                
+                // Обработчик нажатия на кнопку меню
+                this.menuButton.on('pointerdown', () => {
+                    console.log('Menu button pressed');
+                    // Здесь можно добавить функционал меню
+                });
+
+                // Проверяем поддержку ориентации
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (event) => {
+                        if (event.gamma !== null) {
+                            this.handleOrientation(event.gamma);
+                        }
+                    });
+                } else {
+                    console.log("Device orientation not supported");
+                }
+
+				
+				
                 coins = this.add.group();
                 pile = this.add.group();
 
@@ -362,130 +400,8 @@
                 this.createMultiCoin(this.is_n);
                 this.get_up_coin();
                 this.InitPile();
-                
-                // Создаем нижнее меню
-                this.createBottomMenu();
             }
-            
-            createBottomMenu() {
-                // Создаем контейнер для меню
-                this.menuContainer = this.add.container(0, this.cameras.main.height - 60);
-                this.menuContainer.setDepth(10000); // Убедимся, что меню поверх всего
-                
-                // Фон меню
-                const menuBg = this.add.rectangle(
-                    this.cameras.main.centerX, 
-                    0, 
-                    this.cameras.main.width, 
-                    60, 
-                    0x000033, 
-                    0.9
-                ).setOrigin(0.5, 0);
-                
-                // Пункты меню
-                const menuItems = [
-                    { name: "Фарминг", link: "index.html" },
-                    { name: "Сейфы", link: "safes.html" },
-                    { name: "Кошелек", link: "wallet.html" },
-                    { name: "Профиль", link: "profile.html" }
-                ];
-                
-                const menuButtons = [];
-                const buttonWidth = this.cameras.main.width / menuItems.length;
-                const iconSize = 15; // Уменьшенный размер иконок
-                const fontSize = 12; // Уменьшенный размер шрифта
-                
-                menuItems.forEach((item, index) => {
-                    const button = this.add.container(
-                        buttonWidth * (index + 0.5) - this.cameras.main.width / 2,
-                        30,
-                        []
-                    );
-                    
-                    // Создаем иконку (просто круг)
-                    const icon = this.add.circle(0, -5, iconSize, 0x5DADE2);
-                    
-                    // Создаем текст
-                    const text = this.add.text(0, iconSize + 2, item.name, {
-                        font: `${fontSize}px Arial`,
-                        fill: '#ffffff',
-                        align: 'center'
-                    }).setOrigin(0.5);
-                    
-                    button.add([icon, text]);
-                    button.setSize(buttonWidth, 60);
-                    button.setInteractive();
-                    
-                    // Анимация при нажатии (для мобильных)
-                    button.on('pointerdown', () => {
-                        // Анимация нажатия
-                        this.tweens.add({
-                            targets: [icon, text],
-                            scale: 0.9,
-                            duration: 100,
-                            yoyo: true,
-                            ease: 'Sine.easeInOut'
-                        });
-                        
-                        // Подсветка активного пункта
-                        this.highlightActiveButton(index);
-                        
-                        // Переход на страницу с сохранением состояния загрузки
-                        setTimeout(() => {
-                            // Сохраняем состояние загрузки в sessionStorage
-                            sessionStorage.setItem('skipIntro', 'true');
-                            window.location.href = item.link;
-                        }, 300);
-                    });
-                    
-                    menuButtons.push(button);
-                });
-                
-                // Добавляем все элементы в контейнер
-                this.menuContainer.add([menuBg, ...menuButtons]);
-                
-                // Подсветка активного пункта меню
-                this.highlightActiveButton();
-            }
-            
-            highlightActiveButton(activeIndex = null) {
-                // Определяем текущую страницу
-                const currentPage = window.location.pathname.split('/').pop() || 'index.html';
-                
-                // Находим индекс активной страницы
-                if (activeIndex === null) {
-                    const menuItems = [
-                        { link: "index.html" },
-                        { link: "safes.html" },
-                        { link: "wallet.html" },
-                        { link: "profile.html" }
-                    ];
-                    
-                    activeIndex = menuItems.findIndex(item => item.link === currentPage);
-                }
-                
-                // Подсвечиваем активный элемент
-                const buttons = this.menuContainer.getAll();
-                buttons.forEach((button, index) => {
-                    if (button instanceof Phaser.GameObjects.Container) {
-                        const [icon] = button.getAll();
-                        if (index === activeIndex) {
-                            this.tweens.add({
-                                targets: icon,
-                                fillColor: 0x2ECC71,
-                                duration: 300
-                            });
-                        } else {
-                            this.tweens.add({
-                                targets: icon,
-                                fillColor: 0x5DADE2,
-                                duration: 300
-                            });
-                        }
-                    }
-                });
-            }
-                    
+			        
             createMultiCoin(n) {
                 this.mSound.play();
                 const randomX = Phaser.Math.Between(-this.cameras.main.width / 3.5, this.cameras.main.width / 3.5);
@@ -668,6 +584,36 @@
                 if (coins.getChildren()[this.max_i]) {
                     coins.getChildren()[this.max_i].setInteractive();
                 }
+            }
+			
+			
+			 // Обработчик изменения ориентации
+            handleOrientation(gamma) {
+                // Определяем переход через 0 градусов
+                if (this.lastGamma < 0 && gamma > 0 || 
+                    this.lastGamma > 0 && gamma < 0) {
+                    if (this.canShine) {
+                        this.triggerShineEffect();
+                        this.canShine = false;
+                        this.time.delayedCall(500, () => { this.canShine = true; });
+                    }
+                }
+                this.lastGamma = gamma;
+            }
+
+            // Активация эффекта блеска
+            triggerShineEffect() {
+                this.tweens.add({
+                    targets: this.shine,
+                    alpha: { from: 1, to: 0 },
+                    scale: { from: 0.6, to: 0.5 },
+                    duration: 300,
+                    ease: 'Cubic.easeOut',
+                    onStart: () => {
+                        this.shine.setPosition(this.menuButton.x, this.menuButton.y);
+                        this.shine.setAlpha(1);
+                    }
+                });
             }
                     
             update(time, delta) {
@@ -925,18 +871,8 @@
             }, 1000);
         }	   
         
-        // Проверяем, нужно ли пропускать загрузочную сцену
-        const skipIntro = sessionStorage.getItem('skipIntro') === 'true';
-        
         setTimeout(() => {
             const game = new Phaser.Game(config);
-            
-            // Пропускаем загрузочную сцену при повторном заходе
-            if (skipIntro) {
-                game.scene.stop('LoadScene');
-                game.scene.start('MainScene');
-            }
-            
             window.addEventListener('resize', () => {
                 if (game && game.scale) {
                     game.scale.refresh();
