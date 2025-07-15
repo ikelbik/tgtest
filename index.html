@@ -344,11 +344,11 @@
                 this.menuButton = this.add.sprite(200, mbtn1_y, 'menubutton_1')
                     .setInteractive()
                     .setDepth(1000);
-                this.menuButton.setScale(this.scale);
+                this.menuButton.setScale(2*this.scale);
 
 				// Эффект блеска для кнопки (прозрачный спрайт)
                 this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
-                    .setScale(1)
+                    .setScale(2)
                     .setAlpha(0)
                     .setDepth(1001)
                     .setBlendMode(Phaser.BlendModes.ADD);
@@ -606,8 +606,8 @@
                 this.tweens.add({
                     targets: this.shine,
                     alpha: { from: 1, to: 0 },
-                    scale: { from: 1.1, to: 1 },
-                    duration: 300,
+                    scale: { from: 2.0, to: 2 },
+                    duration: 200,
                     ease: 'Cubic.easeOut',
                     onStart: () => {
                         this.shine.setPosition(this.menuButton.x, this.menuButton.y);
