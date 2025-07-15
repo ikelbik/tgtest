@@ -269,6 +269,7 @@
                         this.scene.start('MainScene');
                     });
                 }
+				//this.scene.start('MainScene');
             }
         }
 
@@ -310,36 +311,7 @@
                         tg.close();
                     });
                 }
-                
-                
-                // Эффект блеска для кнопки (прозрачный спрайт)
-                this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
-                    .setScale(0.5)
-                    .setAlpha(0)
-                    .setDepth(1001)
-                    .setBlendMode(Phaser.BlendModes.ADD);
-
-                // Обработчики ориентации устройства
-                this.lastGamma = 0;
-                this.canShine = true;
-                
-                // Обработчик нажатия на кнопку меню
-                this.menuButton.on('pointerdown', () => {
-                    console.log('Menu button pressed');
-                    // Здесь можно добавить функционал меню
-                });
-
-                // Проверяем поддержку ориентации
-                if (window.DeviceOrientationEvent) {
-                    window.addEventListener('deviceorientation', (event) => {
-                        if (event.gamma !== null) {
-                            this.handleOrientation(event.gamma);
-                        }
-                    });
-                } else {
-                    console.log("Device orientation not supported");
-                }
-				
+              
                 coins = this.add.group();
                 pile = this.add.group();
 
@@ -369,10 +341,38 @@
 				
 				// Добавляем кнопку меню
 				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton = this.add.sprite(100, mbtn1_y, 'menubutton_1')
+                this.menuButton = this.add.sprite(200, mbtn1_y, 'menubutton_1')
                     .setInteractive()
                     .setDepth(1000);
-                this.menuButton.setScale(this.scale);				
+                this.menuButton.setScale(this.scale);
+
+				// Эффект блеска для кнопки (прозрачный спрайт)
+                this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
+                    .setScale(0.5)
+                    .setAlpha(0)
+                    .setDepth(1001)
+                    .setBlendMode(Phaser.BlendModes.ADD);
+
+                // Обработчики ориентации устройства
+                this.lastGamma = 0;
+                this.canShine = true;
+                
+                // Обработчик нажатия на кнопку меню
+                this.menuButton.on('pointerdown', () => {
+                    console.log('Menu button pressed');
+                    // Здесь можно добавить функционал меню
+                });
+
+                // Проверяем поддержку ориентации
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (event) => {
+                        if (event.gamma !== null) {
+                            this.handleOrientation(event.gamma);
+                        }
+                    });
+                } else {
+                    console.log("Device orientation not supported");
+                }				
                     
                 this.stnLevel = (this.bg.height - 2 * this.bg01_height) * this.scale;
                 this.baseYOffset = 450 * this.scale;
