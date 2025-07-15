@@ -291,6 +291,7 @@
                 this.bg02_height = 491;
                 this.mcoin_width = 53;
                 this.mcoin_height = 41;
+				this.mbtn1_height = 85;
                 this.pile_high = 0;
                 this.resolution_coeff = 1;
                 this.max_i = 0;
@@ -310,12 +311,6 @@
                     });
                 }
                 
-				
-				// Добавляем кнопку меню
-                this.menuButton = this.add.sprite(50, 50, 'menubutton_1')
-                    .setInteractive()
-                    .setDepth(1000);
-                this.menuButton.setScale(0.5);
                 
                 // Эффект блеска для кнопки (прозрачный спрайт)
                 this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
@@ -344,8 +339,6 @@
                 } else {
                     console.log("Device orientation not supported");
                 }
-
-				
 				
                 coins = this.add.group();
                 pile = this.add.group();
@@ -373,6 +366,13 @@
                 this.plane01.y = (this.bg.height - this.bg01_height) * this.scale;
                 this.plane02.setScale(this.scale);
                 this.plane02.y = (this.bg.height - 2 * this.bg01_height - this.bg02_height) * this.scale;	
+				
+				// Добавляем кнопку меню
+				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
+                this.menuButton = this.add.sprite(100, mbtn1_y, 'menubutton_1')
+                    .setInteractive()
+                    .setDepth(1000);
+                this.menuButton.setScale(this.scale);				
                     
                 this.stnLevel = (this.bg.height - 2 * this.bg01_height) * this.scale;
                 this.baseYOffset = 450 * this.scale;
