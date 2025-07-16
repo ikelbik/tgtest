@@ -1,317 +1,1272 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <meta name="telegram:verify" content="VERIFICATION_CODE_OT_BOTFATHER">
-    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">	
-    <link rel="manifest" href="https://ikelbik.github.io/tgtest/app-manifest.json">
-    <link rel="icon" type="image/png" href="https://ikelbik.github.io/tgtest/favicon.png">    
     <meta charset="UTF-8">
-    <meta name="theme-color" content="#000022">
-    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
+    <script src="https://unpkg.com/tonweb@0.0.66/dist/tonweb.js"></script>
     <style>
-        * { margin: 0; padding: 0; overflow: hidden; -webkit-tap-highlight-color: transparent; touch-action: none }
-        body { background: #000022 }
-        html, body, #game-container {
-            margin: 0;
-            padding: 0;
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        body { 
+            background: #000022;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
+            color: white;
+            overflow-y: auto;
+            overflow-x: hidden;
+        }
+        
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+            min-height: 100vh;
+            animation: fadeIn 0.5s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Карточка подключения кошелька */
+        .connect-card {
+            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(123, 104, 238, 0.1) 100%);
+            border: 2px solid rgba(74, 144, 226, 0.3);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            text-align: center;
+        }
+        
+        #ton-connect-button {
+            display: inline-block;
+            margin: 0 auto;
+        }
+        
+        .wallet-info {
+            display: none;
+            margin-top: 20px;
+        }
+        
+        .wallet-address {
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        /* Баланс карточка */
+        .balance-card {
+            background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
+            display: none;
+        }
+        
+        .balance-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: rotate 20s linear infinite;
+        }
+        
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+        
+        .balance-label {
+            font-size: 14px;
+            opacity: 0.9;
+            margin-bottom: 10px;
+        }
+        
+        .balance-amount {
+            font-size: 48px;
+            font-weight: bold;
+            margin-bottom: 5px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .coin-icon {
+            font-size: 36px;
+            animation: bounce 2s ease-in-out infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        .balance-usd {
+            font-size: 18px;
+            opacity: 0.8;
+        }
+        
+        /* Список токенов */
+        .tokens-section {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 20px;
+            backdrop-filter: blur(10px);
+            display: none;
+        }
+        
+        .token-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .token-item:last-child {
+            border-bottom: none;
+        }
+        
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .token-logo {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .token-logo img {
             width: 100%;
             height: 100%;
-            overflow: hidden;
-        }
-        .back-button {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            z-index: 1000;
-            background: linear-gradient(135deg, #4a6fff, #2a4fff);
-            border: none;
             border-radius: 50%;
-            width: 60px;
-            height: 60px;
-            color: white;
+        }
+        
+        .token-details {
+            text-align: left;
+        }
+        
+        .token-symbol {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .token-name {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .token-balance {
+            text-align: right;
+        }
+        
+        .token-amount {
+            font-weight: bold;
+            font-size: 16px;
+        }
+        
+        .token-value {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        /* Быстрые действия */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 30px;
+            display: none;
+        }
+        
+        .action-button {
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            backdrop-filter: blur(10px);
+        }
+        
+        .action-button:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(74, 144, 226, 0.5);
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(74, 144, 226, 0.2);
+        }
+        
+        .action-icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        
+        .action-label {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        /* История транзакций */
+        .transactions-section {
+            display: none;
+        }
+        
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .section-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .transactions-list {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 20px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .transaction-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px 0;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            transition: opacity 0.3s ease;
+        }
+        
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        
+        .transaction-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .transaction-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .transaction-in {
+            background: rgba(76, 175, 80, 0.2);
+        }
+        
+        .transaction-out {
+            background: rgba(255, 87, 34, 0.2);
+        }
+        
+        .transaction-details {
+            flex: 1;
+        }
+        
+        .transaction-title {
+            font-size: 16px;
+            font-weight: 500;
+            margin-bottom: 2px;
+        }
+        
+        .transaction-date {
+            font-size: 12px;
+            color: #888;
+        }
+        
+        .transaction-amount {
+            text-align: right;
+        }
+        
+        .amount-positive {
+            color: #4caf50;
+            font-weight: 600;
+        }
+        
+        .amount-negative {
+            color: #ff5722;
+            font-weight: 600;
+        }
+        
+        /* Модальное окно */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-content {
+            background: #0a0a1e;
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            width: 90%;
+            animation: modalSlideIn 0.3s ease;
+        }
+        
+        @keyframes modalSlideIn {
+            from { transform: translateY(-50px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-title {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .modal-close {
             font-size: 24px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(74, 111, 255, 0.4);
+            color: #888;
+            transition: color 0.3s ease;
+        }
+        
+        .modal-close:hover {
+            color: white;
+        }
+        
+        /* Форма */
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: #888;
+        }
+        
+        .form-input {
+            width: 100%;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            font-size: 16px;
             transition: all 0.3s ease;
         }
-        .back-button:hover {
-            transform: scale(1.1);
-            box-shadow: 0 6px 20px rgba(74, 111, 255, 0.6);
+        
+        .form-input:focus {
+            outline: none;
+            border-color: #4A90E2;
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .recipient-info {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 15px;
+            font-family: monospace;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        
+        .button-primary {
+            width: 100%;
+            background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
+            color: white;
+            border: none;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .button-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(74, 144, 226, 0.4);
+        }
+        
+        .button-primary:active {
+            transform: translateY(0);
+        }
+        
+        .button-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .button-secondary {
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+            border: 2px solid rgba(255, 255, 255, 0.2);
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-right: 10px;
+        }
+        
+        .button-secondary:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+        
+        .button-danger {
+            background: rgba(255, 87, 34, 0.2);
+            color: #ff5722;
+            border: 2px solid rgba(255, 87, 34, 0.3);
+        }
+        
+        .button-danger:hover {
+            background: rgba(255, 87, 34, 0.3);
+        }
+        
+        /* Уведомления */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: #4A90E2;
+            color: white;
+            padding: 15px 20px;
+            border-radius: 10px;
+            max-width: 300px;
+            z-index: 2000;
+            transform: translateX(400px);
+            transition: transform 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification.success {
+            background: #4caf50;
+        }
+        
+        .notification.error {
+            background: #ff5722;
+        }
+        
+        /* Статус подключения */
+        .connection-status {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            font-size: 12px;
+            color: #888;
+            margin-top: 15px;
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #ff5722;
+        }
+        
+        .status-indicator.connected {
+            background: #4caf50;
+        }
+        
+        /* Загрузчик */
+        .loading {
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        
+        .loading::after {
+            content: " ⏳";
+        }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Адаптивность */
+        @media (max-width: 480px) {
+            .balance-amount {
+                font-size: 36px;
+            }
+            
+            .quick-actions {
+                grid-template-columns: 1fr 1fr;
+            }
         }
     </style>
 </head>
 <body>
-    <button class="back-button" onclick="window.location.href='index.html'">←</button>
-    <div id="game"></div>
-    
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-    <script>
-        const tg = window.Telegram?.WebApp;
+    <div class="container">
+        <!-- Карточка подключения кошелька -->
+        <div class="connect-card">
+            <h2 style="margin-bottom: 20px;">TON Кошелек</h2>
+            <div id="ton-connect-button"></div>
+            
+            <div class="wallet-info" id="wallet-info">
+                <div class="wallet-address" id="wallet-address">Загрузка...</div>
+                <button class="button-secondary" id="refresh-balance" onclick="refreshBalance()">🔄 Обновить</button>
+                <button class="button-secondary button-danger" id="disconnect-wallet" onclick="disconnectWallet()">🔌 Отключить</button>
+            </div>
+            
+            <div class="connection-status">
+                <span class="status-indicator" id="status-indicator"></span>
+                <span id="connection-status-text">Не подключено</span>
+            </div>
+        </div>
         
-        if (tg) {
-            tg.ready();
-            tg.expand();
+        <!-- Карточка баланса -->
+        <div class="balance-card" id="balance-card">
+            <div class="balance-label">Баланс GGCoin</div>
+            <div class="balance-amount">
+                <span id="ggcoin-balance">0</span>
+                <span class="coin-icon">🪙</span>
+            </div>
+            <div class="balance-usd">≈ $<span id="ggcoin-usd">0.00</span></div>
+        </div>
+        
+        <!-- Список токенов -->
+        <div class="tokens-section" id="tokens-section">
+            <h3 style="margin-bottom: 15px;">Токены</h3>
+            <div id="tokens-list">
+                <div style="text-align: center; padding: 20px; color: #888;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">Загрузка токенов...</p>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Быстрые действия -->
+        <div class="quick-actions" id="quick-actions">
+            <div class="action-button" onclick="showSendModal()">
+                <div class="action-icon">📤</div>
+                <div class="action-label">Отправить</div>
+            </div>
+            <div class="action-button" onclick="showReceiveModal()">
+                <div class="action-icon">📥</div>
+                <div class="action-label">Получить</div>
+            </div>
+            <div class="action-button" onclick="refreshBalance()">
+                <div class="action-icon">🔄</div>
+                <div class="action-label">Обновить</div>
+            </div>
+            <div class="action-button" onclick="showHistoryModal()">
+                <div class="action-icon">📊</div>
+                <div class="action-label">История</div>
+            </div>
+        </div>
+        
+        <!-- История транзакций -->
+        <div class="transactions-section" id="transactions-section">
+            <div class="section-header">
+                <h2 class="section-title">Последние транзакции</h2>
+            </div>
+            
+            <div class="transactions-list" id="transactions-list">
+                <div style="text-align: center; padding: 20px; color: #888;">
+                    Нет транзакций
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно отправки -->
+    <div class="modal" id="send-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Отправить GGCoin</h3>
+                <span class="modal-close" onclick="closeModal('send-modal')">&times;</span>
+            </div>
+            <form onsubmit="sendGGCoin(event)">
+                <div class="form-group">
+                    <label class="form-label">Адрес получателя:</label>
+                    <div class="recipient-info">UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Количество GGCoin:</label>
+                    <input type="number" class="form-input" id="send-amount" placeholder="10" step="0.1" min="0.1" required>
+                    <div style="margin-top: 5px; font-size: 12px; color: #888;">
+                        Доступно: <span id="available-balance">0</span> GGCoin
+                    </div>
+                </div>
+                <button type="submit" class="button-primary" id="send-button">Отправить</button>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Модальное окно получения -->
+    <div class="modal" id="receive-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Получить токены</h3>
+                <span class="modal-close" onclick="closeModal('receive-modal')">&times;</span>
+            </div>
+            <div style="text-align: center;">
+                <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
+                    <div id="qr-code" style="font-size: 64px;">📱</div>
+                </div>
+                <p style="color: #888; margin-bottom: 20px;">Отсканируйте QR-код или скопируйте адрес</p>
+                <div class="form-group">
+                    <input type="text" class="form-input" id="receive-address" readonly>
+                </div>
+                <button class="button-primary" onclick="copyAddress()">Скопировать адрес</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Модальное окно истории -->
+    <div class="modal" id="history-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">История транзакций</h3>
+                <span class="modal-close" onclick="closeModal('history-modal')">&times;</span>
+            </div>
+            <div id="history-content">
+                <p style="text-align: center; color: #888;">Загрузка истории...</p>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Получаем Telegram WebApp
+        let tg = window.Telegram?.WebApp;
+        
+        // Если не удалось получить напрямую, слушаем postMessage
+        if (!tg) {
+            window.addEventListener('message', function(event) {
+                if (event.data && event.data.type === 'tg-webapp') {
+                    // Создаем объект-заглушку с основными методами
+                    window.tg = {
+                        ...event.data.data,
+                        HapticFeedback: {
+                            impactOccurred: (style) => console.log('Haptic:', style),
+                            notificationOccurred: (type) => console.log('Haptic notification:', type)
+                        }
+                    };
+                    tg = window.tg;
+                }
+            });
         }
-
-        class WalletScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'WalletScene' });
-                this.balance = 12450; // Пример баланса
-                this.transactions = [
-                    { type: 'income', amount: 150, description: 'Фарминг монет', time: '2 мин назад' },
-                    { type: 'income', amount: 500, description: 'Сейф уровня 2', time: '15 мин назад' },
-                    { type: 'expense', amount: 100, description: 'Открытие сейфа', time: '20 мин назад' },
-                    { type: 'income', amount: 75, description: 'Фарминг монет', time: '1 час назад' },
-                    { type: 'income', amount: 300, description: 'Ежедневная награда', time: '2 часа назад' }
-                ];
-            }
-
-            preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                this.load.image('coin_icon', 'assets/coin_t0.png');
-                this.load.audio('coinSound', 'assets/up.mp3');
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
-            }
-
-            create() {
-                this.cameras.main.setBackgroundColor('#000022');
+        
+        // Конфигурация
+        const GGCOIN_MASTER_ADDRESS = '0:7f82a882da388deecaa53806c44c375f697a09fd86d93e9c0e1832749b222b0b';
+        const GGCOIN_DECIMALS = 9;
+        const RECIPIENT_ADDRESS = 'UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h';
+        const COIN_RATE = 0.001; // Курс GGCoin к доллару
+        
+        // Глобальные переменные
+        let tonConnectUI = null;
+        let walletAddress = null;
+        let isConnected = false;
+        let ggcoinBalance = 0;
+        let ggcoinWalletAddress = null;
+        let tonBalance = 0;
+        
+        // Инициализация TON Connect
+        async function initTonConnect() {
+            try {
+                tonConnectUI = new TON_CONNECT_UI.TonConnectUI({
+                    manifestUrl: 'https://ton-connect.github.io/demo-dapp-with-wallet/tonconnect-manifest.json',
+                    buttonRootId: 'ton-connect-button'
+                });
                 
-                // Создаем фоновый градиент
-                this.createBackground();
-                
-                // Создаем плавающие частицы
-                this.createBackgroundParticles();
-                
-                // Заголовок
-                this.createTitle();
-                
-                // Карточка баланса
-                this.createBalanceCard();
-                
-                // Кнопки действий
-                this.createActionButtons();
-                
-                // История транзакций
-                this.createTransactionHistory();
-                
-                if (tg) {
-                    tg.MainButton.hide();
-                    tg.onEvent('backButtonClicked', () => {
-                        window.location.href = 'index.html';
-                    });
-                }
-            }
-            
-            createBackground() {
-                const graphics = this.add.graphics();
-                const centerX = this.cameras.main.centerX;
-                const centerY = this.cameras.main.centerY;
-                const radius = Math.max(this.cameras.main.width, this.cameras.main.height);
-                
-                for (let i = 0; i < radius; i += 10) {
-                    const alpha = 1 - (i / radius) * 0.8;
-                    const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        { r: 20, g: 40, b: 80 },
-                        { r: 0, g: 0, b: 34 },
-                        100,
-                        Math.floor((i / radius) * 100)
-                    );
-                    
-                    graphics.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b), alpha);
-                    graphics.fillCircle(centerX, centerY, radius - i);
-                }
-            }
-            
-            createBackgroundParticles() {
-                for (let i = 0; i < 20; i++) {
-                    const particle = this.add.circle(
-                        Phaser.Math.Between(0, this.cameras.main.width),
-                        Phaser.Math.Between(0, this.cameras.main.height),
-                        Phaser.Math.Between(2, 5),
-                        0xffd700,
-                        0.3
-                    );
-                    
-                    this.tweens.add({
-                        targets: particle,
-                        y: particle.y + Phaser.Math.Between(-60, 60),
-                        x: particle.x + Phaser.Math.Between(-30, 30),
-                        alpha: { from: 0.1, to: 0.5 },
-                        duration: Phaser.Math.Between(5000, 10000),
-                        ease: 'Sine.easeInOut',
-                        yoyo: true,
-                        repeat: -1,
-                        delay: Phaser.Math.Between(0, 4000)
-                    });
-                }
-            }
-            
-            createTitle() {
-                const title = this.add.text(this.cameras.main.centerX, 120, '💰 КОШЕЛЕК', { 
-                    fontSize: '48px', 
-                    fill: '#ffd700',
-                    fontStyle: 'bold',
-                    stroke: '#000044',
-                    strokeThickness: 6,
-                    shadow: {
-                        offsetX: 3,
-                        offsetY: 3,
-                        color: '#000000',
-                        blur: 10,
-                        fill: true
+                // Обработчик изменения статуса подключения
+                tonConnectUI.onStatusChange(async (wallet) => {
+                    if (wallet) {
+                        walletAddress = wallet.account.address;
+                        isConnected = true;
+                        await onWalletConnected();
+                    } else {
+                        walletAddress = null;
+                        isConnected = false;
+                        onWalletDisconnected();
                     }
-                }).setOrigin(0.5);
-                
-                this.tweens.add({
-                    targets: title,
-                    scale: { from: 1, to: 1.05 },
-                    duration: 2500,
-                    ease: 'Sine.easeInOut',
-                    yoyo: true,
-                    repeat: -1
                 });
                 
-                title.setAlpha(0);
-                this.tweens.add({
-                    targets: title,
-                    alpha: 1,
-                    duration: 1000,
-                    ease: 'Power2.easeOut'
-                });
+                // Проверяем текущее подключение
+                const currentWallet = tonConnectUI.wallet;
+                if (currentWallet) {
+                    walletAddress = currentWallet.account.address;
+                    isConnected = true;
+                    await onWalletConnected();
+                }
+            } catch (error) {
+                console.error('Ошибка инициализации TON Connect:', error);
+                showNotification('Ошибка инициализации кошелька', 'error');
             }
+        }
+        
+        // Обработчик подключения кошелька
+        async function onWalletConnected() {
+            updateConnectionStatus(true);
+            document.getElementById('wallet-address').textContent = formatAddress(walletAddress);
+            document.getElementById('receive-address').value = walletAddress;
             
-            createBalanceCard() {
-                const cardWidth = this.cameras.main.width - 80;
-                const cardHeight = 180;
-                const cardX = this.cameras.main.centerX;
-                const cardY = 280;
-                
-                // Фон карточки с градиентом
-                const cardBg = this.add.graphics();
-                cardBg.fillGradientStyle(0x2a4fff, 0x2a4fff, 0x1a3eee, 0x1a3eee, 1);
-                cardBg.fillRoundedRect(cardX - cardWidth/2, cardY - cardHeight/2, cardWidth, cardHeight, 20);
-                cardBg.lineStyle(3, 0x4a6fff, 0.8);
-                cardBg.strokeRoundedRect(cardX - cardWidth/2, cardY - cardHeight/2, cardWidth, cardHeight, 20);
-                
-                // Эффект свечения
-                const glow = this.add.graphics();
-                glow.fillStyle(0x4a6fff, 0.3);
-                glow.fillRoundedRect(cardX - cardWidth/2 - 5, cardY - cardHeight/2 - 5, cardWidth + 10, cardHeight + 10, 25);
-                
-                this.tweens.add({
-                    targets: glow,
-                    alpha: { from: 0.2, to: 0.5 },
-                    duration: 2000,
-                    ease: 'Sine.easeInOut',
-                    yoyo: true,
-                    repeat: -1
-                });
-                
-                // Заголовок баланса
-                const balanceLabel = this.add.text(cardX, cardY - 40, 'ТЕКУЩИЙ БАЛАНС', {
-                    font: '20px Arial',
-                    fill: '#ffffff',
-                    fontStyle: 'bold'
-                }).setOrigin(0.5);
-                
-                // Сумма баланса
-                this.balanceText = this.add.text(cardX, cardY + 10, this.formatNumber(this.balance), {
-                    font: '42px Arial',
-                    fill: '#ffd700',
-                    fontStyle: 'bold',
-                    stroke: '#000000',
-                    strokeThickness: 4
-                }).setOrigin(0.5);
-                
-                // Иконка монеты
-                const coinIcon = this.add.text(cardX + 120, cardY + 10, '🪙', {
-                    font: '36px Arial'
-                }).setOrigin(0.5);
-                
-                this.tweens.add({
-                    targets: coinIcon,
-                    rotation: { from: 0, to: Math.PI * 2 },
-                    duration: 4000,
-                    repeat: -1,
-                    ease: 'Linear'
-                });
-                
-                // Анимация появления карточки
-                const cardElements = [cardBg, glow, balanceLabel, this.balanceText, coinIcon];
-                cardElements.forEach(element => {
-                    element.setAlpha(0);
-                    element.y += 30;
-                });
-                
-                this.tweens.add({
-                    targets: cardElements,
-                    alpha: 1,
-                    y: '-=30',
-                    duration: 800,
-                    delay: 500,
-                    ease: 'Back.easeOut'
-                });
+            // Показываем элементы интерфейса
+            document.getElementById('wallet-info').style.display = 'block';
+            document.getElementById('balance-card').style.display = 'block';
+            document.getElementById('tokens-section').style.display = 'block';
+            document.getElementById('quick-actions').style.display = 'grid';
+            document.getElementById('transactions-section').style.display = 'block';
+            
+            // Загружаем данные
+            await refreshBalance();
+            vibrateSuccess();
+        }
+        
+        // Обработчик отключения кошелька
+        function onWalletDisconnected() {
+            updateConnectionStatus(false);
+            
+            // Скрываем элементы интерфейса
+            document.getElementById('wallet-info').style.display = 'none';
+            document.getElementById('balance-card').style.display = 'none';
+            document.getElementById('tokens-section').style.display = 'none';
+            document.getElementById('quick-actions').style.display = 'none';
+            document.getElementById('transactions-section').style.display = 'none';
+            
+            // Сбрасываем данные
+            ggcoinBalance = 0;
+            tonBalance = 0;
+            ggcoinWalletAddress = null;
+        }
+        
+        // Обновление статуса подключения
+        function updateConnectionStatus(connected) {
+            const indicator = document.getElementById('status-indicator');
+            const statusText = document.getElementById('connection-status-text');
+            
+            if (connected) {
+                indicator.classList.add('connected');
+                statusText.textContent = 'Подключено к TON';
+            } else {
+                indicator.classList.remove('connected');
+                statusText.textContent = 'Не подключено';
             }
+        }
+        
+        // Форматирование адреса
+        function formatAddress(address) {
+            if (!address) return '';
+            return address.slice(0, 6) + '...' + address.slice(-6);
+        }
+        
+        // Обновление баланса
+        async function refreshBalance() {
+            if (!walletAddress) return;
             
-            createActionButtons() {
-                const buttonData = [
-                    { text: '📤 Отправить', color: 0xff4444, action: 'send' },
-                    { text: '📥 Получить', color: 0x44ff44, action: 'receive' },
-                    { text: '🔄 Обменять', color: 0x4444ff, action: 'exchange' }
-                ];
+            try {
+                showLoadingState('tokens-list', 'Загрузка токенов...');
                 
-                const buttonWidth = 140;
-                const buttonHeight = 80;
-                const spacing = 20;
-                const totalWidth = buttonData.length * buttonWidth + (buttonData.length - 1) * spacing;
-                const startX = this.cameras.main.centerX - totalWidth / 2 + buttonWidth / 2;
-                const y = 450;
+                // Получаем баланс TON
+                const tonResponse = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${walletAddress}`);
+                const tonData = await tonResponse.json();
                 
-                this.coinSound = this.sound.add('coinSound', { volume: 0.6 });
+                if (tonData.ok) {
+                    tonBalance = parseInt(tonData.result) / 1000000000;
+                }
                 
-                buttonData.forEach((data, index) => {
-                    const x = startX + index * (buttonWidth + spacing);
-                    const button = this.createActionButton(x, y, buttonWidth, buttonHeight, data);
+                // Получаем информацию о токенах
+                const tokens = [];
+                
+                // Добавляем TON
+                tokens.push({
+                    symbol: 'TON',
+                    name: 'Toncoin',
+                    balance: tonBalance.toFixed(4),
+                    value: (tonBalance * 5).toFixed(2), // Примерный курс
+                    logo: '💎'
+                });
+                
+                // Получаем баланс GGCoin
+                try {
+                    const response = await fetch(`https://tonapi.io/v2/accounts/${walletAddress}/jettons`);
+                    const data = await response.json();
                     
-                    // Анимация появления
-                    button.setAlpha(0);
-                    button.y += 50;
-                    this.tweens.add({
-                        targets: button,
-                        alpha: 1,
-                        y: y,
-                        duration: 600,
-                        delay: 800 + index * 150,
-                        ease: 'Back.easeOut'
+                    if (data.balances && data.balances.length > 0) {
+                        for (const jetton of data.balances) {
+                            if (jetton.jetton && jetton.jetton.address === GGCOIN_MASTER_ADDRESS) {
+                                ggcoinBalance = parseFloat(jetton.balance) / Math.pow(10, GGCOIN_DECIMALS);
+                                ggcoinWalletAddress = jetton.wallet_address.address;
+                                
+                                tokens.push({
+                                    symbol: 'GGCoin',
+                                    name: 'GoblinGotts Coin',
+                                    balance: ggcoinBalance.toFixed(4),
+                                    value: (ggcoinBalance * COIN_RATE).toFixed(2),
+                                    logo: jetton.jetton.image || '🪙'
+                                });
+                                
+                                // Обновляем основной баланс
+                                updateMainBalance();
+                                break;
+                            }
+                        }
+                    }
+                } catch (error) {
+                    console.error('Ошибка получения баланса GGCoin:', error);
+                }
+                
+                // Если GGCoin не найден, добавляем с нулевым балансом
+                if (!tokens.find(t => t.symbol === 'GGCoin')) {
+                    tokens.push({
+                        symbol: 'GGCoin',
+                        name: 'GoblinGotts Coin',
+                        balance: '0.0000',
+                        value: '0.00',
+                        logo: '🪙'
                     });
-                });
+                }
+                
+                // Отображаем токены
+                displayTokens(tokens);
+                
+                // Загружаем транзакции
+                await loadTransactions();
+                
+            } catch (error) {
+                console.error('Ошибка обновления баланса:', error);
+                showNotification('Ошибка загрузки баланса', 'error');
+            }
+        }
+        
+        // Обновление основного баланса
+        function updateMainBalance() {
+            document.getElementById('ggcoin-balance').textContent = ggcoinBalance.toFixed(4);
+            document.getElementById('ggcoin-usd').textContent = (ggcoinBalance * COIN_RATE).toFixed(2);
+            document.getElementById('available-balance').textContent = ggcoinBalance.toFixed(4);
+        }
+        
+        // Отображение токенов
+        function displayTokens(tokens) {
+            const tokensList = document.getElementById('tokens-list');
+            tokensList.innerHTML = '';
+            
+            tokens.forEach(token => {
+                const tokenItem = document.createElement('div');
+                tokenItem.className = 'token-item';
+                
+                let logoHtml = '';
+                if (token.logo.startsWith('http')) {
+                    logoHtml = `<img src="${token.logo}" alt="${token.symbol}">`;
+                } else {
+                    logoHtml = token.logo;
+                }
+                
+                tokenItem.innerHTML = `
+                    <div class="token-info">
+                        <div class="token-logo">${logoHtml}</div>
+                        <div class="token-details">
+                            <div class="token-symbol">${token.symbol}</div>
+                            <div class="token-name">${token.name}</div>
+                        </div>
+                    </div>
+                    <div class="token-balance">
+                        <div class="token-amount">${token.balance}</div>
+                        <div class="token-value">≈ ${token.value}</div>
+                    </div>
+                `;
+                
+                tokensList.appendChild(tokenItem);
+            });
+        }
+        
+        // Загрузка транзакций
+        async function loadTransactions() {
+            try {
+                const response = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${walletAddress}&limit=5`);
+                const data = await response.json();
+                
+                if (data.ok && data.result.length > 0) {
+                    displayTransactions(data.result);
+                } else {
+                    document.getElementById('transactions-list').innerHTML = `
+                        <div style="text-align: center; padding: 20px; color: #888;">
+                            Нет транзакций
+                        </div>
+                    `;
+                }
+            } catch (error) {
+                console.error('Ошибка загрузки транзакций:', error);
+            }
+        }
+        
+        // Отображение транзакций
+        function displayTransactions(transactions) {
+            const transactionsList = document.getElementById('transactions-list');
+            transactionsList.innerHTML = '';
+            
+            transactions.forEach(tx => {
+                const isIncoming = tx.in_msg && tx.in_msg.value && parseInt(tx.in_msg.value) > 0;
+                const amount = tx.in_msg && tx.in_msg.value ? 
+                    (parseInt(tx.in_msg.value) / 1000000000).toFixed(4) : '0';
+                
+                const txItem = document.createElement('div');
+                txItem.className = 'transaction-item';
+                
+                txItem.innerHTML = `
+                    <div class="transaction-info">
+                        <div class="transaction-icon ${isIncoming ? 'transaction-in' : 'transaction-out'}">
+                            ${isIncoming ? '📥' : '📤'}
+                        </div>
+                        <div class="transaction-details">
+                            <div class="transaction-title">${isIncoming ? 'Получено' : 'Отправлено'}</div>
+                            <div class="transaction-date">${formatDate(new Date(tx.utime * 1000))}</div>
+                        </div>
+                    </div>
+                    <div class="transaction-amount">
+                        <div class="${isIncoming ? 'amount-positive' : 'amount-negative'}">
+                            ${isIncoming ? '+' : '-'}${amount} TON
+                        </div>
+                    </div>
+                `;
+                
+                transactionsList.appendChild(txItem);
+            });
+        }
+        
+        // Форматирование даты
+        function formatDate(date) {
+            const now = new Date();
+            const diff = now - date;
+            const minutes = Math.floor(diff / 60000);
+            const hours = Math.floor(diff / 3600000);
+            const days = Math.floor(diff / 86400000);
+            
+            if (minutes < 60) {
+                return `${minutes} мин. назад`;
+            } else if (hours < 24) {
+                return `${hours} ч. назад`;
+            } else if (days < 7) {
+                return `${days} дн. назад`;
+            } else {
+                return date.toLocaleDateString();
+            }
+        }
+        
+        // Отправка GGCoin
+        async function sendGGCoin(event) {
+            event.preventDefault();
+            
+            const amount = parseFloat(document.getElementById('send-amount').value);
+            
+            if (!amount || amount <= 0) {
+                showNotification('Введите корректную сумму', 'error');
+                return;
             }
             
-            createActionButton(x, y, width, height, data) {
-                const container = this.add.container(x, y);
+            if (amount > ggcoinBalance) {
+                showNotification(`Недостаточно средств. Доступно: ${ggcoinBalance.toFixed(4)} GGCoin`, 'error');
+                return;
+            }
+            
+            if (!ggcoinWalletAddress) {
+                showNotification('GGCoin кошелек не найден', 'error');
+                return;
+            }
+            
+            try {
+                const sendButton = document.getElementById('send-button');
+                sendButton.disabled = true;
+                sendButton.textContent = 'Отправка...';
                 
-                // Фон кнопки
-                const buttonBg = this.add.graphics();
-                buttonBg.fillStyle(data.color, 0.8);
-                buttonBg.fillRoundedRect(-width/2, -height/2, width, height, 15);
-                buttonBg.lineStyle(2, 0xffffff, 0.6);
-                buttonBg.strokeRoundedRect(-width/2, -height/2, width, height, 15);
+                // Проверяем наличие TonWeb
+                if (!window.TonWeb) {
+                    throw new Error('TonWeb библиотека не загружена');
+                }
                 
-                // Текст кнопки
-                const buttonText = this.add.text(0, 0, data.text, {
-                    font: '18px Arial',
-                    fill: '#ffffff',
-                    fontStyle: 'bold',
-                    align: 'center'
-                }).setOrigin(0.5);
+                const tonweb = new window.TonWeb();
                 
-                container.add([buttonBg, buttonText]);
+                // Создаем payload для Jetton transfer
+                const jettonTransferPayload = await createJettonTransferPayload(
+                    tonweb,
+                    amount,
+                    RECIPIENT_ADDRESS,
+                    walletAddress
+                );
                 
-                // Интерактивность
-                const hitArea = new Phaser.Geom.Rectangle(-width/2, -height/2, width, height);
-                container.setInteractive(hitArea, Phaser.Geom.Rectangle.Contains);
+                const transaction = {
+                    validUntil: Math.floor(Date.now() / 1000) + 60,
+                    messages: [
+                        {
+                            address: ggcoinWalletAddress,
+                            amount: "50000000", // 0.05 TON для комиссии
+                            payload: jettonTransferPayload
+                        }
+                    ]
+                };
                 
-                container.on('pointerover', () => {
-                    this.tweens.add({
-                        targets: container,
-                        scale: 1.05,
+                const result = await tonConnectUI.sendTransaction(transaction);
+                
+                if (result) {
+                    showNotification(`${amount} GGCoin успешно отправлено!`, 'success');
+                    closeModal('send-modal');
+                    document.getElementById('send-amount').value = '';
+                    
+                    // Обновляем баланс через 5 секунд
+                    setTimeout(refreshBalance, 5000);
+                    
+                    vibrateSuccess();
+                }
+            } catch (error) {
+                console.error('Ошибка отправки:', error);
+                showNotification('Ошибка отправки транзакции', 'error');
+            } finally {
+                const sendButton = document.getElementById('send-button');
+                sendButton.disabled = false;
+                sendButton.textContent = 'Отправить';
+            }
+        }
+        
+        // Создание payload для Jetton transfer
+        async function createJettonTransferPayload(tonweb, amount, toAddress, fromAddress) {
+            try {
+                const Cell = tonweb.boc.Cell;
+                
+                // Создаем comment для forward payload
+                const forwardPayload = new Cell();
+                forwardPayload.bits.writeUint(0, 32); // op = 0 (comment)
+                const comment = new TextEncoder().encode('GGCoin transfer');
+                forwardPayload.bits.writeBytes(comment);
+                
+                // Создаем основной payload для transfer
+                const transferBody = new Cell();
+                transferBody.bits.writeUint(0xf8a7ea5, 32); // op = transfer
+                transferBody.bits.writeUint(0, 64); // query_id
+                transferBody.bits.writeCoins(Math.floor(amount * Math.pow(10, GGCOIN_DECIMALS))); // amount
+                
+                // Парсим и записываем адрес получателя
+                const toAddr = new tonweb.Address(toAddress);
+                transferBody.bits.writeAddress(toAddr);
+                
+                // Парсим и записываем адрес отправителя для ответа
+                const fromAddr = new tonweb.Address(fromAddress);
+                transferBody.bits.writeAddress(fromAddr);
+                
+                transferBody.bits.writeBit(false); // no custom_payload
+                transferBody.bits.writeCoins(1); // forward_ton_amount (1 nanoton)
+                transferBody.bits.writeBit(true); // forward_payload in ref
+                transferBody.refs.push(forwardPayload);
+                
+                // Конвертируем в base64
+                const boc = await transferBody.toBoc(false);
+                const base64 = tonweb.utils.bytesToBase64(boc);
+                
+                return base64;
+            } catch (error) {
+                console.error('Ошибка создания payload:', error);
+                throw error;
+            }
+        }
+        
+        // Отключение кошелька
+        async function disconnectWallet() {
+            try {
+                await tonConnectUI.disconnect();
+                showNotification('Кошелек отключен', 'success');
+            } catch (error) {
+                console.error('Ошибка отключения:', error);
+                showNotification('Ошибка отключения кошелька', 'error');
+            }
+        }
+        
+        // Копирование адреса
+        function copyAddress() {
+            const address = document.getElementById('receive-address').value;
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(address).then(() => {
+                    showNotification('Адрес скопирован!', 'success');
+                    vibrateSuccess();
+                });
+            } else {
+                // Fallback для старых браузеров
+                const input = document.getElementById('receive-address');
+                input.select();
+                document.execCommand('copy');
+                showNotification('Адрес скопирован!', 'success');
+                vibrateSuccess();
+            }
+        }
+        
+        // Показ/скрытие модальных окон
+        function showSendModal() {
+            document.getElementById('send-modal').style.display = 'flex';
+            vibrateLight();
+        }
+        
+        function showReceiveModal() {
+            document.getElementById('receive-modal').style.display = 'flex';
+            vibrateLight();
+        }
+        
+        function showHistoryModal() {
+            document.getElementById('history-modal').style.display = 'flex';
+            loadFullHistory();
+            vibrateLight();
+        }
+        
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Загрузка полной истории
+        async function loadFullHistory() {
+            const historyContent = document.getElementById('history-content');
+            historyContent.innerHTML = '<p style="text-align: center; color: #888;">Загрузка истории...</p>';
+            
+            try {
+                const response = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${walletAddress}&limit=20`);
+                const data = await response.json();
+                
+                if (data.ok && data.result.length > 0) {
+                    historyContent.innerHTML = '';
+                    data.result.forEach(tx => {
+                        const isIncoming = tx.in_msg && tx.in_msg.value && parseInt(tx.in_msg.value) > 0;
+                        const amount = tx.in_msg && tx.in_msg.value ? 
+                            (parseInt(tx.in_msg.value) / 1000000000).toFixed(4) : '0';
+                        
+                        const txElement = document.createElement('div');
+                        txElement.style.cssText = 'padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);';
+                        txElement.innerHTML = `
+                            <div style="display: flex; justify-content: space-between; align-items: center;">
+                                <div>
+                                    <div style="font-weight: 600;">${isIncoming ? 'Получено' : 'Отправлено'}</div>
+                                    <div style="font-size: 12px; color: #888;">${formatDate(new Date(tx.utime * 1000))}</div>
+                                </div>
+                                <div style="font-weight: 600; color: ${isIncoming ? '#4caf50' : '#ff5722'};">
+                                    ${isIncoming ? '+' : '-'}${amount} TON
+                                </div>
+                            </div>
+                        `;
+                        historyContent.appendChild(txElement);
+                    });
+                } else {
+                    historyContent.innerHTML = '<p style="text-align: center; color: #888;">Нет транзакций</p>';
+                }
+            } catch (error) {
+                historyContent.innerHTML = '<p style="text-align: center; color: #ff5722;">Ошибка загрузки истории</p>';
+            }
+        }
+        
+        // Показ уведомлений
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.classList.add('show');
+            }, 10);
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+        
+        // Показ состояния загрузки
+        function showLoadingState(elementId, message) {
+            const element = document.getElementById(elementId);
+            element.innerHTML = `
+                <div style="text-align: center; padding: 20px; color: #888;">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px;">${message}</p>
+                </div>
+            `;
+        }
+        
+        // Вибрация
+        function vibrateLight() {
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.impactOccurred('light');
+            }
+        }
+        
+        function vibrateSuccess() {
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
+        }
+        
+        // Закрытие модалов по клику вне
+        window.onclick = function(event) {
+            if (event.target.classList.contains('modal')) {
+                event.target.style.display = 'none';
+            }
+        }
+        
+        // Периодическое обновление баланса
+        setInterval(() => {
+            if (isConnected && walletAddress) {
+                refreshBalance();
+            }
+        }, 30000);
+        
+        // Инициализация при загрузке
+        window.addEventListener('load', () => {
+            initTonConnect();
+        });
+    </script>
+</body>
+</html>
