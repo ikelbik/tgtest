@@ -470,8 +470,7 @@
 				
                 // Обработчик нажатия на кнопку меню
                 this.menuButton3.on('pointerdown', () => {
-                    console.log('Menu 3 button pressed');
-                    // Здесь можно добавить функционал меню
+					window.location.href = "https://ikelbik.github.io/tgtest/wallet.html";
                 });
 				
 				
@@ -512,6 +511,15 @@
                 this.createMultiCoin(this.is_n);
                 this.get_up_coin();
                 this.InitPile();
+				
+				
+				    // Создаем текстовый элемент для отображения значения i
+    this.debugText = this.add.text(10, 10, 'Last i: -', { 
+        font: '16px Arial', 
+        fill: '#ffffff',
+        backgroundColor: '#000000'
+    }).setScrollFactor(0).setDepth(100);
+				
             }
 			        
             createMultiCoin(n) {
@@ -714,6 +722,7 @@
             (this.lastGamma > ang[i] && gamma <= ang[i])     // Сверху вниз
         ) {
             if (this.canShine) {
+				this.debugText.setText(`Last i: ${i} (${ang[i]}°)`);
                 this.triggerShineEffect(i);
                 this.canShine = false;
                 this.time.delayedCall(500, () => { 
