@@ -714,7 +714,7 @@
         return;
     }
 
-    const ang = [-0.1, 0, +0.1];
+    const ang = [-5, 0, +5];
     for (let i = 0; i < 3; i++) {
         // Исправленное условие: проверяем пересечение порога в обоих направлениях
         if (
@@ -725,7 +725,7 @@
 				this.debugText.setText(`Last i: ${i} (${ang[i]}°)`);
                 this.triggerShineEffect(i);
                 this.canShine = false;
-                this.time.delayedCall(500, () => { 
+                this.time.delayedCall(50, () => { 
                     this.canShine = true; 
                 });
             }
