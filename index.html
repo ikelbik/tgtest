@@ -337,9 +337,9 @@
                     tg.MainButton.onClick(() => {
                         this.scene.start('MainScene');
                     });
-                } else{
+                } 
 				this.scene.start('MainScene');
-				}
+				
             }
         }
 
@@ -701,20 +701,28 @@
 			
 			 // Обработчик изменения ориентации
             handleOrientation(gamma) {
-                // Определяем переход через 0 градусов
-				const ang = [-0.1,0,+0.1]
-				for (let i = 0; i < 3; i++){
-					if (this.lastGamma < ang[i] && gamma > this.lastGamma < ang[i] || 
-						this.lastGamma > this.lastGamma < ang[i] && gamma < this.lastGamma < ang[i]) {
+    if (this.lastGamma === undefined) {
+        this.lastGamma = gamma;
+        return;
+    }
 
-							if (this.canShine) {
-								this.triggerShineEffect(i);
-								this.canShine = false;
-								this.time.delayedCall(500, () => { this.canShine = true; });
-							}
-					}
-				}
-                this.lastGamma = gamma;
+    const ang = [-0.1, 0, +0.1];
+    for (let i = 0; i < 3; i++) {
+        // Исправленное условие: проверяем пересечение порога в обоих направлениях
+        if (
+            (this.lastGamma < ang[i] && gamma >= ang[i]) ||  // Снизу вверх
+            (this.lastGamma > ang[i] && gamma <= ang[i])     // Сверху вниз
+        ) {
+            if (this.canShine) {
+                this.triggerShineEffect(i);
+                this.canShine = false;
+                this.time.delayedCall(500, () => { 
+                    this.canShine = true; 
+                });
+            }
+        }
+    }
+    this.lastGamma = gamma;
             }
 
             // Активация эффекта блеска
