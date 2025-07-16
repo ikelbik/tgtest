@@ -17,20 +17,84 @@
             width: 100%;
             height: 100%;
             overflow: hidden;
-        }		
+        }
+        
+        /* Стили для заглушки ориентации */
+        #orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,34,0.95);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
+        }
+
+        #orientation-overlay .message {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            max-width: 80%;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
+        }
+
+        #orientation-overlay .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: rotate 2s infinite linear;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(90deg); }
+        }
     </style>
 </head>
 <body>
     <div id="game"></div>
+    <!-- Заглушка для портретной ориентации -->
+    <div id="orientation-overlay">
+        <div class="icon">🔄</div>
+        <div class="message">Пожалуйста, поверните устройство в альбомную ориентацию</div>
+    </div>
     
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
         const tg = window.Telegram?.WebApp;
+        const orientationOverlay = document.getElementById('orientation-overlay');
+        let game = null; // Глобальная ссылка на игру
         
         if (tg) {
             <!-- tg.ready(); -->
             tg.expand();
         }
+
+        // Функция проверки ориентации
+        function checkOrientation() {
+            if (window.innerHeight > window.innerWidth) {
+                orientationOverlay.style.display = 'flex';
+                if (game && game.loop) {
+                    game.loop.sleep();
+                }
+            } else {
+                orientationOverlay.style.display = 'none';
+                if (game && game.loop) {
+                    game.loop.wake();
+                }
+            }
+        }
+
+        // Проверка при загрузке
+        checkOrientation();
+
+        // Обработчики изменения ориентации и размера
+        window.addEventListener('resize', checkOrientation);
+        window.addEventListener('orientationchange', checkOrientation);
 
         let coins;
         let pile;
@@ -872,11 +936,15 @@
         }	   
         
         setTimeout(() => {
-            const game = new Phaser.Game(config);
+            game = new Phaser.Game(config);
+            // Проверка ориентации после создания игры
+            checkOrientation();
+            
             window.addEventListener('resize', () => {
                 if (game && game.scale) {
                     game.scale.refresh();
                 }
+                checkOrientation(); // Дополнительная проверка
             });
         }, 300);
         
