@@ -194,7 +194,8 @@
                 this.load.image('bg02', 'assets/bg02.png');				
                 this.load.obj('coin', 'assets/ggcoin.obj');
 				this.load.image('menubutton_1', 'assets/mbtn1.png');
-				this.load.image('menubutton_2', 'assets/mbtn2.png');				
+				this.load.image('menubutton_2', 'assets/mbtn2.png');	
+				this.load.image('menubutton_3', 'assets/mbtn3.png');				
                 this.load.image('texture', 'assets/coin_txt_n.png');
                 this.load.image('coin_t0', 'assets/coin_c00.png');
                 this.load.image('coin_t1', 'assets/coin_c01.png');
@@ -406,19 +407,28 @@
                 this.plane02.setScale(this.scale);
                 this.plane02.y = (this.bg.height - 2 * this.bg01_height - this.bg02_height) * this.scale;	
 				
+				
+				const  d_buttons_x = this.cameras.main.width / 4;
 				// Добавляем кнопку меню 1
 				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton1 = this.add.sprite(200, mbtn1_y, 'menubutton_1')
+                this.menuButton1 = this.add.sprite(d_buttons_x, mbtn1_y, 'menubutton_1')
                     .setInteractive()
                     .setDepth(1000);
                 this.menuButton1.setScale(1*this.scale);
 				
 				// Добавляем кнопку меню 2
 				const mbtn2_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton2 = this.add.sprite(600, mbtn2_y, 'menubutton_2')
+                this.menuButton2 = this.add.sprite(2*d_buttons_x, mbtn2_y, 'menubutton_2')
                     .setInteractive()
                     .setDepth(1000);
-                this.menuButton2.setScale(1*this.scale);				
+                this.menuButton2.setScale(1*this.scale);
+				
+				// Добавляем кнопку меню 3
+				const mbtn3_y = (this.bg.height - this.mbtn1_height) * this.scale;
+                this.menuButton3 = this.add.sprite(3*d_buttons_x, mbtn2_y, 'menubutton_3')
+                    .setInteractive()
+                    .setDepth(1000);
+                this.menuButton3.setScale(1*this.scale);				
 
 				// Эффект блеска для кнопки 1 (прозрачный спрайт)
                 this.shine1 = this.add.sprite(this.menuButton1.x, this.menuButton1.y, 'menubutton_1')
@@ -432,7 +442,14 @@
                     .setScale(1*this.scale)
                     .setAlpha(0)
                     .setDepth(1001)
-                    .setBlendMode(Phaser.BlendModes.ADD);					
+                    .setBlendMode(Phaser.BlendModes.ADD);
+
+				// Эффект блеска для кнопки 3 (прозрачный спрайт)
+                this.shine3 = this.add.sprite(this.menuButton3.x, this.menuButton3.y, 'menubutton_3')
+                    .setScale(1*this.scale)
+                    .setAlpha(0)
+                    .setDepth(1001)
+                    .setBlendMode(Phaser.BlendModes.ADD);							
 
                 // Обработчики ориентации устройства
                 this.lastGamma = 0;
@@ -447,8 +464,15 @@
                 this.menuButton2.on('pointerdown', () => {
                     console.log('Menu 2 button pressed');
                     // Здесь можно добавить функционал меню
-                });				
-
+                });
+				
+                // Обработчик нажатия на кнопку меню
+                this.menuButton3.on('pointerdown', () => {
+                    console.log('Menu 3 button pressed');
+                    // Здесь можно добавить функционал меню
+                });
+				
+				
                 // Проверяем поддержку ориентации
                 if (window.DeviceOrientationEvent) {
                     window.addEventListener('deviceorientation', (event) => {
@@ -676,32 +700,65 @@
 			 // Обработчик изменения ориентации
             handleOrientation(gamma) {
                 // Определяем переход через 0 градусов
-                if (this.lastGamma < 0 && gamma > 0 || 
-                    this.lastGamma > 0 && gamma < 0) {
-                    if (this.canShine) {
-                        this.triggerShineEffect();
-                        this.canShine = false;
-                        this.time.delayedCall(500, () => { this.canShine = true; });
-                    }
-                }
+				const ang = [-0.1,0,+0.1]
+				for (let i = 0; i < 3; i++){
+					if (this.lastGamma < ang[i] && gamma > this.lastGamma < ang[i] || 
+						this.lastGamma > this.lastGamma < ang[i] && gamma < this.lastGamma < ang[i]) {
+
+							if (this.canShine) {
+								this.triggerShineEffect(i);
+								this.canShine = false;
+								this.time.delayedCall(500, () => { this.canShine = true; });
+							}
+					}
+				}
                 this.lastGamma = gamma;
             }
 
             // Активация эффекта блеска
-            triggerShineEffect() {
-                this.tweens.add({
-                    targets: [this.shine1, this.shine2],
+            triggerShineEffect(m) {
+				if (m==0) {
+				this.tweens.add({
+                    targets: shine1,
                     alpha: { from: 0.6, to: 0 },
                     //scale: { from: 2.0, to: 2 },
                     duration: 200,
                     ease: 'Cubic.easeOut',
                     onStart: () => {
                         this.shine1.setPosition(this.menuButton1.x, this.menuButton1.y);
-                        this.shine1.setAlpha(1);
-                        this.shine2.setPosition(this.menuButton2.x, this.menuButton2.y);
-                        this.shine2.setAlpha(1);						
+                        this.buf_shine1.setAlpha(1);
                     }
                 });
+				}
+				
+				if (m==1) {
+				this.tweens.add({
+                    targets: shine2,
+                    alpha: { from: 0.6, to: 0 },
+                    //scale: { from: 2.0, to: 2 },
+                    duration: 200,
+                    ease: 'Cubic.easeOut',
+                    onStart: () => {
+                        this.shine2.setPosition(this.menuButton2.x, this.menuButton2.y);
+                        this.buf_shine2.setAlpha(1);
+                    }
+                });
+				}
+				
+				if (m==2) {
+				this.tweens.add({
+                    targets: shine3,
+                    alpha: { from: 0.6, to: 0 },
+                    //scale: { from: 2.0, to: 2 },
+                    duration: 200,
+                    ease: 'Cubic.easeOut',
+                    onStart: () => {
+                        this.shine3.setPosition(this.menuButton3.x, this.menuButton3.y);
+                        this.buf_shine3.setAlpha(1);
+                    }
+                });
+				}				
+				
             }
                     
             update(time, delta) {
