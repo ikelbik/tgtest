@@ -408,11 +408,11 @@
                 this.menuButton = this.add.sprite(200, mbtn1_y, 'menubutton_1')
                     .setInteractive()
                     .setDepth(1000);
-                this.menuButton.setScale(1);
+                this.menuButton.setScale(1*this.scale);
 
 				// Эффект блеска для кнопки (прозрачный спрайт)
                 this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
-                    .setScale(1)
+                    .setScale(1*this.scale)
                     .setAlpha(0)
                     .setDepth(1001)
                     .setBlendMode(Phaser.BlendModes.ADD);
