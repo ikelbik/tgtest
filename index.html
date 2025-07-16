@@ -193,6 +193,7 @@
                 this.load.image('bg02', 'assets/bg02.png');				
                 this.load.obj('coin', 'assets/ggcoin.obj');
 				this.load.image('menubutton_1', 'assets/mbtn1.png');
+				this.load.image('menubutton_2', 'assets/mbtn2.png');				
                 this.load.image('texture', 'assets/coin_txt_n.png');
                 this.load.image('coin_t0', 'assets/coin_c00.png');
                 this.load.image('coin_t1', 'assets/coin_c01.png');
@@ -403,29 +404,48 @@
                 this.plane02.setScale(this.scale);
                 this.plane02.y = (this.bg.height - 2 * this.bg01_height - this.bg02_height) * this.scale;	
 				
-				// Добавляем кнопку меню
+				// Добавляем кнопку меню 1
 				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton = this.add.sprite(200, mbtn1_y, 'menubutton_1')
+                this.menuButton1 = this.add.sprite(200, mbtn1_y, 'menubutton_1')
                     .setInteractive()
                     .setDepth(1000);
-                this.menuButton.setScale(1*this.scale);
+                this.menuButton1.setScale(1*this.scale);
+				
+				// Добавляем кнопку меню 2
+				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
+                this.menuButton2 = this.add.sprite(600, mbtn1_y, 'menubutton_2')
+                    .setInteractive()
+                    .setDepth(1000);
+                this.menuButton2.setScale(1*this.scale);				
 
-				// Эффект блеска для кнопки (прозрачный спрайт)
-                this.shine = this.add.sprite(this.menuButton.x, this.menuButton.y, 'menubutton_1')
+				// Эффект блеска для кнопки 1 (прозрачный спрайт)
+                this.shine1 = this.add.sprite(this.menuButton1.x, this.menuButton1.y, 'menubutton_1')
                     .setScale(1*this.scale)
                     .setAlpha(0)
                     .setDepth(1001)
                     .setBlendMode(Phaser.BlendModes.ADD);
+					
+				// Эффект блеска для кнопки 2 (прозрачный спрайт)
+                this.shine2 = this.add.sprite(this.menuButton2.x, this.menuButton2.y, 'menubutton_2')
+                    .setScale(1*this.scale)
+                    .setAlpha(0)
+                    .setDepth(1001)
+                    .setBlendMode(Phaser.BlendModes.ADD);					
 
                 // Обработчики ориентации устройства
                 this.lastGamma = 0;
                 this.canShine = true;
                 
                 // Обработчик нажатия на кнопку меню
-                this.menuButton.on('pointerdown', () => {
-                    console.log('Menu button pressed');
+                this.menuButton1.on('pointerdown', () => {
+                    console.log('Menu 1 button pressed');
                     // Здесь можно добавить функционал меню
                 });
+                // Обработчик нажатия на кнопку меню
+                this.menuButton2.on('pointerdown', () => {
+                    console.log('Menu 2 button pressed');
+                    // Здесь можно добавить функционал меню
+                });				
 
                 // Проверяем поддержку ориентации
                 if (window.DeviceOrientationEvent) {
@@ -668,14 +688,16 @@
             // Активация эффекта блеска
             triggerShineEffect() {
                 this.tweens.add({
-                    targets: this.shine,
+                    targets: [this.shine1, this.shine2],
                     alpha: { from: 0.6, to: 0 },
                     //scale: { from: 2.0, to: 2 },
                     duration: 200,
                     ease: 'Cubic.easeOut',
                     onStart: () => {
-                        this.shine.setPosition(this.menuButton.x, this.menuButton.y);
-                        this.shine.setAlpha(1);
+                        this.shine1.setPosition(this.menuButton1.x, this.menuButton1.y);
+                        this.shine1.setAlpha(1);
+                        this.shine2.setPosition(this.menuButton2.x, this.menuButton2.y);
+                        this.shine2.setAlpha(1);						
                     }
                 });
             }
