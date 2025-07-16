@@ -90,12 +90,13 @@
         }
 
         // Проверка при загрузке
-        checkOrientation();
+		if (tg){
+			checkOrientation();
 
-        // Обработчики изменения ориентации и размера
-        window.addEventListener('resize', checkOrientation);
-        window.addEventListener('orientationchange', checkOrientation);
-
+			// Обработчики изменения ориентации и размера
+			window.addEventListener('resize', checkOrientation);
+			window.addEventListener('orientationchange', checkOrientation);
+		}
         let coins;
         let pile;
         
@@ -333,8 +334,9 @@
                     tg.MainButton.onClick(() => {
                         this.scene.start('MainScene');
                     });
-                }
-				//this.scene.start('MainScene');
+                } else{
+				this.scene.start('MainScene');
+				}
             }
         }
 
@@ -412,8 +414,8 @@
                 this.menuButton1.setScale(1*this.scale);
 				
 				// Добавляем кнопку меню 2
-				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton2 = this.add.sprite(600, mbtn1_y, 'menubutton_2')
+				const mbtn2_y = (this.bg.height - this.mbtn1_height) * this.scale;
+                this.menuButton2 = this.add.sprite(600, mbtn2_y, 'menubutton_2')
                     .setInteractive()
                     .setDepth(1000);
                 this.menuButton2.setScale(1*this.scale);				
