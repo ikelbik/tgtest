@@ -409,16 +409,26 @@
                 this.plane02.setScale(this.scale);
                 this.plane02.y = (this.bg.height - 2 * this.bg01_height - this.bg02_height) * this.scale;	
 				
+                const create3DButton = (x, y, texture) => {
+                    const button = this.add.plane(x, y, texture);
+                    button.setScale(this.scale);
+                    button.setDepth(1000);
+                    //button.modelRotation.x = Math.PI / 12; // Наклон для 3D-эффекта
+                    return button;
+                };
+				
 				
 				const  d_buttons_x = this.cameras.main.width / 6;
 				// Добавляем кнопку меню 1
 				const mbtn1_y = (this.bg.height - this.mbtn1_height) * this.scale;
-                this.menuButton1 = this.add.sprite(d_buttons_x, mbtn1_y, 'menubutton_1')
-                    .setInteractive()
-                    .setDepth(1000);
-                this.menuButton1.setScale(1*this.scale);
+				this.menuButton1 = create3DButton(d_buttons_x, mbtn1_y, 'menubutton_1');
+                //this.menuButton1 = this.add.sprite(d_buttons_x, mbtn1_y, 'menubutton_1')
+                //    .setInteractive()
+                //    .setDepth(1000);
+                
+				this.menuButton1.setScale(1*this.scale);
 				
-				this.menuButton1.rotation = 0.5;
+				this.menuButton1.modelRotation.y = 0.5;
 				
 				// Анимация пульсации для menuButton1
                 this.pulseTween = this.tweens.add({
