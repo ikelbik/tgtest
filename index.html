@@ -512,14 +512,6 @@
                 this.get_up_coin();
                 this.InitPile();
 				
-				
-				    // Создаем текстовый элемент для отображения значения i
-    this.debugText = this.add.text(10, 10, 'Last i: -', { 
-        font: '16px Arial', 
-        fill: '#ffffff',
-        backgroundColor: '#000000'
-    }).setScrollFactor(0).setDepth(100);
-				
             }
 			        
             createMultiCoin(n) {
@@ -709,34 +701,33 @@
 			
 			 // Обработчик изменения ориентации
             handleOrientation(gamma) {
-    if (this.lastGamma === undefined) {
-        this.lastGamma = gamma;
-        return;
-    }
+				if (this.lastGamma === undefined) {
+					this.lastGamma = gamma;
+					return;
+				}
 
-    const ang = [-5, 0, +5];
-    for (let i = 0; i < 3; i++) {
-        // Исправленное условие: проверяем пересечение порога в обоих направлениях
-        if (
-            (this.lastGamma < ang[i] && gamma >= ang[i]) ||  // Снизу вверх
-            (this.lastGamma > ang[i] && gamma <= ang[i])     // Сверху вниз
-        ) {
-            if (this.canShine) {
-				this.debugText.setText(`Last i: ${i} (${ang[i]}°)`);
-                this.triggerShineEffect(i);
-                this.canShine = false;
-                this.time.delayedCall(50, () => { 
-                    this.canShine = true; 
-                });
-            }
-        }
-    }
-    this.lastGamma = gamma;
+				const ang = [-5, 0, +5];
+				for (let i = 0; i < 3; i++) {
+
+				if (
+					(this.lastGamma < ang[i] && gamma >= ang[i]) ||  // Снизу вверх
+					(this.lastGamma > ang[i] && gamma <= ang[i])     // Сверху вниз
+				) {
+					if (this.canShine) {
+						this.triggerShineEffect(i);
+						this.canShine = false;
+						this.time.delayedCall(50, () => { 
+						this.canShine = true; 
+						});
+					}
+				}
+				}
+				this.lastGamma = gamma;
             }
 
             // Активация эффекта блеска
             triggerShineEffect(m) {
-				if (m==0) {
+				if (m==2) {
 				this.tweens.add({
                     targets: this.shine1,
                     alpha: { from: 0.6, to: 0 },
@@ -764,7 +755,7 @@
                 });
 				}
 				
-				if (m==2) {
+				if (m==0) {
 				this.tweens.add({
                     targets: this.shine3,
                     alpha: { from: 0.6, to: 0 },
