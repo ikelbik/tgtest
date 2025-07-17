@@ -413,7 +413,7 @@
                     const button = this.add.plane(x, y, texture);
                     button.setScale(this.scale);
                     button.setDepth(1000);
-                    //button.modelRotation.x = Math.PI / 12; // Наклон для 3D-эффекта
+                    button.modelRotation.x = Math.PI / 12; // Наклон для 3D-эффекта
                     return button;
                 };
 				
@@ -428,7 +428,7 @@
                 
 				this.menuButton1.setScale(1*this.scale);
 				
-				this.menuButton1.modelRotation.y += 0.5;
+				this.menuButton1.modelRotation.z += 0.5;
 				
 				// Анимация пульсации для menuButton1
                 this.pulseTween = this.tweens.add({
