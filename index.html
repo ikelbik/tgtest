@@ -418,6 +418,18 @@
                     .setDepth(1000);
                 this.menuButton1.setScale(1*this.scale);
 				
+				
+				// Анимация пульсации для menuButton1
+                this.pulseTween = this.tweens.add({
+                    targets: this.menuButton1,
+                    scaleX: 1.1 * this.scale,
+                    scaleY: 1.1 * this.scale,
+                    duration: 800,
+                    ease: 'Sine.easeInOut',
+                    yoyo: true,
+                    repeat: -1
+                });
+				
 				// Добавляем кнопку меню 2
 				const mbtn2_y = (this.bg.height - this.mbtn1_height) * this.scale;
                 this.menuButton2 = this.add.sprite(3*d_buttons_x, mbtn2_y, 'menubutton_2')
@@ -451,7 +463,18 @@
                     .setScale(1*this.scale)
                     .setAlpha(0)
                     .setDepth(1001)
-                    .setBlendMode(Phaser.BlendModes.ADD);							
+                    .setBlendMode(Phaser.BlendModes.ADD);	
+
+                // Обработчики для остановки пульсации при взаимодействии с другими кнопками
+                this.menuButton2.on('pointerover', () => {
+                    this.pulseTween.stop();
+                    this.menuButton1.setScale(1 * this.scale);
+                });
+
+                this.menuButton3.on('pointerover', () => {
+                    this.pulseTween.stop();
+                    this.menuButton1.setScale(1 * this.scale);
+                });					
 
                 // Обработчики ориентации устройства
                 this.lastGamma = 0;
@@ -770,6 +793,7 @@
 				}				
 				
             }
+			
                     
             update(time, delta) {
                 const cl = this.get_c_len();
