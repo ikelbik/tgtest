@@ -772,12 +772,12 @@
 				// Плавное изменение угла поворота
                 this.tweens.add({
                     targets: this,
-                    buttonRotationY: targetRotation * (Math.PI / 180), // Конвертируем в радианы
+                    this.buttonRotationY: targetRotation * (Math.PI / 180), // Конвертируем в радианы
                     duration: 200,
                     ease: 'Sine.easeOut'
                 });
 				
-				this.scoreText.setText(`Монет : ${buttonRotationY}`);
+				this.scoreText.setText(`Монет : ${this.buttonRotationY}`);
 
 				const ang = [-5, 0, +5];
 				for (let i = 0; i < 3; i++) {
