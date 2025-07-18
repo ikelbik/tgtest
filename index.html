@@ -777,8 +777,6 @@
                     ease: 'Sine.easeOut'
                 });
 				
-				this.scoreText.setText(`Монет : ${this.buttonRotationY}`);
-
 				const ang = [-5, 0, +5];
 				for (let i = 0; i < 3; i++) {
 
@@ -847,6 +845,8 @@
                     
             update(time, delta) {
 			
+				this.scoreText.setText(`Монет : ${this.buttonRotationY}`);
+				
 				const rotationY = this.buttonRotationY;
 				this.menuButton1.modelRotation.y = rotationY;
 				this.shine1.modelRotation.y = rotationY;
