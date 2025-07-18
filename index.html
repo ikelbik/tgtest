@@ -367,6 +367,7 @@
                 this.resolution_coeff = 1;
                 this.max_i = 0;
                 this.e_flag = true;
+				this.buttonRotationY = 0; // Текущий угол поворота кнопок по оси Y
             }
         
             preload() {
@@ -417,6 +418,17 @@
                     return button;
                 };
 				
+                // Создаем эффекты блеска как 3D-объекты
+                const create3DShine = (x, y, texture) => {
+                    const shine = this.add.plane(x, y, texture);
+                    shine.setScale(this.scale);
+                    shine.setAlpha(0);
+                    shine.setDepth(1001);
+                    shine.setBlendMode(Phaser.BlendModes.ADD);
+                    shine.modelRotation.x = Math.PI / 12; // Наклон для 3D-эффекта
+                    return shine;
+                };				
+				
 				
 				const  d_buttons_x = this.cameras.main.width / 6;
 				// Добавляем кнопку меню 1
@@ -424,11 +436,10 @@
 				this.menuButton1 = create3DButton(d_buttons_x, mbtn1_y, 'menubutton_1');
                 //this.menuButton1 = this.add.sprite(d_buttons_x, mbtn1_y, 'menubutton_1')
                 //    .setInteractive()
-                //    .setDepth(1000);
-                
-				this.menuButton1.setScale(1*this.scale);
+                //    .setDepth(1000);                
+				//this.menuButton1.setScale(1*this.scale);
 				
-				this.menuButton1.modelRotation.y += 0.7;
+				//this.menuButton1.modelRotation.y += 0.7;
 				
 				// Анимация пульсации для menuButton1
                 this.pulseTween = this.tweens.add({
@@ -456,11 +467,12 @@
                 this.menuButton3.setScale(1*this.scale);				
 
 				// Эффект блеска для кнопки 1 (прозрачный спрайт)
-                this.shine1 = this.add.sprite(this.menuButton1.x, this.menuButton1.y, 'menubutton_1')
-                    .setScale(1*this.scale)
-                    .setAlpha(0)
-                    .setDepth(1001)
-                    .setBlendMode(Phaser.BlendModes.ADD);
+				this.shine1 = create3DShine(d_buttons_x, mbtn1_y, 'menubutton_1');
+                //this.shine1 = this.add.sprite(this.menuButton1.x, this.menuButton1.y, 'menubutton_1')
+                //    .setScale(1*this.scale)
+                //    .setAlpha(0)
+                //    .setDepth(1001)
+                //    .setBlendMode(Phaser.BlendModes.ADD);
 					
 				// Эффект блеска для кнопки 2 (прозрачный спрайт)
                 this.shine2 = this.add.sprite(this.menuButton2.x, this.menuButton2.y, 'menubutton_2')
@@ -490,6 +502,13 @@
                 // Обработчики ориентации устройства
                 this.lastGamma = 0;
                 this.canShine = true;
+				
+				// Добавляем обработчик ориентации устройства
+                this.orientationHandler = (event) => {
+                    if (event.gamma !== null) {
+                        this.handleDeviceOrientation(event.gamma);
+                    }
+                };
                 
                 // Обработчик нажатия на кнопку меню
                 this.menuButton1.on('pointerdown', () => {
@@ -519,6 +538,13 @@
                     console.log("Device orientation not supported");
                 }				
                     
+				// Очистка при уничтожении сцены
+                this.events.on('destroy', () => {
+                    if (window.DeviceOrientationEvent) {
+                        window.removeEventListener('deviceorientation', this.orientationHandler);
+                    }
+                });					
+					
                 this.stnLevel = (this.bg.height - 2 * this.bg01_height) * this.scale;
                 this.baseYOffset = 450 * this.scale;
                 this.target_y = (this.bg.height - 2 * this.bg01_height - 2 * this.bg02_height + 300) * this.scale;
@@ -739,6 +765,19 @@
 					this.lastGamma = gamma;
 					return;
 				}
+				
+				const maxRotation = 15;
+                let targetRotation = Phaser.Math.Clamp(gamma, -maxRotation, maxRotation);
+				
+				// Плавное изменение угла поворота
+                this.tweens.add({
+                    targets: this,
+                    buttonRotationY: targetRotation * (Math.PI / 180), // Конвертируем в радианы
+                    duration: 200,
+                    ease: 'Sine.easeOut'
+                });
+				
+				this.scoreText.setText(`Монет : ${buttonRotationY}`);
 
 				const ang = [-5, 0, +5];
 				for (let i = 0; i < 3; i++) {
@@ -807,6 +846,11 @@
 			
                     
             update(time, delta) {
+			
+				const rotationY = this.buttonRotationY;
+				this.menuButton1.modelRotation.y = rotationY;
+				this.shine1.modelRotation.y = rotationY;
+			
                 const cl = this.get_c_len();
                 const dt = 1.5 * delta / 16.66667;
                 
