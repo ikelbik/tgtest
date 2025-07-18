@@ -3,338 +3,51 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <script src="https://unpkg.com/@tonconnect/ui@latest/dist/tonconnect-ui.min.js"></script>
     <script src="https://unpkg.com/tonweb@0.0.66/dist/tonweb.js"></script>
     <style>
         * { 
             margin: 0; 
             padding: 0; 
-            box-sizing: border-box;
-            -webkit-tap-highlight-color: transparent;
+            overflow: hidden; 
+            -webkit-tap-highlight-color: transparent; 
+            touch-action: none;
         }
         
         body { 
             background: #000022;
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif;
-            color: white;
-            overflow-y: auto;
-            overflow-x: hidden;
         }
         
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
-            padding: 20px;
-            min-height: 100vh;
-            animation: fadeIn 0.5s ease;
-        }
-        
-        @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
-            to { opacity: 1; transform: translateY(0); }
-        }
-        
-        /* Карточка подключения кошелька */
-        .connect-card {
-            background: linear-gradient(135deg, rgba(74, 144, 226, 0.1) 0%, rgba(123, 104, 238, 0.1) 100%);
-            border: 2px solid rgba(74, 144, 226, 0.3);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            text-align: center;
-        }
-        
-        #ton-connect-button {
-            display: inline-block;
-            margin: 0 auto;
-        }
-        
-        .wallet-info {
-            display: none;
-            margin-top: 20px;
-        }
-        
-        .wallet-address {
-            font-family: monospace;
-            font-size: 14px;
-            word-break: break-all;
-            padding: 15px;
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 10px;
-            margin-bottom: 15px;
-            border: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        /* Баланс карточка */
-        .balance-card {
-            background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
-            border-radius: 20px;
-            padding: 30px;
-            margin-bottom: 30px;
-            position: relative;
-            overflow: hidden;
-            box-shadow: 0 10px 30px rgba(74, 144, 226, 0.3);
-            display: none;
-        }
-        
-        .balance-card::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            right: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 50%);
-            animation: rotate 20s linear infinite;
-        }
-        
-        @keyframes rotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-        
-        .balance-label {
-            font-size: 14px;
-            opacity: 0.9;
-            margin-bottom: 10px;
-        }
-        
-        .balance-amount {
-            font-size: 48px;
-            font-weight: bold;
-            margin-bottom: 5px;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .coin-icon {
-            font-size: 36px;
-            animation: bounce 2s ease-in-out infinite;
-        }
-        
-        @keyframes bounce {
-            0%, 100% { transform: translateY(0); }
-            50% { transform: translateY(-10px); }
-        }
-        
-        .balance-usd {
-            font-size: 18px;
-            opacity: 0.8;
-        }
-        
-        /* Список токенов */
-        .tokens-section {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            margin-bottom: 20px;
-            backdrop-filter: blur(10px);
-            display: none;
-        }
-        
-        .token-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        }
-        
-        .token-item:last-child {
-            border-bottom: none;
-        }
-        
-        .token-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .token-logo {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.1);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .token-logo img {
+        html, body, #game-container {
+            margin: 0;
+            padding: 0;
             width: 100%;
             height: 100%;
-            border-radius: 50%;
+            overflow: hidden;
         }
         
-        .token-details {
-            text-align: left;
+        /* TON Connect Button */
+        #ton-connect-button {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            z-index: 1000;
         }
         
-        .token-symbol {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .token-name {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .token-balance {
-            text-align: right;
-        }
-        
-        .token-amount {
-            font-weight: bold;
-            font-size: 16px;
-        }
-        
-        .token-value {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        /* Быстрые действия */
-        .quick-actions {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 15px;
-            margin-bottom: 30px;
-            display: none;
-        }
-        
-        .action-button {
-            background: rgba(255, 255, 255, 0.05);
-            border: 2px solid rgba(255, 255, 255, 0.1);
-            border-radius: 15px;
-            padding: 20px;
-            text-align: center;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            backdrop-filter: blur(10px);
-        }
-        
-        .action-button:hover {
-            background: rgba(255, 255, 255, 0.1);
-            border-color: rgba(74, 144, 226, 0.5);
-            transform: translateY(-3px);
-            box-shadow: 0 5px 20px rgba(74, 144, 226, 0.2);
-        }
-        
-        .action-icon {
-            font-size: 32px;
-            margin-bottom: 10px;
-        }
-        
-        .action-label {
-            font-size: 14px;
-            font-weight: 600;
-        }
-        
-        /* История транзакций */
-        .transactions-section {
-            display: none;
-        }
-        
-        .section-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 20px;
-        }
-        
-        .section-title {
-            font-size: 20px;
-            font-weight: 600;
-        }
-        
-        .transactions-list {
-            background: rgba(255, 255, 255, 0.05);
-            border-radius: 15px;
-            padding: 20px;
-            backdrop-filter: blur(10px);
-        }
-        
-        .transaction-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 15px 0;
-            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-            transition: opacity 0.3s ease;
-        }
-        
-        .transaction-item:last-child {
-            border-bottom: none;
-        }
-        
-        .transaction-info {
-            display: flex;
-            align-items: center;
-            gap: 15px;
-        }
-        
-        .transaction-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 20px;
-        }
-        
-        .transaction-in {
-            background: rgba(76, 175, 80, 0.2);
-        }
-        
-        .transaction-out {
-            background: rgba(255, 87, 34, 0.2);
-        }
-        
-        .transaction-details {
-            flex: 1;
-        }
-        
-        .transaction-title {
-            font-size: 16px;
-            font-weight: 500;
-            margin-bottom: 2px;
-        }
-        
-        .transaction-date {
-            font-size: 12px;
-            color: #888;
-        }
-        
-        .transaction-amount {
-            text-align: right;
-        }
-        
-        .amount-positive {
-            color: #4caf50;
-            font-weight: 600;
-        }
-        
-        .amount-negative {
-            color: #ff5722;
-            font-weight: 600;
-        }
-        
-        /* Модальное окно */
-        .modal {
+        /* Модальные окна */
+        .modal-overlay {
             position: fixed;
             top: 0;
             left: 0;
             width: 100%;
             height: 100%;
-            background: rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.8);
             display: none;
-            align-items: center;
             justify-content: center;
-            z-index: 1000;
+            align-items: center;
+            z-index: 2000;
         }
         
         .modal-content {
@@ -343,12 +56,20 @@
             padding: 30px;
             max-width: 400px;
             width: 90%;
-            animation: modalSlideIn 0.3s ease;
+            max-height: 80vh;
+            overflow-y: auto;
+            animation: slideIn 0.3s ease;
         }
         
-        @keyframes modalSlideIn {
-            from { transform: translateY(-50px); opacity: 0; }
-            to { transform: translateY(0); opacity: 1; }
+        @keyframes slideIn {
+            from {
+                transform: translateY(-50px);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
         }
         
         .modal-header {
@@ -359,22 +80,22 @@
         }
         
         .modal-title {
-            font-size: 20px;
-            font-weight: 600;
+            font-size: 24px;
+            font-weight: bold;
+            color: white;
         }
         
         .modal-close {
-            font-size: 24px;
+            font-size: 28px;
             cursor: pointer;
             color: #888;
-            transition: color 0.3s ease;
+            transition: color 0.3s;
         }
         
         .modal-close:hover {
             color: white;
         }
         
-        /* Форма */
         .form-group {
             margin-bottom: 20px;
         }
@@ -382,19 +103,19 @@
         .form-label {
             display: block;
             margin-bottom: 8px;
-            font-size: 14px;
             color: #888;
+            font-size: 14px;
         }
         
         .form-input {
             width: 100%;
-            padding: 15px;
+            padding: 12px;
             background: rgba(255, 255, 255, 0.05);
             border: 2px solid rgba(255, 255, 255, 0.1);
             border-radius: 10px;
             color: white;
             font-size: 16px;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
         
         .form-input:focus {
@@ -408,10 +129,11 @@
             border: 1px solid rgba(255, 255, 255, 0.1);
             border-radius: 8px;
             padding: 12px;
-            margin-bottom: 15px;
+            margin-bottom: 10px;
             font-family: monospace;
             font-size: 14px;
             word-break: break-all;
+            color: #ccc;
         }
         
         .button-primary {
@@ -419,12 +141,12 @@
             background: linear-gradient(135deg, #4A90E2 0%, #7B68EE 100%);
             color: white;
             border: none;
-            padding: 15px;
+            padding: 12px;
             border-radius: 10px;
             font-size: 16px;
             font-weight: 600;
             cursor: pointer;
-            transition: all 0.3s ease;
+            transition: all 0.3s;
         }
         
         .button-primary:hover {
@@ -432,204 +154,124 @@
             box-shadow: 0 5px 20px rgba(74, 144, 226, 0.4);
         }
         
-        .button-primary:active {
-            transform: translateY(0);
-        }
-        
         .button-primary:disabled {
             opacity: 0.5;
             cursor: not-allowed;
         }
         
-        .button-secondary {
+        .token-list {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .token-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 10px;
+            margin-bottom: 10px;
+            transition: all 0.3s;
+        }
+        
+        .token-item:hover {
+            background: rgba(255, 255, 255, 0.08);
+        }
+        
+        .token-info {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .token-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
             background: rgba(255, 255, 255, 0.1);
-            color: white;
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            padding: 12px 20px;
-            border-radius: 10px;
-            font-size: 14px;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-right: 10px;
-        }
-        
-        .button-secondary:hover {
-            background: rgba(255, 255, 255, 0.15);
-        }
-        
-        .button-danger {
-            background: rgba(255, 87, 34, 0.2);
-            color: #ff5722;
-            border: 2px solid rgba(255, 87, 34, 0.3);
-        }
-        
-        .button-danger:hover {
-            background: rgba(255, 87, 34, 0.3);
-        }
-        
-        /* Уведомления */
-        .notification {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            background: #4A90E2;
-            color: white;
-            padding: 15px 20px;
-            border-radius: 10px;
-            max-width: 300px;
-            z-index: 2000;
-            transform: translateX(400px);
-            transition: transform 0.3s ease;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
-        }
-        
-        .notification.show {
-            transform: translateX(0);
-        }
-        
-        .notification.success {
-            background: #4caf50;
-        }
-        
-        .notification.error {
-            background: #ff5722;
-        }
-        
-        /* Статус подключения */
-        .connection-status {
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            font-size: 18px;
+        }
+        
+        .token-details {
+            text-align: left;
+        }
+        
+        .token-symbol {
+            font-weight: bold;
+            color: white;
+        }
+        
+        .token-name {
             font-size: 12px;
             color: #888;
-            margin-top: 15px;
         }
         
-        .status-indicator {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            background: #ff5722;
+        .token-balance {
+            text-align: right;
         }
         
-        .status-indicator.connected {
-            background: #4caf50;
+        .token-amount {
+            font-weight: bold;
+            color: white;
         }
         
-        /* Загрузчик */
-        .loading {
-            opacity: 0.7;
-            pointer-events: none;
+        .token-value {
+            font-size: 12px;
+            color: #888;
         }
         
-        .loading::after {
-            content: " ⏳";
+        /* Ориентация */
+        #orientation-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,34,0.95);
+            z-index: 10000;
+            display: none;
+            justify-content: center;
+            align-items: center;
+            flex-direction: column;
         }
-        
-        .spinner {
-            display: inline-block;
-            width: 20px;
-            height: 20px;
-            border: 3px solid rgba(255, 255, 255, 0.3);
-            border-top-color: white;
-            border-radius: 50%;
-            animation: spin 0.8s linear infinite;
+
+        #orientation-overlay .message {
+            color: white;
+            font-size: 24px;
+            text-align: center;
+            padding: 20px;
+            max-width: 80%;
+            text-shadow: 0 0 10px rgba(255,255,255,0.5);
         }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
+
+        #orientation-overlay .icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+            animation: rotate 2s infinite linear;
         }
-        
-        /* Адаптивность */
-        @media (max-width: 480px) {
-            .balance-amount {
-                font-size: 36px;
-            }
-            
-            .quick-actions {
-                grid-template-columns: 1fr 1fr;
-            }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(90deg); }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <!-- Карточка подключения кошелька -->
-        <div class="connect-card">
-            <h2 style="margin-bottom: 20px;">GGCoin Кошелек</h2>
-            <div id="ton-connect-button"></div>
-            
-            <div class="wallet-info" id="wallet-info">
-                <div class="wallet-address" id="wallet-address">Загрузка...</div>
-                <button class="button-secondary" id="refresh-balance" onclick="refreshBalance()">🔄 Обновить</button>
-                <button class="button-secondary button-danger" id="disconnect-wallet" onclick="disconnectWallet()">🔌 Отключить</button>
-            </div>
-            
-            <div class="connection-status">
-                <span class="status-indicator" id="status-indicator"></span>
-                <span id="connection-status-text">Не подключено</span>
-            </div>
-        </div>
-        
-        <!-- Карточка баланса -->
-        <div class="balance-card" id="balance-card">
-            <div class="balance-label">Баланс GGCoin</div>
-            <div class="balance-amount">
-                <span id="ggcoin-balance">0</span>
-                <span class="coin-icon"><img src='favicon.png'></span>
-            </div>
-            <div class="balance-usd">≈ $<span id="ggcoin-usd">0.00</span></div>
-        </div>
-        
-        <!-- Список токенов -->
-        <div class="tokens-section" id="tokens-section">
-            <h3 style="margin-bottom: 15px;">Токены</h3>
-            <div id="tokens-list">
-                <div style="text-align: center; padding: 20px; color: #888;">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 10px;">Загрузка токенов...</p>
-                </div>
-            </div>
-        </div>
-        
-        <!-- Быстрые действия -->
-        <div class="quick-actions" id="quick-actions">
-            <div class="action-button" onclick="showSendModal()">
-                <div class="action-icon">📤</div>
-                <div class="action-label">Отправить</div>
-            </div>
-            <div class="action-button" onclick="showReceiveModal()">
-                <div class="action-icon">📥</div>
-                <div class="action-label">Получить</div>
-            </div>
-            <div class="action-button" onclick="refreshBalance()">
-                <div class="action-icon">🔄</div>
-                <div class="action-label">Обновить</div>
-            </div>
-            <div class="action-button" onclick="showHistoryModal()">
-                <div class="action-icon">📊</div>
-                <div class="action-label">История</div>
-            </div>
-        </div>
-        
-        <!-- История транзакций -->
-        <div class="transactions-section" id="transactions-section">
-            <div class="section-header">
-                <h2 class="section-title">Последние транзакции</h2>
-            </div>
-            
-            <div class="transactions-list" id="transactions-list">
-                <div style="text-align: center; padding: 20px; color: #888;">
-                    Нет транзакций
-                </div>
-            </div>
-        </div>
+    <div id="game"></div>
+    <div id="ton-connect-button"></div>
+    
+    <!-- Заглушка для портретной ориентации -->
+    <div id="orientation-overlay">
+        <div class="icon">🔄</div>
+        <div class="message">Пожалуйста, поверните устройство</div>
     </div>
     
     <!-- Модальное окно отправки -->
-    <div class="modal" id="send-modal">
+    <div class="modal-overlay" id="send-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Отправить GGCoin</h3>
@@ -653,7 +295,7 @@
     </div>
     
     <!-- Модальное окно получения -->
-    <div class="modal" id="receive-modal">
+    <div class="modal-overlay" id="receive-modal">
         <div class="modal-content">
             <div class="modal-header">
                 <h3 class="modal-title">Получить токены</h3>
@@ -661,9 +303,9 @@
             </div>
             <div style="text-align: center;">
                 <div style="background: white; padding: 20px; border-radius: 10px; margin: 20px 0;">
-                    <div id="qr-code" style="font-size: 64px;">📱</div>
+                    <div style="font-size: 64px;">📱</div>
                 </div>
-                <p style="color: #888; margin-bottom: 20px;">Отсканируйте QR-код или скопируйте адрес</p>
+                <p style="color: #888; margin-bottom: 20px;">Скопируйте адрес кошелька</p>
                 <div class="form-group">
                     <input type="text" class="form-input" id="receive-address" readonly>
                 </div>
@@ -672,30 +314,30 @@
         </div>
     </div>
     
-    <!-- Модальное окно истории -->
-    <div class="modal" id="history-modal">
+    <!-- Модальное окно токенов -->
+    <div class="modal-overlay" id="tokens-modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h3 class="modal-title">История транзакций</h3>
-                <span class="modal-close" onclick="closeModal('history-modal')">&times;</span>
+                <h3 class="modal-title">Мои токены</h3>
+                <span class="modal-close" onclick="closeModal('tokens-modal')">&times;</span>
             </div>
-            <div id="history-content">
-                <p style="text-align: center; color: #888;">Загрузка истории...</p>
+            <div class="token-list" id="token-list">
+                <p style="text-align: center; color: #888;">Загрузка...</p>
             </div>
         </div>
     </div>
     
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
-        // Получаем Telegram WebApp
+        // Telegram WebApp
         let tg = window.Telegram?.WebApp;
-        
-        // Если не удалось получить напрямую, слушаем postMessage
         if (!tg) {
             window.addEventListener('message', function(event) {
                 if (event.data && event.data.type === 'tg-webapp') {
-                    // Создаем объект-заглушку с основными методами
                     window.tg = {
                         ...event.data.data,
+                        ready: () => console.log('TG Ready'),
+                        expand: () => console.log('TG Expand'),
                         HapticFeedback: {
                             impactOccurred: (style) => console.log('Haptic:', style),
                             notificationOccurred: (type) => console.log('Haptic notification:', type)
@@ -706,19 +348,341 @@
             });
         }
         
+        if (tg) {
+            tg.expand();
+        }
+        
         // Конфигурация
         const GGCOIN_MASTER_ADDRESS = '0:7f82a882da388deecaa53806c44c375f697a09fd86d93e9c0e1832749b222b0b';
         const GGCOIN_DECIMALS = 9;
         const RECIPIENT_ADDRESS = 'UQBak6BF62bcdFXplIcoOtrh45eVpECUI9ZdymxixK501w-h';
-        const COIN_RATE = 0.001; // Курс GGCoin к доллару
+        const COIN_RATE = 0.001;
         
         // Глобальные переменные
+        let game = null;
         let tonConnectUI = null;
         let walletAddress = null;
         let isConnected = false;
         let ggcoinBalance = 0;
         let ggcoinWalletAddress = null;
         let tonBalance = 0;
+        let mainScene = null;
+        
+        const orientationOverlay = document.getElementById('orientation-overlay');
+        
+        // Проверка ориентации
+        function checkOrientation() {
+            if (tg) {
+                if (window.innerHeight < window.innerWidth) {
+                    orientationOverlay.style.display = 'flex';
+                    if (game && game.loop) {
+                        game.loop.sleep();
+                    }
+                } else {
+                    orientationOverlay.style.display = 'none';
+                    if (game && game.loop) {
+                        game.loop.wake();
+                    }
+                }
+            }
+        }
+        
+        if (tg) {
+            checkOrientation();
+            window.addEventListener('resize', checkOrientation);
+            window.addEventListener('orientationchange', checkOrientation);
+        }
+        
+        // Сцена загрузки
+        class LoadScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'LoadScene' });
+            }
+            
+            preload() {
+                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+                
+                // Загружаем ресурсы
+                this.load.image('bg', 'assets/bg00.jpg');
+                this.load.image('menubutton_1', 'assets/mbtn1.png');
+                this.load.image('menubutton_2', 'assets/mbtn2.png');
+                this.load.image('menubutton_3', 'assets/mbtn3.png');
+            }
+            
+            create() {
+                this.scene.start('WalletScene');
+            }
+        }
+        
+        // Основная сцена кошелька
+        class WalletScene extends Phaser.Scene {
+            constructor() {
+                super({ key: 'WalletScene' });
+                this.menuButtons = [];
+                this.shineEffects = [];
+                this.lastGamma = 0;
+                this.canShine = true;
+            }
+            
+            create() {
+                mainScene = this;
+                
+                // Фон
+                this.cameras.main.setBackgroundColor('#000022');
+                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'bg');
+                
+                const scaleX = this.cameras.main.width / this.bg.width;
+                const scaleY = this.cameras.main.height / this.bg.height;
+                this.scale = Math.max(scaleX, scaleY);
+                this.bg.setScale(this.scale);
+                
+                // Основной контент
+                this.createWalletInfo();
+                this.createBalanceDisplay();
+                this.createMenuButtons();
+                
+                // Обработчик ориентации для эффектов
+                if (window.DeviceOrientationEvent) {
+                    window.addEventListener('deviceorientation', (event) => {
+                        if (event.gamma !== null) {
+                            this.handleOrientation(event.gamma);
+                        }
+                    });
+                }
+                
+                // Инициализация TON Connect
+                initTonConnect();
+            }
+            
+            createWalletInfo() {
+                // Заголовок
+                this.titleText = this.add.text(this.cameras.main.centerX, 80, 'TON Кошелек', {
+                    font: '36px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 4
+                }).setOrigin(0.5);
+                
+                // Статус подключения
+                this.statusText = this.add.text(this.cameras.main.centerX, 130, 'Не подключено', {
+                    font: '18px Arial',
+                    fill: '#888888'
+                }).setOrigin(0.5);
+                
+                // Адрес кошелька
+                this.addressText = this.add.text(this.cameras.main.centerX, 160, '', {
+                    font: '14px monospace',
+                    fill: '#aaaaaa'
+                }).setOrigin(0.5);
+            }
+            
+            createBalanceDisplay() {
+                const centerY = this.cameras.main.centerY - 100;
+                
+                // Фон для баланса
+                const balanceBg = this.add.graphics();
+                balanceBg.fillStyle(0x4A90E2, 0.2);
+                balanceBg.fillRoundedRect(
+                    this.cameras.main.width * 0.1,
+                    centerY - 100,
+                    this.cameras.main.width * 0.8,
+                    200,
+                    20
+                );
+                
+                // GGCoin баланс
+                this.ggcoinText = this.add.text(this.cameras.main.centerX, centerY - 30, 'GGCoin', {
+                    font: '24px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                this.ggcoinBalance = this.add.text(this.cameras.main.centerX, centerY + 10, '0.0000', {
+                    font: '48px Arial',
+                    fill: '#FFD700',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(0.5);
+                
+                this.ggcoinUSD = this.add.text(this.cameras.main.centerX, centerY + 50, '≈ $0.00', {
+                    font: '18px Arial',
+                    fill: '#aaaaaa'
+                }).setOrigin(0.5);
+                
+                // TON баланс
+                this.tonBalance = this.add.text(this.cameras.main.width - 50, 200, 'TON: 0.0000', {
+                    font: '16px Arial',
+                    fill: '#ffffff',
+                    stroke: '#000000',
+                    strokeThickness: 2
+                }).setOrigin(1, 0);
+            }
+            
+            createMenuButtons() {
+                const d_buttons_x = this.cameras.main.width / 6;
+                const mbtn_y = this.cameras.main.height - 110 * this.scale;
+                
+                // Кнопка 1 - Отправить
+                this.createMenuButton(d_buttons_x, mbtn_y, 'menubutton_1', 0, () => {
+                    console.log('Send button pressed');
+                    if (isConnected) {
+                        showModal('send-modal');
+                    } else {
+                        this.showNotification('Сначала подключите кошелек');
+                    }
+                });
+                
+                // Кнопка 2 - Получить
+                this.createMenuButton(3 * d_buttons_x, mbtn_y, 'menubutton_2', 1, () => {
+                    console.log('Receive button pressed');
+                    if (isConnected) {
+                        showModal('receive-modal');
+                    } else {
+                        this.showNotification('Сначала подключите кошелек');
+                    }
+                });
+                
+                // Кнопка 3 - Токены
+                this.createMenuButton(5 * d_buttons_x, mbtn_y, 'menubutton_3', 2, () => {
+                    console.log('Tokens button pressed');
+                    if (isConnected) {
+                        showTokensModal();
+                    } else {
+                        this.showNotification('Сначала подключите кошелек');
+                    }
+                });
+                
+                // Добавляем подписи к кнопкам
+                this.add.text(d_buttons_x, mbtn_y + 60, 'Отправить', {
+                    font: '14px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                this.add.text(3 * d_buttons_x, mbtn_y + 60, 'Получить', {
+                    font: '14px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+                
+                this.add.text(5 * d_buttons_x, mbtn_y + 60, 'Токены', {
+                    font: '14px Arial',
+                    fill: '#ffffff'
+                }).setOrigin(0.5);
+            }
+            
+            createMenuButton(x, y, texture, index, callback) {
+                const button = this.add.sprite(x, y, texture)
+                    .setInteractive()
+                    .setDepth(1000)
+                    .setScale(1 * this.scale);
+                
+                // Эффект блеска
+                const shine = this.add.sprite(x, y, texture)
+                    .setScale(1 * this.scale)
+                    .setAlpha(0)
+                    .setDepth(1001)
+                    .setBlendMode(Phaser.BlendModes.ADD);
+                
+                this.menuButtons[index] = button;
+                this.shineEffects[index] = shine;
+                
+                button.on('pointerdown', () => {
+                    // Анимация нажатия
+                    this.tweens.add({
+                        targets: button,
+                        scaleX: 0.9 * this.scale,
+                        scaleY: 0.9 * this.scale,
+                        duration: 100,
+                        yoyo: true,
+                        onComplete: callback
+                    });
+                    
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.impactOccurred('light');
+                    }
+                });
+            }
+            
+            handleOrientation(gamma) {
+                if (this.lastGamma === undefined) {
+                    this.lastGamma = gamma;
+                    return;
+                }
+                
+                const angles = [-5, 0, +5];
+                for (let i = 0; i < 3; i++) {
+                    if ((this.lastGamma < angles[i] && gamma >= angles[i]) ||
+                        (this.lastGamma > angles[i] && gamma <= angles[i])) {
+                        if (this.canShine) {
+                            this.triggerShineEffect(i);
+                            this.canShine = false;
+                            this.time.delayedCall(50, () => {
+                                this.canShine = true;
+                            });
+                        }
+                    }
+                }
+                this.lastGamma = gamma;
+            }
+            
+            triggerShineEffect(index) {
+                if (this.shineEffects[index]) {
+                    this.tweens.add({
+                        targets: this.shineEffects[index],
+                        alpha: { from: 0.6, to: 0 },
+                        duration: 200,
+                        ease: 'Cubic.easeOut'
+                    });
+                }
+            }
+            
+            updateWalletDisplay(connected, address) {
+                if (connected) {
+                    this.statusText.setText('Подключено').setColor('#4caf50');
+                    this.addressText.setText(formatAddress(address));
+                } else {
+                    this.statusText.setText('Не подключено').setColor('#888888');
+                    this.addressText.setText('');
+                }
+            }
+            
+            updateBalance(ggcoin, ton) {
+                this.ggcoinBalance.setText(ggcoin.toFixed(4));
+                this.ggcoinUSD.setText(`≈ $${(ggcoin * COIN_RATE).toFixed(2)}`);
+                this.tonBalance.setText(`TON: ${ton.toFixed(4)}`);
+                
+                // Анимация обновления
+                this.tweens.add({
+                    targets: this.ggcoinBalance,
+                    scaleX: 1.1,
+                    scaleY: 1.1,
+                    duration: 200,
+                    yoyo: true
+                });
+            }
+            
+            showNotification(message) {
+                const notification = this.add.text(
+                    this.cameras.main.centerX,
+                    this.cameras.main.centerY,
+                    message,
+                    {
+                        font: '24px Arial',
+                        fill: '#ffffff',
+                        stroke: '#000000',
+                        strokeThickness: 4,
+                        backgroundColor: '#4A90E2',
+                        padding: { x: 20, y: 10 }
+                    }
+                ).setOrigin(0.5).setDepth(2000);
+                
+                this.tweens.add({
+                    targets: notification,
+                    alpha: { from: 1, to: 0 },
+                    y: notification.y - 50,
+                    duration: 2000,
+                    onComplete: () => notification.destroy()
+                });
+            }
+        }
         
         // Инициализация TON Connect
         async function initTonConnect() {
@@ -728,7 +692,6 @@
                     buttonRootId: 'ton-connect-button'
                 });
                 
-                // Обработчик изменения статуса подключения
                 tonConnectUI.onStatusChange(async (wallet) => {
                     if (wallet) {
                         walletAddress = wallet.account.address;
@@ -741,7 +704,6 @@
                     }
                 });
                 
-                // Проверяем текущее подключение
                 const currentWallet = tonConnectUI.wallet;
                 if (currentWallet) {
                     walletAddress = currentWallet.account.address;
@@ -750,57 +712,30 @@
                 }
             } catch (error) {
                 console.error('Ошибка инициализации TON Connect:', error);
-                showNotification('Ошибка инициализации кошелька', 'error');
             }
         }
         
-        // Обработчик подключения кошелька
+        // Обработчики подключения кошелька
         async function onWalletConnected() {
-            updateConnectionStatus(true);
-            document.getElementById('wallet-address').textContent = formatAddress(walletAddress);
+            if (mainScene) {
+                mainScene.updateWalletDisplay(true, walletAddress);
+            }
             document.getElementById('receive-address').value = walletAddress;
-            
-            // Показываем элементы интерфейса
-            document.getElementById('wallet-info').style.display = 'block';
-            document.getElementById('balance-card').style.display = 'block';
-            document.getElementById('tokens-section').style.display = 'block';
-            document.getElementById('quick-actions').style.display = 'grid';
-            document.getElementById('transactions-section').style.display = 'block';
-            
-            // Загружаем данные
             await refreshBalance();
-            vibrateSuccess();
+            
+            if (tg && tg.HapticFeedback) {
+                tg.HapticFeedback.notificationOccurred('success');
+            }
         }
         
-        // Обработчик отключения кошелька
         function onWalletDisconnected() {
-            updateConnectionStatus(false);
-            
-            // Скрываем элементы интерфейса
-            document.getElementById('wallet-info').style.display = 'none';
-            document.getElementById('balance-card').style.display = 'none';
-            document.getElementById('tokens-section').style.display = 'none';
-            document.getElementById('quick-actions').style.display = 'none';
-            document.getElementById('transactions-section').style.display = 'none';
-            
-            // Сбрасываем данные
+            if (mainScene) {
+                mainScene.updateWalletDisplay(false, null);
+                mainScene.updateBalance(0, 0);
+            }
             ggcoinBalance = 0;
             tonBalance = 0;
             ggcoinWalletAddress = null;
-        }
-        
-        // Обновление статуса подключения
-        function updateConnectionStatus(connected) {
-            const indicator = document.getElementById('status-indicator');
-            const statusText = document.getElementById('connection-status-text');
-            
-            if (connected) {
-                indicator.classList.add('connected');
-                statusText.textContent = 'Подключено к TON';
-            } else {
-                indicator.classList.remove('connected');
-                statusText.textContent = 'Не подключено';
-            }
         }
         
         // Форматирование адреса
@@ -811,11 +746,9 @@
         
         // Обновление баланса
         async function refreshBalance() {
-            if (!walletAddress) return;
+            if (!walletAddress || !mainScene) return;
             
             try {
-                showLoadingState('tokens-list', 'Загрузка токенов...');
-                
                 // Получаем баланс TON
                 const tonResponse = await fetch(`https://toncenter.com/api/v2/getAddressBalance?address=${walletAddress}`);
                 const tonData = await tonResponse.json();
@@ -823,18 +756,6 @@
                 if (tonData.ok) {
                     tonBalance = parseInt(tonData.result) / 1000000000;
                 }
-                
-                // Получаем информацию о токенах
-                const tokens = [];
-                
-                // Добавляем TON
-                tokens.push({
-                    symbol: 'TON',
-                    name: 'Toncoin',
-                    balance: tonBalance.toFixed(4),
-                    value: (tonBalance * 5).toFixed(2), // Примерный курс
-                    logo: '💎'
-                });
                 
                 // Получаем баланс GGCoin
                 try {
@@ -846,17 +767,6 @@
                             if (jetton.jetton && jetton.jetton.address === GGCOIN_MASTER_ADDRESS) {
                                 ggcoinBalance = parseFloat(jetton.balance) / Math.pow(10, GGCOIN_DECIMALS);
                                 ggcoinWalletAddress = jetton.wallet_address.address;
-                                
-                                tokens.push({
-                                    symbol: 'GGCoin',
-                                    name: 'GoblinGotts Coin',
-                                    balance: ggcoinBalance.toFixed(4),
-                                    value: (ggcoinBalance * COIN_RATE).toFixed(2),
-                                    logo: jetton.jetton.image || '🪙'
-                                });
-                                
-                                // Обновляем основной баланс
-                                updateMainBalance();
                                 break;
                             }
                         }
@@ -865,140 +775,77 @@
                     console.error('Ошибка получения баланса GGCoin:', error);
                 }
                 
-                // Если GGCoin не найден, добавляем с нулевым балансом
-                if (!tokens.find(t => t.symbol === 'GGCoin')) {
-                    tokens.push({
-                        symbol: 'GGCoin',
-                        name: 'GoblinGotts Coin',
-                        balance: '0.0000',
-                        value: '0.00',
-                        logo: '🪙'
-                    });
-                }
-                
-                // Отображаем токены
-                displayTokens(tokens);
-                
-                // Загружаем транзакции
-                await loadTransactions();
+                // Обновляем отображение
+                mainScene.updateBalance(ggcoinBalance, tonBalance);
+                document.getElementById('available-balance').textContent = ggcoinBalance.toFixed(4);
                 
             } catch (error) {
                 console.error('Ошибка обновления баланса:', error);
-                showNotification('Ошибка загрузки баланса', 'error');
+                if (mainScene) {
+                    mainScene.showNotification('Ошибка загрузки баланса');
+                }
             }
         }
         
-        // Обновление основного баланса
-        function updateMainBalance() {
-            document.getElementById('ggcoin-balance').textContent = ggcoinBalance.toFixed(4);
-            document.getElementById('ggcoin-usd').textContent = (ggcoinBalance * COIN_RATE).toFixed(2);
-            document.getElementById('available-balance').textContent = ggcoinBalance.toFixed(4);
+        // Показ модальных окон
+        function showModal(modalId) {
+            document.getElementById(modalId).style.display = 'flex';
         }
         
-        // Отображение токенов
-        function displayTokens(tokens) {
-            const tokensList = document.getElementById('tokens-list');
-            tokensList.innerHTML = '';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
+        }
+        
+        // Показ токенов
+        async function showTokensModal() {
+            showModal('tokens-modal');
+            const tokenList = document.getElementById('token-list');
+            tokenList.innerHTML = '<p style="text-align: center; color: #888;">Загрузка...</p>';
             
-            tokens.forEach(token => {
-                const tokenItem = document.createElement('div');
-                tokenItem.className = 'token-item';
-                
-                let logoHtml = '';
-                if (token.logo.startsWith('http')) {
-                    logoHtml = `<img src="${token.logo}" alt="${token.symbol}">`;
-                } else {
-                    logoHtml = token.logo;
-                }
-                
-                tokenItem.innerHTML = `
-                    <div class="token-info">
-                        <div class="token-logo">${logoHtml}</div>
-                        <div class="token-details">
-                            <div class="token-symbol">${token.symbol}</div>
-                            <div class="token-name">${token.name}</div>
-                        </div>
-                    </div>
-                    <div class="token-balance">
-                        <div class="token-amount">${token.balance}</div>
-                        <div class="token-value">≈ ${token.value}</div>
-                    </div>
-                `;
-                
-                tokensList.appendChild(tokenItem);
-            });
-        }
-        
-        // Загрузка транзакций
-        async function loadTransactions() {
             try {
-                const response = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${walletAddress}&limit=5`);
-                const data = await response.json();
+                const tokens = [];
                 
-                if (data.ok && data.result.length > 0) {
-                    displayTransactions(data.result);
-                } else {
-                    document.getElementById('transactions-list').innerHTML = `
-                        <div style="text-align: center; padding: 20px; color: #888;">
-                            Нет транзакций
+                // TON
+                tokens.push({
+                    symbol: 'TON',
+                    name: 'Toncoin',
+                    balance: tonBalance.toFixed(4),
+                    value: (tonBalance * 5).toFixed(2),
+                    icon: '💎'
+                });
+                
+                // GGCoin
+                tokens.push({
+                    symbol: 'GGCoin',
+                    name: 'GoblinGotts Coin',
+                    balance: ggcoinBalance.toFixed(4),
+                    value: (ggcoinBalance * COIN_RATE).toFixed(2),
+                    icon: '🪙'
+                });
+                
+                // Отображаем токены
+                let html = '';
+                tokens.forEach(token => {
+                    html += `
+                        <div class="token-item">
+                            <div class="token-info">
+                                <div class="token-icon">${token.icon}</div>
+                                <div class="token-details">
+                                    <div class="token-symbol">${token.symbol}</div>
+                                    <div class="token-name">${token.name}</div>
+                                </div>
+                            </div>
+                            <div class="token-balance">
+                                <div class="token-amount">${token.balance}</div>
+                                <div class="token-value">≈ ${token.value}</div>
+                            </div>
                         </div>
                     `;
-                }
+                });
+                
+                tokenList.innerHTML = html;
             } catch (error) {
-                console.error('Ошибка загрузки транзакций:', error);
-            }
-        }
-        
-        // Отображение транзакций
-        function displayTransactions(transactions) {
-            const transactionsList = document.getElementById('transactions-list');
-            transactionsList.innerHTML = '';
-            
-            transactions.forEach(tx => {
-                const isIncoming = tx.in_msg && tx.in_msg.value && parseInt(tx.in_msg.value) > 0;
-                const amount = tx.in_msg && tx.in_msg.value ? 
-                    (parseInt(tx.in_msg.value) / 1000000000).toFixed(4) : '0';
-                
-                const txItem = document.createElement('div');
-                txItem.className = 'transaction-item';
-                
-                txItem.innerHTML = `
-                    <div class="transaction-info">
-                        <div class="transaction-icon ${isIncoming ? 'transaction-in' : 'transaction-out'}">
-                            ${isIncoming ? '📥' : '📤'}
-                        </div>
-                        <div class="transaction-details">
-                            <div class="transaction-title">${isIncoming ? 'Получено' : 'Отправлено'}</div>
-                            <div class="transaction-date">${formatDate(new Date(tx.utime * 1000))}</div>
-                        </div>
-                    </div>
-                    <div class="transaction-amount">
-                        <div class="${isIncoming ? 'amount-positive' : 'amount-negative'}">
-                            ${isIncoming ? '+' : '-'}${amount} TON
-                        </div>
-                    </div>
-                `;
-                
-                transactionsList.appendChild(txItem);
-            });
-        }
-        
-        // Форматирование даты
-        function formatDate(date) {
-            const now = new Date();
-            const diff = now - date;
-            const minutes = Math.floor(diff / 60000);
-            const hours = Math.floor(diff / 3600000);
-            const days = Math.floor(diff / 86400000);
-            
-            if (minutes < 60) {
-                return `${minutes} мин. назад`;
-            } else if (hours < 24) {
-                return `${hours} ч. назад`;
-            } else if (days < 7) {
-                return `${days} дн. назад`;
-            } else {
-                return date.toLocaleDateString();
+                tokenList.innerHTML = '<p style="text-align: center; color: #ff5722;">Ошибка загрузки токенов</p>';
             }
         }
         
@@ -1009,17 +856,17 @@
             const amount = parseFloat(document.getElementById('send-amount').value);
             
             if (!amount || amount <= 0) {
-                showNotification('Введите корректную сумму', 'error');
+                alert('Введите корректную сумму');
                 return;
             }
             
             if (amount > ggcoinBalance) {
-                showNotification(`Недостаточно средств. Доступно: ${ggcoinBalance.toFixed(4)} GGCoin`, 'error');
+                alert(`Недостаточно средств. Доступно: ${ggcoinBalance.toFixed(4)} GGCoin`);
                 return;
             }
             
             if (!ggcoinWalletAddress) {
-                showNotification('GGCoin кошелек не найден', 'error');
+                alert('GGCoin кошелек не найден');
                 return;
             }
             
@@ -1057,18 +904,23 @@
                 const result = await tonConnectUI.sendTransaction(transaction);
                 
                 if (result) {
-                    showNotification(`${amount} GGCoin успешно отправлено!`, 'success');
                     closeModal('send-modal');
                     document.getElementById('send-amount').value = '';
+                    
+                    if (mainScene) {
+                        mainScene.showNotification(`${amount} GGCoin успешно отправлено!`);
+                    }
                     
                     // Обновляем баланс через 5 секунд
                     setTimeout(refreshBalance, 5000);
                     
-                    vibrateSuccess();
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                    }
                 }
             } catch (error) {
                 console.error('Ошибка отправки:', error);
-                showNotification('Ошибка отправки транзакции', 'error');
+                alert('Ошибка отправки транзакции');
             } finally {
                 const sendButton = document.getElementById('send-button');
                 sendButton.disabled = false;
@@ -1117,144 +969,82 @@
             }
         }
         
-        // Отключение кошелька
-        async function disconnectWallet() {
-            try {
-                await tonConnectUI.disconnect();
-                showNotification('Кошелек отключен', 'success');
-            } catch (error) {
-                console.error('Ошибка отключения:', error);
-                showNotification('Ошибка отключения кошелька', 'error');
-            }
-        }
-        
         // Копирование адреса
         function copyAddress() {
             const address = document.getElementById('receive-address').value;
             
             if (navigator.clipboard) {
                 navigator.clipboard.writeText(address).then(() => {
-                    showNotification('Адрес скопирован!', 'success');
-                    vibrateSuccess();
+                    if (mainScene) {
+                        mainScene.showNotification('Адрес скопирован!');
+                    }
+                    if (tg && tg.HapticFeedback) {
+                        tg.HapticFeedback.notificationOccurred('success');
+                    }
                 });
             } else {
                 // Fallback для старых браузеров
                 const input = document.getElementById('receive-address');
                 input.select();
                 document.execCommand('copy');
-                showNotification('Адрес скопирован!', 'success');
-                vibrateSuccess();
-            }
-        }
-        
-        // Показ/скрытие модальных окон
-        function showSendModal() {
-            document.getElementById('send-modal').style.display = 'flex';
-            vibrateLight();
-        }
-        
-        function showReceiveModal() {
-            document.getElementById('receive-modal').style.display = 'flex';
-            vibrateLight();
-        }
-        
-        function showHistoryModal() {
-            document.getElementById('history-modal').style.display = 'flex';
-            loadFullHistory();
-            vibrateLight();
-        }
-        
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
-        }
-        
-        // Загрузка полной истории
-        async function loadFullHistory() {
-            const historyContent = document.getElementById('history-content');
-            historyContent.innerHTML = '<p style="text-align: center; color: #888;">Загрузка истории...</p>';
-            
-            try {
-                const response = await fetch(`https://toncenter.com/api/v2/getTransactions?address=${walletAddress}&limit=20`);
-                const data = await response.json();
-                
-                if (data.ok && data.result.length > 0) {
-                    historyContent.innerHTML = '';
-                    data.result.forEach(tx => {
-                        const isIncoming = tx.in_msg && tx.in_msg.value && parseInt(tx.in_msg.value) > 0;
-                        const amount = tx.in_msg && tx.in_msg.value ? 
-                            (parseInt(tx.in_msg.value) / 1000000000).toFixed(4) : '0';
-                        
-                        const txElement = document.createElement('div');
-                        txElement.style.cssText = 'padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.1);';
-                        txElement.innerHTML = `
-                            <div style="display: flex; justify-content: space-between; align-items: center;">
-                                <div>
-                                    <div style="font-weight: 600;">${isIncoming ? 'Получено' : 'Отправлено'}</div>
-                                    <div style="font-size: 12px; color: #888;">${formatDate(new Date(tx.utime * 1000))}</div>
-                                </div>
-                                <div style="font-weight: 600; color: ${isIncoming ? '#4caf50' : '#ff5722'};">
-                                    ${isIncoming ? '+' : '-'}${amount} TON
-                                </div>
-                            </div>
-                        `;
-                        historyContent.appendChild(txElement);
-                    });
-                } else {
-                    historyContent.innerHTML = '<p style="text-align: center; color: #888;">Нет транзакций</p>';
+                if (mainScene) {
+                    mainScene.showNotification('Адрес скопирован!');
                 }
-            } catch (error) {
-                historyContent.innerHTML = '<p style="text-align: center; color: #ff5722;">Ошибка загрузки истории</p>';
-            }
-        }
-        
-        // Показ уведомлений
-        function showNotification(message, type = 'info') {
-            const notification = document.createElement('div');
-            notification.className = `notification ${type}`;
-            notification.textContent = message;
-            
-            document.body.appendChild(notification);
-            
-            setTimeout(() => {
-                notification.classList.add('show');
-            }, 10);
-            
-            setTimeout(() => {
-                notification.classList.remove('show');
-                setTimeout(() => notification.remove(), 300);
-            }, 3000);
-        }
-        
-        // Показ состояния загрузки
-        function showLoadingState(elementId, message) {
-            const element = document.getElementById(elementId);
-            element.innerHTML = `
-                <div style="text-align: center; padding: 20px; color: #888;">
-                    <div class="spinner"></div>
-                    <p style="margin-top: 10px;">${message}</p>
-                </div>
-            `;
-        }
-        
-        // Вибрация
-        function vibrateLight() {
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.impactOccurred('light');
-            }
-        }
-        
-        function vibrateSuccess() {
-            if (tg && tg.HapticFeedback) {
-                tg.HapticFeedback.notificationOccurred('success');
             }
         }
         
         // Закрытие модалов по клику вне
-        window.onclick = function(event) {
-            if (event.target.classList.contains('modal')) {
-                event.target.style.display = 'none';
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', function(e) {
+                if (e.target === this) {
+                    this.style.display = 'none';
+                }
+            });
+        });
+        
+        // Конфигурация Phaser
+        const config = {
+            type: Phaser.WEBGL,
+            parent: 'game',
+            scene: [LoadScene, WalletScene],
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+                width: 1024,
+                height: 1920,
+                resolution: Math.max(window.devicePixelRatio || 1, 1),
+            },
+            render: {
+                antialiasGL: true,
+                pixelArt: false
             }
+        };
+        
+        // Адаптация для Android
+        if (navigator.userAgent.toLowerCase().includes('android')) {
+            document.body.style.height = `${window.innerHeight}px`;
+            setTimeout(() => {
+                document.body.style.height = `${window.innerHeight}px`;
+            }, 1000);
         }
+        
+        // Запуск игры
+        setTimeout(() => {
+            game = new Phaser.Game(config);
+            
+            if (tg) {
+                checkOrientation();
+            }
+            
+            window.addEventListener('resize', () => {
+                if (game && game.scale) {
+                    game.scale.refresh();
+                }
+                if (tg) {
+                    checkOrientation();
+                }
+            });
+        }, 300);
         
         // Периодическое обновление баланса
         setInterval(() => {
@@ -1263,10 +1053,8 @@
             }
         }, 30000);
         
-        // Инициализация при загрузке
-        window.addEventListener('load', () => {
-            initTonConnect();
-        });
+        // Предотвращение контекстного меню
+        document.addEventListener('contextmenu', e => e.preventDefault());
     </script>
 </body>
 </html>
