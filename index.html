@@ -367,7 +367,7 @@
                 this.resolution_coeff = 1;
                 this.max_i = 0;
                 this.e_flag = true;
-				this.buttonRotationY = 0; // Текущий угол поворота кнопок по оси Y
+				this.canShine = [true,true,true];
             }
         
             preload() {
@@ -477,7 +477,6 @@
 
                 // Обработчики ориентации устройства
                 this.lastGamma = 0;
-                this.canShine = [true,true,true];
 				
 				// Добавляем обработчик ориентации устройства
                 this.orientationHandler = (event) => {
@@ -751,7 +750,7 @@
 				) {
 					if (this.canShine[i]) {
 						this.triggerShineEffect(i);
-						this.canShine = false;
+						this.canShine[i] = false;
 						this.time.delayedCall(500, () => { 
 						this.canShine[i] = true; 
 						});
