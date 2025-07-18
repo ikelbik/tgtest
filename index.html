@@ -844,11 +844,11 @@
 			
             update(time, delta) {
 			
-				this.scoreText.setText(`Монет : ${this.buttonRotationY}`);
+				//this.scoreText.setText(`Монет : ${this.buttonRotationY}`);
 				
-				const rotationY = this.buttonRotationY;
-				//this.menuButton1.modelRotation.y = rotationY;
-				//this.shine1.modelRotation.y = rotationY;
+				const rotationY = 3*this.buttonRotationY;
+				this.menuButton1.modelRotation.y = rotationY;
+				this.shine1.modelRotation.y = rotationY;
 			
                 const cl = this.get_c_len();
                 const dt = 1.5 * delta / 16.66667;
