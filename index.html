@@ -152,197 +152,380 @@
             }		
         }
 
-        class LoadScene extends Phaser.Scene {
-            constructor() {
-                super({ key: 'LoadScene' });
-                this.loadProgress = 0;
-                this.isLoading = true;
+class LoadScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'LoadScene' });
+        this.loadProgress = 0;
+        this.isLoading = true;
+        this.layersLoaded = {};
+        this.animationStarted = false;
+        this.layers = [];
+        this.baseScreenLoaded = false;
+        this.animationLoop = null;
+        this.loadscreen0Layer = null; // Отдельно храним слой loadscreen0
+    }
+
+    init() {
+        // Создаем простой фон сразу, без ожидания загрузки
+        this.cameras.main.setBackgroundColor('#000022');
+        
+        // Устанавливаем обработчики событий загрузки до начала preload
+        this.load.on('progress', (value) => {
+            this.loadProgress = value;
+            this.updateProgressBar();
+        });
+        
+        this.load.on('filecomplete', (key) => {
+            console.log('Loaded:', key); // Для отладки
+            
+            // Как только загрузится основная заставка, показываем её
+            if (key === 'loadscreen' && !this.bg) {
+                this.baseScreenLoaded = true;
+                this.showLoadScreen();
             }
-
-            init() {
-                // Создаем простой фон сразу, без ожидания загрузки
-                this.cameras.main.setBackgroundColor('#000022');
+            
+            // Отслеживаем загрузку слоев
+            if (key.startsWith('loadscreen') && key !== 'loadscreen') {
+                this.layersLoaded[key] = true;
+                console.log('Layer loaded:', key); // Для отладки
                 
-                // Устанавливаем обработчики событий загрузки до начала preload
-                this.load.on('progress', (value) => {
-                    this.loadProgress = value;
-                    this.updateProgressBar();
-                });
-                
-                this.load.on('filecomplete', (key) => {
-                    // Как только загрузится заставка, показываем её
-                    if (key === 'loadscreen' && !this.bg) {
-                        this.showLoadScreen();
-                    }
-                });
-                
-                this.load.on('complete', () => {
-                    this.isLoading = false;
-                    this.time.delayedCall(500, () => {
-                        this.showPlayButton();
-                    });
-                });
+                if (this.baseScreenLoaded) {
+                    this.addLayer(key);
+                    this.checkAllLayersLoaded();
+                }
             }
-
-            preload() {
-                this.load.setBaseURL('https://ikelbik.github.io/tgtest');
-                
-                // Загружаем заставку первой
-                this.load.image('loadscreen', 'assets/loadscreen.jpg');
-                
-                // Остальные ресурсы
-                this.load.image('bg', 'assets/bg00.jpg');
-                this.load.image('bg01', 'assets/bg01.png');	
-                this.load.image('bg02', 'assets/bg02.png');				
-                this.load.obj('coin', 'assets/ggcoin.obj');
-				this.load.image('menubutton_1', 'assets/mbtn1.png');
-				this.load.image('menubutton_2', 'assets/mbtn2.png');	
-				this.load.image('menubutton_3', 'assets/mbtn3.png');				
-                this.load.image('texture', 'assets/coin_txt_n.png');
-                this.load.image('coin_t0', 'assets/coin_c00.png');
-                this.load.image('coin_t1', 'assets/coin_c01.png');
-                this.load.image('coin_t2', 'assets/coin_c02.png');
-                this.load.image('coin_t3', 'assets/coin_c03.png');				
-                this.load.image('cshdw', 'assets/shd_txt.png');
-                this.load.audio('coinDrop', 'assets/drop.mp3');
-                this.load.audio('coinUp', 'assets/up.mp3');
-                this.load.audio('magic', 'assets/rise.wav');  
-                this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+        });
+        
+        this.load.on('complete', () => {
+            console.log('All loading complete'); // Для отладки
+            this.isLoading = false;
+            
+            // Если анимация еще не запущена, проверяем слои
+            if (!this.animationStarted) {
+                this.checkAllLayersLoaded();
             }
+        });
+    }
 
-            showLoadScreen() {
-                // Показываем заставку как только она загрузилась
-                this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
-                
-                const scaleX = this.cameras.main.width / this.bg.width;
-                const scaleY = this.cameras.main.height / this.bg.height;
-                const scale = Math.max(scaleX, scaleY);
-                this.bg.setScale(scale);
+    preload() {
+        this.load.setBaseURL('https://ikelbik.github.io/tgtest');
+        
+        // Загружаем ВСЕ изображения сразу в preload
+        this.load.image('loadscreen', 'assets/loadscreen.jpg');
+        
+        // Загружаем слои loadscreen0-5 сразу
+        for (let i = 0; i <= 5; i++) {
+            this.load.image(`loadscreen${i}`, `assets/ld${i}.png`);
+        }
+        
+        // Остальные основные ресурсы
+        this.load.image('bg', 'assets/bg00.jpg');
+        this.load.image('bg01', 'assets/bg01.png');	
+        this.load.image('bg02', 'assets/bg02.png');				
+        this.load.obj('coin', 'assets/ggcoin.obj');
+        this.load.image('menubutton_1', 'assets/mbtn1.png');
+        this.load.image('menubutton_2', 'assets/mbtn2.png');	
+        this.load.image('menubutton_3', 'assets/mbtn3.png');				
+        this.load.image('texture', 'assets/coin_txt_n.png');
+        this.load.image('coin_t0', 'assets/coin_c00.png');
+        this.load.image('coin_t1', 'assets/coin_c01.png');
+        this.load.image('coin_t2', 'assets/coin_c02.png');
+        this.load.image('coin_t3', 'assets/coin_c03.png');				
+        this.load.image('cshdw', 'assets/shd_txt.png');
+        this.load.audio('coinDrop', 'assets/drop.mp3');
+        this.load.audio('coinUp', 'assets/up.mp3');
+        this.load.audio('magic', 'assets/rise.wav');  
+        this.load.atlas('flares', 'assets/flares.png', 'assets/flares.json');
+    }
 
-                // Создаем UI элементы поверх заставки
-                this.createProgressBarUI();
+    showLoadScreen() {
+        // Показываем основную заставку как только она загрузилась
+        this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
+        
+        const scaleX = this.cameras.main.width / this.bg.width;
+        const scaleY = this.cameras.main.height / this.bg.height;
+        const scale = Math.max(scaleX, scaleY);
+        this.bg.setScale(scale);
+
+        // Создаем UI элементы поверх заставки
+        this.createProgressBarUI();
+        
+        // Проверяем, может быть слои уже загружены
+        this.checkAllLayersLoaded();
+    }
+
+    addLayer(layerKey) {
+        // Проверяем, не добавлен ли уже этот слой
+        if (this.layers.find(layer => layer.texture.key === layerKey) || 
+            (this.loadscreen0Layer && this.loadscreen0Layer.texture.key === layerKey)) {
+            return;
+        }
+        
+        console.log('Adding layer:', layerKey); // Для отладки
+        
+        // Добавляем каждый слой поверх предыдущих с alpha = 0
+        const layer = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, layerKey);
+        
+        const scaleX = this.cameras.main.width / layer.width;
+        const scaleY = this.cameras.main.height / layer.height;
+        const scale = Math.max(scaleX, scaleY);
+        layer.setScale(scale);
+        layer.setAlpha(0); // Начально невидимый
+        
+        // Разделяем loadscreen0 от остальных слоев
+        if (layerKey === 'loadscreen0') {
+            this.loadscreen0Layer = layer;
+        } else {
+            this.layers.push(layer);
+        }
+        
+        // Располагаем UI элементы поверх всех слоев
+        if (this.progressBg) this.progressBg.setDepth(100);
+        if (this.progressBorder) this.progressBorder.setDepth(100);
+        if (this.progressBar) this.progressBar.setDepth(100);
+        if (this.percentText) this.percentText.setDepth(100);
+        if (this.loadingText) this.loadingText.setDepth(100);
+    }
+
+    checkAllLayersLoaded() {
+        // Проверяем, загружены ли все слои (включая loadscreen0)
+        const requiredLayers = ['loadscreen0', 'loadscreen1', 'loadscreen2', 'loadscreen3', 'loadscreen4', 'loadscreen5'];
+        const allLoaded = requiredLayers.every(layer => this.layersLoaded[layer]);
+        
+        if (allLoaded && this.baseScreenLoaded && !this.animationStarted) {
+            // Добавляем все слои, которые еще не добавлены
+            requiredLayers.forEach(layerKey => {
+                this.addLayer(layerKey);
+            });
+            
+            this.startLayerAnimation();
+        }
+    }
+
+    startLayerAnimation() {
+        this.animationStarted = true;
+        
+        if (this.layers.length === 0 && !this.loadscreen0Layer) {
+            console.log('No layers to animate!');
+            return;
+        }
+        
+        // Запускаем постоянную случайную анимацию для loadscreen0
+        this.startLoadscreen0Animation();
+        
+        // Запускаем зацикленную анимацию для слоев 1-5
+        this.runAnimationCycle();
+        
+        // Показываем кнопку через некоторое время, но анимация продолжается
+        this.time.delayedCall(800, () => {
+            this.showPlayButton();
+        });
+    }
+
+    startLoadscreen0Animation() {
+        if (!this.loadscreen0Layer) return;
+        
+        const animateLoadscreen0 = () => {
+            if (!this.animationStarted) return; // Остановка анимации
+            
+            // Случайное значение alpha от 0.1 до 0.8
+            const randomAlpha = Math.random() * 0.6 + 0.2;
+            // Случайная длительность от 50 до 300ms
+            const randomDuration = Math.random() * 0 + 100;
+            
+            this.tweens.add({
+                targets: this.loadscreen0Layer,
+                alpha: randomAlpha,
+                duration: randomDuration,
+                ease: 'Power2',
+                onComplete: () => {
+                    // Случайная пауза от 30 до 150ms перед следующей анимацией
+                    const randomDelay = Math.random() * 120 + 30;
+                    this.time.delayedCall(randomDelay, animateLoadscreen0);
+                }
+            });
+        };
+        
+        // Запускаем первую анимацию loadscreen0
+        animateLoadscreen0();
+    }
+
+    runAnimationCycle() {
+        if (this.layers.length === 0) return;
+        
+        // Создаем случайный порядок показа слоев 1-5
+        const shuffleArray = (array) => {
+            const shuffled = [...array];
+            for (let i = shuffled.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
             }
-
-            createProgressBarUI() {
-                // Создание прогресс-бара
-                this.createProgressBar();
-                
-                // Текст загрузки
-                this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
-                    'Загрузка...', {
-                    font: '28px Arial',
-                    fill: '#1',
-                    align: 'center'
-                }).setOrigin(0.5);
-
-
+            return shuffled;
+        };
+        
+        let currentLayerIndex = 0;
+        let shuffledLayers = shuffleArray(this.layers);
+        
+        const animateNextLayer = () => {
+            if (!this.animationStarted) return; // Остановка анимации
+            
+            if (currentLayerIndex >= shuffledLayers.length) {
+                // Скрываем все слои и создаем новый случайный порядок
+                this.layers.forEach(layer => layer.setAlpha(0));
+                currentLayerIndex = 0;
+                shuffledLayers = shuffleArray(this.layers);
             }
-
-            create() {
-                // Если заставка еще не показана (например, не загрузилась), создаем fallback
-                if (!this.bg) {
+            
+            const layer = shuffledLayers[currentLayerIndex];
+            
+            this.tweens.add({
+                targets: layer,
+                alpha: 1,
+                duration: 100,
+                ease: 'Power2',
+                onComplete: () => {
+                    // Через некоторое время скрываем текущий слой и показываем следующий
                     this.time.delayedCall(100, () => {
-                        if (this.textures.exists('loadscreen')) {
-                            this.showLoadScreen();
-                        } else {
-                            // Fallback - простой фон
-                            this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
-                                                       this.cameras.main.width, this.cameras.main.height, 0x000044);
-                            this.createProgressBarUI();
+                        layer.setAlpha(0);
+                        currentLayerIndex++;
+                        
+                        // Продолжаем цикл, если анимация еще активна
+                        if (this.animationStarted) {
+                            animateNextLayer();
                         }
                     });
                 }
-            }
+            });
+        };
+        
+        // Запускаем первую анимацию
+        animateNextLayer();
+    }
 
-            createProgressBar() {
-                const barWidth = 300;
-                const barHeight = 20;
-                const x = this.cameras.main.centerX - barWidth / 2;
-                const y = this.cameras.main.height - 250;
+    createProgressBarUI() {
+        // Создание прогресс-бара
+        this.createProgressBar();
+        
+        // Текст загрузки
+        this.loadingText = this.add.text(this.cameras.main.centerX, this.cameras.main.height - 200, 
+            'Загрузка...', {
+            font: '28px Arial',
+            fill: '#ffffff',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(100);
+    }
 
-                // Фон прогресс-бара
-                this.progressBg = this.add.graphics();
-                this.progressBg.fillStyle(0x222222, 0.8);
-                this.progressBg.fillRoundedRect(x, y, barWidth, barHeight, 10);
-                
-                // Рамка прогресс-бара
-                this.progressBorder = this.add.graphics();
-                this.progressBorder.lineStyle(2, 0xffffff, 0.8);
-                this.progressBorder.strokeRoundedRect(x, y, barWidth, barHeight, 10);
-
-                // Заполнение прогресс-бара
-                this.progressBar = this.add.graphics();
-                
-                // Текст процента
-                this.percentText = this.add.text(this.cameras.main.centerX, y + barHeight / 2, '0%', {
-                    font: '16px Arial',
-                    fill: '#ffffff'
-                }).setOrigin(0.5);
-            }
-
-            updateProgressBar() {
-                if (!this.progressBar) return; // Проверяем существование progressBar
-                
-                const barWidth = 300;
-                const barHeight = 20;
-                const x = this.cameras.main.centerX - barWidth / 2;
-                const y = this.cameras.main.height - 250;
-                
-                this.progressBar.clear();
-                
-                // Градиент от синего к зеленому
-                const progress = this.loadProgress;
-                const fillWidth = barWidth * progress;
-                
-                if (fillWidth > 0) {
-                    // Создаем градиентный эффект
-                    const color = Phaser.Display.Color.Interpolate.ColorWithColor(
-                        { r: 100, g: 150, b: 255 }, // Синий
-                        { r: 100, g: 255, b: 100 }, // Зеленый
-                        100,
-                        Math.floor(progress * 100)
-                    );
-                    
-                    this.progressBar.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
-                    this.progressBar.fillRoundedRect(x, y, fillWidth, barHeight, 10);
+    create() {
+        // Если заставка еще не показана (например, не загрузилась), создаем fallback
+        if (!this.bg) {
+            this.time.delayedCall(100, () => {
+                if (this.textures.exists('loadscreen')) {
+                    this.baseScreenLoaded = true;
+                    this.showLoadScreen();
+                } else {
+                    // Fallback - простой фон
+                    this.bg = this.add.rectangle(this.cameras.main.centerX, this.cameras.main.centerY, 
+                                               this.cameras.main.width, this.cameras.main.height, 0x000044);
+                    this.createProgressBarUI();
                 }
-                
-                // Обновляем текст процента
-                if (this.percentText) {
-                    this.percentText.setText(Math.floor(progress * 100) + '%');
-                }
-                
-                // Обновляем текст загрузки
-                if (this.loadingText) {
-                    if (progress < 1) {
-                        this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
-                    } else {
-                        this.loadingText.setText('Загрузка завершена!');
-                    }
-                }
-            }
+            });
+        }
+    }
 
-            showPlayButton() {
-                // Скрываем элементы загрузки
-                this.progressBg.setVisible(false);
-                this.progressBorder.setVisible(false);
-                this.progressBar.setVisible(false);
-                this.percentText.setVisible(false);
-                this.loadingText.setVisible(false);
-                
+    createProgressBar() {
+        const barWidth = 300;
+        const barHeight = 20;
+        const x = this.cameras.main.centerX - barWidth / 2;
+        const y = this.cameras.main.height - 250;
 
-                if (tg) {
-                    tg.MainButton.setText('Играть');
-                    tg.MainButton.show();
-                    tg.MainButton.onClick(() => {
-                        this.scene.start('MainScene');
-                    });
-                } 
-				//this.scene.start('MainScene');
-				
+        // Фон прогресс-бара
+        this.progressBg = this.add.graphics();
+        this.progressBg.fillStyle(0x222222, 0.8);
+        this.progressBg.fillRoundedRect(x, y, barWidth, barHeight, 10);
+        this.progressBg.setDepth(100);
+        
+        // Рамка прогресс-бара
+        this.progressBorder = this.add.graphics();
+        this.progressBorder.lineStyle(2, 0xffffff, 0.8);
+        this.progressBorder.strokeRoundedRect(x, y, barWidth, barHeight, 10);
+        this.progressBorder.setDepth(100);
+
+        // Заполнение прогресс-бара
+        this.progressBar = this.add.graphics();
+        this.progressBar.setDepth(100);
+        
+        // Текст процента
+        this.percentText = this.add.text(this.cameras.main.centerX, y + barHeight / 2, '0%', {
+            font: '16px Arial',
+            fill: '#ffffff'
+        }).setOrigin(0.5).setDepth(100);
+    }
+
+    updateProgressBar() {
+        if (!this.progressBar) return; // Проверяем существование progressBar
+        
+        const barWidth = 300;
+        const barHeight = 20;
+        const x = this.cameras.main.centerX - barWidth / 2;
+        const y = this.cameras.main.height - 250;
+        
+        this.progressBar.clear();
+        
+        // Градиент от синего к зеленому
+        const progress = this.loadProgress;
+        const fillWidth = barWidth * progress;
+        
+        if (fillWidth > 0) {
+            // Создаем градиентный эффект
+            const color = Phaser.Display.Color.Interpolate.ColorWithColor(
+                { r: 100, g: 150, b: 255 }, // Синий
+                { r: 100, g: 255, b: 100 }, // Зеленый
+                100,
+                Math.floor(progress * 100)
+            );
+            
+            this.progressBar.fillStyle(Phaser.Display.Color.GetColor(color.r, color.g, color.b));
+            this.progressBar.fillRoundedRect(x, y, fillWidth, barHeight, 10);
+        }
+        
+        // Обновляем текст процента
+        if (this.percentText) {
+            this.percentText.setText(Math.floor(progress * 100) + '%');
+        }
+        
+        // Обновляем текст загрузки
+        if (this.loadingText && !this.animationStarted) {
+            if (progress < 1) {
+                this.loadingText.setText('Загрузка... ' + Math.floor(progress * 100) + '%');
+            } else {
+                this.loadingText.setText('Загрузка завершена!');
             }
         }
+    }
 
+    showPlayButton() {
+        // Скрываем элементы загрузки
+        if (this.progressBg) this.progressBg.setVisible(false);
+        if (this.progressBorder) this.progressBorder.setVisible(false);
+        if (this.progressBar) this.progressBar.setVisible(false);
+        if (this.percentText) this.percentText.setVisible(false);
+        if (this.loadingText) this.loadingText.setVisible(false);
+        
+        // Останавливаем анимацию при показе кнопки (опционально)
+        // this.animationStarted = false;
+        
+        if (tg) {
+            tg.MainButton.setText('Играть');
+            tg.MainButton.show();
+            tg.MainButton.onClick(() => {
+                // Останавливаем анимацию перед переходом
+                this.animationStarted = false;
+                this.scene.start('MainScene');
+            });
+        } 
+        //this.scene.start('MainScene');
+    }
+}
         class MainScene extends Phaser.Scene {
             constructor() {
                 super({ key: 'MainScene' });
@@ -732,7 +915,6 @@
                     coins.getChildren()[this.max_i].setInteractive();
                 }
             }
-			
 			
 			 // Обработчик изменения ориентации
             handleOrientation(gamma) {
