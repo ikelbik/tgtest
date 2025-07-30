@@ -386,8 +386,15 @@ class LoadScene extends Phaser.Scene {
                 onComplete: () => {
                     // Через некоторое время скрываем текущий слой и показываем следующий
                     this.time.delayedCall(100, () => {
-                        layer.setAlpha(0);
-                        currentLayerIndex++;
+                        //layer.setAlpha(0);
+						this.tweens.add({
+							targets: layer,
+							alpha: 0,
+							duration: 100,
+							ease: 'Power2'
+						});
+						
+						currentLayerIndex++;
                         
                         // Продолжаем цикл, если анимация еще активна
                         if (this.animationStarted) {
