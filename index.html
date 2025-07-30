@@ -264,8 +264,8 @@ class LoadScene extends Phaser.Scene {
         console.log('Adding layer:', layerKey); // Для отладки
         
         // Добавляем каждый слой поверх предыдущих с alpha = 0
-        const layer = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, layerKey);
-        
+        //const layer = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, layerKey);
+        const layer = this.add.image(this.cameras.main.centerX, 0, layerKey).setOrigin(0.5, 0);
         const scaleX = this.cameras.main.width / layer.width;
         const scaleY = this.cameras.main.height / layer.height;
         const scale = Math.max(scaleX, scaleY);
