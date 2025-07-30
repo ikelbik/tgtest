@@ -240,12 +240,14 @@ class LoadScene extends Phaser.Scene {
 
     showLoadScreen() {
         // Показываем основную заставку как только она загрузилась
-        this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY - 30, 'loadscreen');
+        this.bg = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, 'loadscreen');
         //this.bg = this.add.image(this.cameras.main.centerX, 0, 'loadscreen').setOrigin(0.5, 0);
-        const scaleX = this.cameras.main.width / this.bg.width;
+		const scaleX = this.cameras.main.width / this.bg.width;
         const scaleY = this.cameras.main.height / this.bg.height;
-        const scale = Math.max(scaleX, scaleY);
+        const scale = Math.min(scaleX, scaleY);
         this.bg.setScale(scale);
+		//console.log(this.cameras.main.width, ' ', this.bg.height*scale)
+		//this.bg.y += (this.cameras.main.height - this.bg.displayHeight)/1;
 
         // Создаем UI элементы поверх заставки
         this.createProgressBarUI();
@@ -261,14 +263,14 @@ class LoadScene extends Phaser.Scene {
             return;
         }
         
-        console.log('Adding layer:', layerKey); // Для отладки
+        //console.log('Adding layer:', layerKey); // Для отладки
         
         // Добавляем каждый слой поверх предыдущих с alpha = 0
-        const layer = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY - 30, layerKey);
+        const layer = this.add.image(this.cameras.main.centerX, this.cameras.main.centerY, layerKey);
         //const layer = this.add.image(this.cameras.main.centerX, 0, layerKey).setOrigin(0.5, 0);
         const scaleX = this.cameras.main.width / layer.width;
         const scaleY = this.cameras.main.height / layer.height;
-        const scale = Math.max(scaleX, scaleY);
+        const scale = Math.min(scaleX, scaleY);
         layer.setScale(scale);
         layer.setAlpha(0); // Начально невидимый
         
