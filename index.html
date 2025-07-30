@@ -247,9 +247,9 @@ class LoadScene extends Phaser.Scene {
 		const scaleX = this.cameras.main.width / this.bg.width;
 		const scaleY = this.cameras.main.height / this.bg.height;
 		
-        //const scale = Math.max(scaleX, scaleY);
+        const scale = Math.max(scaleX, scaleY);
 		
-		const scale = this.scale.displaySize.height / this.bg.height; 
+		//const scale = this.scale.displaySize.height / this.bg.height; 
 		
 	    this.bg.setScale(scale);
 		//console.log(his.scale.displaySize.width, ' ', this.bg.height*scale)
