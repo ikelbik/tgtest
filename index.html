@@ -211,7 +211,7 @@ class LoadScene extends Phaser.Scene {
         this.load.setBaseURL('https://ikelbik.github.io/tgtest');
         
         // Загружаем ВСЕ изображения сразу в preload
-        this.load.image('loadscreen', 'assets/loadscreen.jpg');
+        this.load.image('loadscreen', 'assets/loadscreen01.jpg');
         
         // Загружаем слои loadscreen0-5 сразу
         for (let i = 0; i <= 5; i++) {
@@ -249,6 +249,15 @@ class LoadScene extends Phaser.Scene {
 		
         const scale = Math.max(scaleX, scaleY);
 		
+		const ratio = (this.cameras.main.width/this.cameras.main.height) / (this.scale.displaySize.width/this.scale.displaySize.height)
+		
+		
+    console.log('Camera size:', this.cameras.main.width, 'x', this.cameras.main.height);
+    console.log('Scale size:', this.scale.width, 'x', this.scale.height);
+    console.log('Display size:', this.scale.displaySize.width, 'x', this.scale.displaySize.height);
+	   console.log('Resolution:',ratio);
+		
+		
 		//const scale = this.scale.displaySize.height / this.bg.height; 
 		
 	    this.bg.setScale(scale);
@@ -277,7 +286,7 @@ class LoadScene extends Phaser.Scene {
         const scaleX = this.cameras.main.width / layer.width;
         const scaleY = this.cameras.main.height / layer.height;
         const scale = Math.max(scaleX, scaleY);
-        layer.setScale(scaleX);
+        layer.setScale(scale);
         layer.setAlpha(0); // Начально невидимый
         
         // Разделяем loadscreen0 от остальных слоев
@@ -1229,6 +1238,8 @@ class LoadScene extends Phaser.Scene {
                 autoCenter: Phaser.Scale.CENTER_BOTH,
                 width: 1024,
                 height: 1920,
+				//width : '100%',
+				//height : '100%',
                 resolution: Math.max(window.devicePixelRatio || 1, 1),
             },
             cameras: {
